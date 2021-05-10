@@ -1,0 +1,7 @@
+FROM onsdigital/dp-concourse-tools-ubuntu
+
+WORKDIR /app/
+
+COPY dp-search-data-extractor .
+
+CMD ./dp-search-data-extractor
