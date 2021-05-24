@@ -11,70 +11,6 @@ job "dp-search-data-extractor" {
     auto_revert      = true
   }
 
-  group "web" {
-    count = "{{WEB_TASK_COUNT}}"
-
-    constraint {
-      attribute = "${node.class}"
-      value     = "web"
-    }
-
-    restart {
-      attempts = 3
-      delay    = "15s"
-      interval = "1m"
-      mode     = "delay"
-    }
-
-    task "dp-search-data-extractor-web" {
-      driver = "docker"
-
-      artifact {
-        source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-search-data-extractor/{{PROFILE}}/{{RELEASE}}.tar.gz"
-      }
-
-      config {
-        command = "${NOMAD_TASK_DIR}/start-task"
-
-        args = ["./dp-search-data-extractor"]
-
-        image = "{{ECR_URL}}:concourse-{{REVISION}}"
-
-      }
-
-      service {
-        name = "dp-search-data-extractor"
-        port = "http"
-        tags = ["web"]
-
-        check {
-          type     = "http"
-          path     = "/health"
-          interval = "10s"
-          timeout  = "2s"
-        }
-      }
-
-      resources {
-        cpu    = "{{WEB_RESOURCE_CPU}}"
-        memory = "{{WEB_RESOURCE_MEM}}"
-
-        network {
-          port "http" {}
-        }
-      }
-
-      template {
-        source      = "${NOMAD_TASK_DIR}/vars-template"
-        destination = "${NOMAD_TASK_DIR}/vars"
-      }
-
-      vault {
-        policies = ["dp-search-data-extractor-web"]
-      }
-    }
-  }
-
   group "publishing" {
     count = "{{PUBLISHING_TASK_COUNT}}"
 
@@ -90,7 +26,7 @@ job "dp-search-data-extractor" {
       mode     = "delay"
     }
 
-    task "dp-search-data-extractor-publishing" {
+    task "dp-search-data-extractor" {
       driver = "docker"
 
       artifact {
@@ -133,7 +69,7 @@ job "dp-search-data-extractor" {
       }
 
       vault {
-        policies = ["dp-search-data-extractor-publishing"]
+        policies = ["dp-search-data-extractor"]
       }
     }
   }
