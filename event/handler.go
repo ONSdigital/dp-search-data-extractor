@@ -9,19 +9,18 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-// TODO: remove hello called example handler
-// HelloCalledHandler ...
-type HelloCalledHandler struct {
+// ContentPublishedHandler ...
+type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *HelloCalledHandler) Handle(ctx context.Context, cfg *config.Config, event *HelloCalled) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config, event *ContentPublished) (err error) {
 	logData := log.Data{
 		"event": event,
 	}
 	log.Info(ctx, "event handler called", logData)
 
-	greeting := fmt.Sprintf("Hello, %s!", event.RecipientName)
+	greeting := fmt.Sprintf("URL:%s, DataType:%s, CollectionID:%s", event.URL, event.DataType, event.CollectionID)
 	err = ioutil.WriteFile(cfg.OutputFilePath, []byte(greeting), 0644)
 	if err != nil {
 		return err

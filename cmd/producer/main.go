@@ -29,11 +29,11 @@ func main() {
 
 	// Create Kafka Producer
 	pChannels := kafka.CreateProducerChannels()
-	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.HelloCalledTopic, pChannels, &kafka.ProducerConfig{
+	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.ContentPublishedTopic, pChannels, &kafka.ProducerConfig{
 		KafkaVersion: &config.KafkaVersion,
 	})
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": config.HelloCalledTopic})
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": config.ContentPublishedTopic})
 		os.Exit(1)
 	}
 
@@ -44,11 +44,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		e := scanEvent(scanner)
-		log.Info(ctx, "sending hello-called event", log.Data{"helloCalledEvent": e})
+		log.Info(ctx, "sending content-published event", log.Data{"contentPublishedEvent": e})
 
-		bytes, err := schema.HelloCalledEvent.Marshal(e)
+		bytes, err := schema.ContentPublishedEvent.Marshal(e)
 		if err != nil {
-			log.Fatal(ctx, "hello-called event error", err)
+			log.Fatal(ctx, "content-published event error", err)
 			os.Exit(1)
 		}
 
@@ -58,16 +58,16 @@ func main() {
 	}
 }
 
-// scanEvent creates a HelloCalled event according to the user input
-func scanEvent(scanner *bufio.Scanner) *event.HelloCalled {
-	fmt.Println("--- [Send Kafka HelloCalled] ---")
+// scanEvent creates a ContentPublished event according to the user input
+func scanEvent(scanner *bufio.Scanner) *event.ContentPublished {
+	fmt.Println("--- [Send Kafka ContentPublished] ---")
 
 	fmt.Println("Please type the recipient name")
 	fmt.Printf("$ ")
 	scanner.Scan()
 	name := scanner.Text()
 
-	return &event.HelloCalled{
-		RecipientName: name,
+	return &event.ContentPublished{
+		URL: name,
 	}
 }

@@ -20,7 +20,7 @@ var _ event.Handler = &HandlerMock{}
 //
 // 		// make and configure a mocked event.Handler
 // 		mockedHandler := &HandlerMock{
-// 			HandleFunc: func(ctx context.Context, cfg *config.Config, helloCalled *event.HelloCalled) error {
+// 			HandleFunc: func(ctx context.Context, cfg *config.Config, helloCalled *event.ContentPublished) error {
 // 				panic("mock out the Handle method")
 // 			},
 // 		}
@@ -31,7 +31,7 @@ var _ event.Handler = &HandlerMock{}
 // 	}
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, cfg *config.Config, helloCalled *event.HelloCalled) error
+	HandleFunc func(ctx context.Context, cfg *config.Config, helloCalled *event.ContentPublished) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -42,21 +42,21 @@ type HandlerMock struct {
 			// Cfg is the cfg argument value.
 			Cfg *config.Config
 			// HelloCalled is the helloCalled argument value.
-			HelloCalled *event.HelloCalled
+			HelloCalled *event.ContentPublished
 		}
 	}
 	lockHandle sync.RWMutex
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, helloCalled *event.HelloCalled) error {
+func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, helloCalled *event.ContentPublished) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
 		Cfg         *config.Config
-		HelloCalled *event.HelloCalled
+		HelloCalled *event.ContentPublished
 	}{
 		Ctx:         ctx,
 		Cfg:         cfg,
@@ -74,12 +74,12 @@ func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, helloCa
 func (mock *HandlerMock) HandleCalls() []struct {
 	Ctx         context.Context
 	Cfg         *config.Config
-	HelloCalled *event.HelloCalled
+	HelloCalled *event.ContentPublished
 } {
 	var calls []struct {
 		Ctx         context.Context
 		Cfg         *config.Config
-		HelloCalled *event.HelloCalled
+		HelloCalled *event.ContentPublished
 	}
 	mock.lockHandle.RLock()
 	calls = mock.calls.Handle
