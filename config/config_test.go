@@ -30,6 +30,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaNumWorkers, ShouldEqual, 1)
 				So(cfg.ContentPublishedGroup, ShouldEqual, "dp-search-data-extractor")
 				So(cfg.ContentPublishedTopic, ShouldEqual, "content-published")
+				So(cfg.ZebedeeAPIURL, ShouldEqual, "http://localhost:8082")
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

@@ -20,8 +20,8 @@ var testCtx = context.Background()
 var errHandler = errors.New("Handler Error")
 
 var testEvent = event.ContentPublished{
-	URL: "moo.com",
-	DataType: "Thing",
+	URL:          "moo.com",
+	DataType:     "Thing",
 	CollectionID: "Col123",
 }
 

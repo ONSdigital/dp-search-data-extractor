@@ -37,6 +37,9 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	r := mux.NewRouter()
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
+	// Get the zebedee client
+	zebedeeClient := serviceList.GetZebedee(ctx, cfg)
+
 	// Get Kafka consumer
 	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
@@ -45,7 +48,9 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	}
 
 	// Event Handler for Kafka Consumer
-	event.Consume(ctx, consumer, &event.ContentPublishedHandler{}, cfg)
+	event.Consume(ctx, consumer, &event.ContentPublishedHandler{
+		//zebedee Client is zebedeeClient
+	}, cfg)
 
 	// Kafka error logging go-routine
 	consumer.Channels().LogErrors(ctx, "kafka consumer")
@@ -57,7 +62,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, consumer); err != nil {
+	if err := registerCheckers(ctx, hc, zebedeeClient, consumer); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -147,9 +152,15 @@ func (svc *Service) Close(ctx context.Context) error {
 
 func registerCheckers(ctx context.Context,
 	hc HealthChecker,
+	zebedeeClient ZebedeeClient,
 	consumer kafka.IConsumerGroup) (err error) {
 
 	hasErrors := false
+
+	if err := hc.AddCheck("Zebedee client", zebedeeClient.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for ZebedeeClient", log.ERROR, err)
+	}
 
 	if err := hc.AddCheck("Kafka consumer", consumer.Checker); err != nil {
 		hasErrors = true

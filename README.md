@@ -1,6 +1,7 @@
 dp-search-data-extractor
 ================
-Service to retrieve data to update search index
+Service to retrieve publish-data to update search index
+This service calls /publishdata endpoint on zebedee.
 
 ### Getting started
 
@@ -11,6 +12,8 @@ An example event can be created using the helper script, `make produce`.
 
 ### Dependencies
 
+* golang 1.16.x
+* Running instance of zebedee
 * Requires running…
   * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
 * No further dependencies other than those defined in `go.mod`
@@ -36,6 +39,7 @@ An example event can be created using the helper script, `make produce`.
  On a development machine a request to the health check endpoint can be made by:
 
  `curl localhost:25800/health`
+
 
 ### Contributing
 

@@ -19,6 +19,7 @@ type Config struct {
 	ContentPublishedGroup      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_GROUP"`
 	ContentPublishedTopic      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
+	ZebedeeAPIURL              string        `envconfig:"ZEBEDEE_API_URL"`
 }
 
 var cfg *Config
@@ -42,6 +43,7 @@ func Get() (*Config, error) {
 		ContentPublishedGroup:      "dp-search-data-extractor",
 		ContentPublishedTopic:      "content-published",
 		OutputFilePath:             "/tmp/helloworld.txt",
+		ZebedeeAPIURL:              "http://localhost:8082",
 	}
 
 	return cfg, envconfig.Process("", cfg)
