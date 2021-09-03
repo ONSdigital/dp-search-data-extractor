@@ -3,9 +3,10 @@ package event_test
 import (
 	"context"
 	"errors"
-	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"sync"
 	"testing"
+
+	"github.com/ONSdigital/dp-search-data-extractor/config"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
@@ -17,7 +18,7 @@ import (
 
 var testCtx = context.Background()
 
-var errHandler = errors.New("Handler Error")
+var errHandler = errors.New("handler error")
 
 var testEvent = event.ContentPublished{
 	URL:          "moo.com",
@@ -27,11 +28,11 @@ var testEvent = event.ContentPublished{
 
 // kafkaStubConsumer mock which exposes Channels function returning empty channels
 // to be used on tests that are not supposed to receive any kafka message
-var kafkaStubConsumer = &kafkatest.IConsumerGroupMock{
-	ChannelsFunc: func() *kafka.ConsumerGroupChannels {
-		return &kafka.ConsumerGroupChannels{}
-	},
-}
+// var kafkaStubConsumer = &kafkatest.IConsumerGroupMock{
+// 	ChannelsFunc: func() *kafka.ConsumerGroupChannels {
+// 		return &kafka.ConsumerGroupChannels{}
+// 	},
+// }
 
 // TODO: remove or replace hello called logic with app specific
 func TestConsume(t *testing.T) {
@@ -64,7 +65,7 @@ func TestConsume(t *testing.T) {
 
 				Convey("An event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
-					So(*mockEventHandler.HandleCalls()[0].HelloCalled, ShouldResemble, testEvent)
+					So(*mockEventHandler.HandleCalls()[0].ContentPublished, ShouldResemble, testEvent)
 				})
 
 				Convey("The message is committed and the consumer is released", func() {
@@ -90,7 +91,7 @@ func TestConsume(t *testing.T) {
 
 				Convey("Only the valid event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
-					So(*mockEventHandler.HandleCalls()[0].HelloCalled, ShouldResemble, testEvent)
+					So(*mockEventHandler.HandleCalls()[0].ContentPublished, ShouldResemble, testEvent)
 				})
 
 				Convey("Only the valid message is committed, but the consumer is released for both messages", func() {
@@ -120,7 +121,7 @@ func TestConsume(t *testing.T) {
 
 				Convey("An event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
-					So(*mockEventHandler.HandleCalls()[0].HelloCalled, ShouldResemble, testEvent)
+					So(*mockEventHandler.HandleCalls()[0].ContentPublished, ShouldResemble, testEvent)
 				})
 
 				Convey("The message is committed and the consumer is released", func() {

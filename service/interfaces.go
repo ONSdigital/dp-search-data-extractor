@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
+	"github.com/ONSdigital/dp-search-data-extractor/event"
 )
 
 //go:generate moq -out mock/initialiser.go -pkg mock . Initialiser
@@ -43,6 +44,6 @@ type EventConsumer interface {
 
 // ZebedeeClient defines the zebedee client
 type ZebedeeClient interface {
-	// Get(ctx context.Context, userAccessToken string, path string) ([]byte, error) //// Get returns a response for the requested uri in zebedee
+	event.ZebedeeClient
 	Checker(context.Context, *healthcheck.CheckState) error
 }

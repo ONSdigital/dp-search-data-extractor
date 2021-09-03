@@ -49,7 +49,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 
 	// Event Handler for Kafka Consumer
 	event.Consume(ctx, consumer, &event.ContentPublishedHandler{
-		//zebedee Client is zebedeeClient
+		ZebedeeCli: zebedeeClient,
 	}, cfg)
 
 	// Kafka error logging go-routine
@@ -150,16 +150,13 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context,
-	hc HealthChecker,
-	zebedeeClient ZebedeeClient,
-	consumer kafka.IConsumerGroup) (err error) {
+func registerCheckers(ctx context.Context, hc HealthChecker, zebedeeClient ZebedeeClient, consumer kafka.IConsumerGroup) (err error) {
 
 	hasErrors := false
 
 	if err := hc.AddCheck("Zebedee client", zebedeeClient.Checker); err != nil {
 		hasErrors = true
-		log.Error(ctx, "error adding check for ZebedeeClient", log.ERROR, err)
+		log.Error(ctx, "error adding check for ZebedeeClient", err)
 	}
 
 	if err := hc.AddCheck("Kafka consumer", consumer.Checker); err != nil {

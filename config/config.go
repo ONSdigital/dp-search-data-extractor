@@ -42,7 +42,7 @@ func Get() (*Config, error) {
 		KafkaNumWorkers:            1,
 		ContentPublishedGroup:      "dp-search-data-extractor",
 		ContentPublishedTopic:      "content-published",
-		OutputFilePath:             "/tmp/helloworld.txt",
+		OutputFilePath:             "/tmp/dpSearchDataExtractor.txt",
 		ZebedeeAPIURL:              "http://localhost:8082",
 	}
 

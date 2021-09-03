@@ -6,7 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-search-data-extractor/service"
+	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"sync"
 )
 
@@ -17,13 +17,13 @@ var (
 
 // Ensure, that ZebedeeClientMock does implement ZebedeeClient.
 // If this is not the case, regenerate this file with moq.
-var _ service.ZebedeeClient = &ZebedeeClientMock{}
+var _ event.ZebedeeClient = &ZebedeeClientMock{}
 
-// ZebedeeClientMock is a mock implementation of service.ZebedeeClient.
+// ZebedeeClientMock is a mock implementation of event.ZebedeeClient.
 //
 //     func TestSomethingThatUsesZebedeeClient(t *testing.T) {
 //
-//         // make and configure a mocked service.ZebedeeClient
+//         // make and configure a mocked event.ZebedeeClient
 //         mockedZebedeeClient := &ZebedeeClientMock{
 //             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
 // 	               panic("mock out the Checker method")
@@ -33,7 +33,7 @@ var _ service.ZebedeeClient = &ZebedeeClientMock{}
 //             },
 //         }
 //
-//         // use mockedZebedeeClient in code that requires service.ZebedeeClient
+//         // use mockedZebedeeClient in code that requires event.ZebedeeClient
 //         // and then make assertions.
 //
 //     }
