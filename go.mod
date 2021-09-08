@@ -5,11 +5,10 @@ go 1.16
 replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.35.0 // indirect
 	github.com/ONSdigital/dp-component-test v0.3.0
-	github.com/ONSdigital/dp-healthcheck v1.0.5
+	github.com/ONSdigital/dp-healthcheck v1.1.0
 	github.com/ONSdigital/dp-kafka/v2 v2.2.0
-	github.com/ONSdigital/dp-net v1.0.12
+	github.com/ONSdigital/dp-net v1.2.0
 	github.com/ONSdigital/go-ns v0.0.0-20210410105122-6d6a140e952e
 	github.com/ONSdigital/log.go/v2 v2.0.9
 	github.com/Shopify/sarama v1.29.0 // indirect
@@ -29,7 +28,5 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.5.2 // indirect
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
-	golang.org/x/net v0.0.0-20210521195947-fe42d452be8f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210521203332-0cec03c779c1 // indirect
 )
