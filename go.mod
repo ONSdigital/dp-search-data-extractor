@@ -11,16 +11,14 @@ require (
 	github.com/ONSdigital/dp-kafka/v2 v2.2.0
 	github.com/ONSdigital/dp-net v1.0.12
 	github.com/ONSdigital/go-ns v0.0.0-20210410105122-6d6a140e952e
-	github.com/ONSdigital/log.go v1.0.1
+	github.com/ONSdigital/log.go/v2 v2.0.9
 	github.com/Shopify/sarama v1.29.0 // indirect
 	github.com/aws/aws-sdk-go v1.38.45 // indirect
 	github.com/cucumber/godog v0.11.0
-	github.com/fatih/color v1.12.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-memdb v1.3.2 // indirect
-	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/maxcnunes/httpfake v1.2.3 // indirect
 	github.com/pkg/errors v0.9.1
@@ -34,5 +32,4 @@ require (
 	golang.org/x/net v0.0.0-20210521195947-fe42d452be8f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210521203332-0cec03c779c1 // indirect
-	gopkg.in/avro.v0 v0.0.0-20171217001914-a730b5802183 // indirect
 )
