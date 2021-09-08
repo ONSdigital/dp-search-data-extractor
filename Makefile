@@ -12,6 +12,9 @@ all: audit test build
 .PHONY: audit
 audit:
 	go list -m all | nancy sleuth
+.PHONY: lint
+lint:
+	exit
 
 .PHONY: build
 build:
