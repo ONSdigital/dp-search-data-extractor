@@ -36,7 +36,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 	}
 
 	logData["greeting"] = greeting
-	log.Info(ctx, "hello world example handler called successfully", logData)
+	log.Info(ctx, "handler called successfully", logData)
 	log.Info(ctx, "event successfully handled", logData)
 
 	return nil

@@ -11,7 +11,6 @@ import (
 
 //go:generate moq -out mock/handler.go -pkg mock . Handler
 
-// TODO: remove or replace hello called logic with app specific
 // Handler represents a handler for processing a single event.
 type Handler interface {
 	Handle(ctx context.Context, cfg *config.Config, contentPublished *ContentPublished) error

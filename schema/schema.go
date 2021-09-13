@@ -4,7 +4,6 @@ import (
 	"github.com/ONSdigital/go-ns/avro"
 )
 
-// TODO: remove or replace hello called structure and model with app specific
 var contentPublishedEvent = `{
   "type": "record",
   "name": "content-published",
