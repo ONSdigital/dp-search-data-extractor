@@ -45,6 +45,7 @@ func NewComponent() *Component {
 		DoGetKafkaConsumerFunc: c.DoGetConsumer,
 		DoGetHealthCheckFunc:   c.DoGetHealthCheck,
 		DoGetHTTPServerFunc:    c.DoGetHTTPServer,
+		// DoGetZebedeeClientFunc: c.
 	}
 
 	c.serviceList = service.NewServiceList(initMock)

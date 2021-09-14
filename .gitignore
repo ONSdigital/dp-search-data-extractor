@@ -1,4 +1,5 @@
 /build
+dp-search-data-extractor.nomad
 
 # Mac
 .DS_Store
