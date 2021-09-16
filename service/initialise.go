@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	zebedee "github.com/ONSdigital/dp-api-clients-go/zebedee"
+	zebedee "github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
