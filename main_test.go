@@ -13,7 +13,6 @@ import (
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 type ComponentTest struct {
-	// KafkaFeature *componenttest.KafkaFeature
 }
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {

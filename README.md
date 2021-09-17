@@ -1,7 +1,7 @@
 dp-search-data-extractor
 ================
-Service to retrieve publish-data to update search index
-This service calls /publishdata endpoint on zebedee.
+Service to retrieve published data to be used to update a search index
+This service calls /publisheddata endpoint on zebedee.
 
 ### Getting started
 
@@ -29,8 +29,8 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_ADDR                   | "localhost:9092"                  | The address of Kafka (accepts list)
 | KAFKA_OFFSET_OLDEST          | true                              | Start processing Kafka messages in order from the oldest in the queue
 | KAFKA_NUM_WORKERS            | 1                                 | The maximum number of parallel kafka consumers
-| KAFKA_CALLED_GROUP           | dp-search-data-extractor          | The consumer group this application to consume ImageUploaded messages
-| KAFKA_APP_TOPIC              | kafka-app                         | The name of the topic to consume messages from
+| KAFKA_CONTENT_PUBLISHED_GROUP  | dp-search-data-extractor          | The consumer group this application to consume ImageUploaded messages
+| KAFKA_CONTENT_PUBLISHED_TOPIC  | content-published                 | The name of the topic to consume messages from
 
 ### Healthcheck
 

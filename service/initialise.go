@@ -65,14 +65,14 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 	return &hc, nil
 }
 
-// GetKafkaConsumer creates a Kafka consumer and sets the consumer flag to true
+// GetZebedee return zebedee client
 func (e *ExternalServiceList) GetZebedee(ctx context.Context, cfg *config.Config) ZebedeeClient {
 	zebedeeClient := e.Init.DoGetZebedeeClient(ctx, cfg)
 	e.ZebedeeClient = true
 	return zebedeeClient
 }
 
-// GetZebedeeAPIClient gets and initialises the Zebedee Client
+// DoGetZebedeeClient gets and initialises the Zebedee Client
 func (e *Init) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) ZebedeeClient {
 	zebedeeClient := zebedee.New(cfg.ZebedeeAPIURL)
 	return zebedeeClient

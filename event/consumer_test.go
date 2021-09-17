@@ -28,13 +28,12 @@ var testEvent = event.ContentPublished{
 
 // kafkaStubConsumer mock which exposes Channels function returning empty channels
 // to be used on tests that are not supposed to receive any kafka message
-// var kafkaStubConsumer = &kafkatest.IConsumerGroupMock{
-// 	ChannelsFunc: func() *kafka.ConsumerGroupChannels {
-// 		return &kafka.ConsumerGroupChannels{}
-// 	},
-// }
+var kafkaStubConsumer = &kafkatest.IConsumerGroupMock{
+	ChannelsFunc: func() *kafka.ConsumerGroupChannels {
+		return &kafka.ConsumerGroupChannels{}
+	},
+}
 
-// TODO: remove or replace hello called logic with app specific
 func TestConsume(t *testing.T) {
 
 	Convey("Given kafka consumer and event handler mocks", t, func() {

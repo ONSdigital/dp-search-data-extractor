@@ -62,7 +62,7 @@ func main() {
 func scanEvent(scanner *bufio.Scanner) *event.ContentPublished {
 	fmt.Println("--- [Send Kafka ContentPublished] ---")
 
-	fmt.Println("Please type the recipient name")
+	fmt.Println("Please type the URL")
 	fmt.Printf("$ ")
 	scanner.Scan()
 	name := scanner.Text()

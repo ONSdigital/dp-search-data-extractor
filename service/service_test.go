@@ -95,6 +95,7 @@ func TestRun(t *testing.T) {
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errKafkaConsumer)
 				So(svcList.KafkaConsumer, ShouldBeFalse)
+				So(svcList.ZebedeeClient, ShouldBeTrue)
 				So(svcList.HealthCheck, ShouldBeFalse)
 			})
 		})
@@ -113,6 +114,7 @@ func TestRun(t *testing.T) {
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errHealthcheck)
 				So(svcList.KafkaConsumer, ShouldBeTrue)
+				So(svcList.ZebedeeClient, ShouldBeTrue)
 				So(svcList.HealthCheck, ShouldBeFalse)
 			})
 		})
