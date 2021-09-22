@@ -10,28 +10,32 @@ import (
 	"sync"
 )
 
-// Ensure, that HandlerMock does implement event.Handler.
+var (
+	lockHandlerMockHandle sync.RWMutex
+)
+
+// Ensure, that HandlerMock does implement Handler.
 // If this is not the case, regenerate this file with moq.
 var _ event.Handler = &HandlerMock{}
 
 // HandlerMock is a mock implementation of event.Handler.
 //
-// 	func TestSomethingThatUsesHandler(t *testing.T) {
+//     func TestSomethingThatUsesHandler(t *testing.T) {
 //
-// 		// make and configure a mocked event.Handler
-// 		mockedHandler := &HandlerMock{
-// 			HandleFunc: func(ctx context.Context, cfg *config.Config, helloCalled *event.HelloCalled) error {
-// 				panic("mock out the Handle method")
-// 			},
-// 		}
+//         // make and configure a mocked event.Handler
+//         mockedHandler := &HandlerMock{
+//             HandleFunc: func(ctx context.Context, cfg *config.Config, contentPublished *event.ContentPublished) error {
+// 	               panic("mock out the Handle method")
+//             },
+//         }
 //
-// 		// use mockedHandler in code that requires event.Handler
-// 		// and then make assertions.
+//         // use mockedHandler in code that requires event.Handler
+//         // and then make assertions.
 //
-// 	}
+//     }
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, cfg *config.Config, helloCalled *event.HelloCalled) error
+	HandleFunc func(ctx context.Context, cfg *config.Config, contentPublished *event.ContentPublished) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -41,48 +45,47 @@ type HandlerMock struct {
 			Ctx context.Context
 			// Cfg is the cfg argument value.
 			Cfg *config.Config
-			// HelloCalled is the helloCalled argument value.
-			HelloCalled *event.HelloCalled
+			// ContentPublished is the contentPublished argument value.
+			ContentPublished *event.ContentPublished
 		}
 	}
-	lockHandle sync.RWMutex
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, helloCalled *event.HelloCalled) error {
+func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, contentPublished *event.ContentPublished) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
-		Ctx         context.Context
-		Cfg         *config.Config
-		HelloCalled *event.HelloCalled
+		Ctx              context.Context
+		Cfg              *config.Config
+		ContentPublished *event.ContentPublished
 	}{
-		Ctx:         ctx,
-		Cfg:         cfg,
-		HelloCalled: helloCalled,
+		Ctx:              ctx,
+		Cfg:              cfg,
+		ContentPublished: contentPublished,
 	}
-	mock.lockHandle.Lock()
+	lockHandlerMockHandle.Lock()
 	mock.calls.Handle = append(mock.calls.Handle, callInfo)
-	mock.lockHandle.Unlock()
-	return mock.HandleFunc(ctx, cfg, helloCalled)
+	lockHandlerMockHandle.Unlock()
+	return mock.HandleFunc(ctx, cfg, contentPublished)
 }
 
 // HandleCalls gets all the calls that were made to Handle.
 // Check the length with:
 //     len(mockedHandler.HandleCalls())
 func (mock *HandlerMock) HandleCalls() []struct {
-	Ctx         context.Context
-	Cfg         *config.Config
-	HelloCalled *event.HelloCalled
+	Ctx              context.Context
+	Cfg              *config.Config
+	ContentPublished *event.ContentPublished
 } {
 	var calls []struct {
-		Ctx         context.Context
-		Cfg         *config.Config
-		HelloCalled *event.HelloCalled
+		Ctx              context.Context
+		Cfg              *config.Config
+		ContentPublished *event.ContentPublished
 	}
-	mock.lockHandle.RLock()
+	lockHandlerMockHandle.RLock()
 	calls = mock.calls.Handle
-	mock.lockHandle.RUnlock()
+	lockHandlerMockHandle.RUnlock()
 	return calls
 }

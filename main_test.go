@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-search-data-extractor/features/steps"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
@@ -14,21 +13,21 @@ import (
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 type ComponentTest struct {
-	MongoFeature *componenttest.MongoFeature
 }
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-	component := steps.NewComponent()
+
+	testComponent := steps.NewComponent()
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
-		component.Reset()
+		testComponent.Reset()
 	})
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
-		component.Close()
+		testComponent.Close()
 	})
 
-	component.RegisterSteps(ctx)
+	testComponent.RegisterSteps(ctx)
 }
 
 func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {

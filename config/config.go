@@ -6,7 +6,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-// TODO: remove hello call config options
 // Config represents service configuration for dp-search-data-extractor
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
@@ -17,9 +16,10 @@ type Config struct {
 	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
-	HelloCalledGroup           string        `envconfig:"HELLO_CALLED_GROUP"`
-	HelloCalledTopic           string        `envconfig:"HELLO_CALLED_TOPIC"`
+	ContentPublishedGroup      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_GROUP"`
+	ContentPublishedTopic      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
+	ZebedeeAPIURL              string        `envconfig:"ZEBEDEE_API_URL"`
 }
 
 var cfg *Config
@@ -40,9 +40,10 @@ func Get() (*Config, error) {
 		KafkaVersion:               "1.0.2",
 		KafkaOffsetOldest:          true,
 		KafkaNumWorkers:            1,
-		HelloCalledGroup:           "dp-search-data-extractor",
-		HelloCalledTopic:           "hello-called",
-		OutputFilePath:             "/tmp/helloworld.txt",
+		ContentPublishedGroup:      "dp-search-data-extractor",
+		ContentPublishedTopic:      "content-published",
+		OutputFilePath:             "/tmp/dpSearchDataExtractor.txt",
+		ZebedeeAPIURL:              "http://localhost:8082",
 	}
 
 	return cfg, envconfig.Process("", cfg)

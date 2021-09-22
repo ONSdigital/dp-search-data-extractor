@@ -18,24 +18,24 @@ import (
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^these hello events are consumed:$`, c.theseHelloEventsAreConsumed)
-	ctx.Step(`^I should receive a hello-world response$`, c.iShouldReceiveAHelloworldResponse)
+	ctx.Step(`^these kafka events are consumed:$`, c.theseKafkaEventsAreConsumed)
+	ctx.Step(`^I should receive a kafka response$`, c.iShouldReceiveAKafkaResponse)
 }
 
-func (c *Component) iShouldReceiveAHelloworldResponse() error {
+func (c *Component) iShouldReceiveAKafkaResponse() error {
 	content, err := ioutil.ReadFile(c.cfg.OutputFilePath)
 	if err != nil {
 		return err
 	}
 
-	assert.Equal(c, "Hello, Tim!", string(content))
+	assert.Equal(c, "Hello, testURL.com", string(content))
 
 	return c.StepError()
 }
 
-func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
+func (c *Component) theseKafkaEventsAreConsumed(table *godog.Table) error {
 
-	observationEvents, err := c.convertToHelloEvents(table)
+	observationEvents, err := c.convertToKafkaEvents(table)
 	if err != nil {
 		return err
 	}
@@ -62,17 +62,17 @@ func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
 	return nil
 }
 
-func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.HelloCalled, error) {
+func (c *Component) convertToKafkaEvents(table *godog.Table) ([]*event.ContentPublished, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&event.HelloCalled{}, table)
+	events, err := assist.CreateSlice(&event.ContentPublished{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*event.HelloCalled), nil
+	return events.([]*event.ContentPublished), nil
 }
 
-func (c *Component) sendToConsumer(e *event.HelloCalled) error {
-	bytes, err := schema.HelloCalledEvent.Marshal(e)
+func (c *Component) sendToConsumer(e *event.ContentPublished) error {
+	bytes, err := schema.ContentPublishedEvent.Marshal(e)
 	if err != nil {
 		return err
 	}
