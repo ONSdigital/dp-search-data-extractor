@@ -8,6 +8,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
+	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 )
 
@@ -15,6 +16,7 @@ import (
 type ExternalServiceList struct {
 	HealthCheck   bool
 	KafkaConsumer bool
+	KafkaProducer bool
 	Init          Initialiser
 	ZebedeeClient bool
 }
@@ -24,6 +26,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
 		HealthCheck:   false,
 		KafkaConsumer: false,
+		KafkaProducer: false,
 		Init:          initialiser,
 		ZebedeeClient: false,
 	}
@@ -66,14 +69,14 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // GetZebedee return zebedee client
-func (e *ExternalServiceList) GetZebedee(ctx context.Context, cfg *config.Config) ZebedeeClient {
+func (e *ExternalServiceList) GetZebedee(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
 	zebedeeClient := e.Init.DoGetZebedeeClient(ctx, cfg)
 	e.ZebedeeClient = true
 	return zebedeeClient
 }
 
 // DoGetZebedeeClient gets and initialises the Zebedee Client
-func (e *Init) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) ZebedeeClient {
+func (e *Init) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
 	zebedeeClient := zebedee.New(cfg.ZebedeeAPIURL)
 	return zebedeeClient
 }
@@ -111,4 +114,28 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 	}
 
 	return kafkaConsumer, nil
+}
+
+// GetKafkaProducer creates a Kafka producer and sets the producder flag to true
+func (e *ExternalServiceList) GetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) {
+	producer, err := e.Init.DoGetKafkaProducer(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	e.KafkaProducer = true
+	return producer, nil
+}
+
+func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) {
+	pChannels := dpkafka.CreateProducerChannels()
+	pConfig := &dpkafka.ProducerConfig{
+		KafkaVersion: &cfg.KafkaVersion,
+	}
+	producer, err := dpkafka.NewProducer(ctx, cfg.KafkaAddr, cfg.KafkaProducerTopic, pChannels, pConfig)
+	if err != nil {
+		// log.Fatal(ctx, "new kafka producer returned an error", err, log.Data{"topic": topic})
+		return nil, err
+	}
+
+	return producer, nil
 }

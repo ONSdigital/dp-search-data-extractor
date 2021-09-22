@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"sync"
 )
 
@@ -24,7 +25,7 @@ var _ event.Handler = &HandlerMock{}
 //
 //         // make and configure a mocked event.Handler
 //         mockedHandler := &HandlerMock{
-//             HandleFunc: func(ctx context.Context, cfg *config.Config, contentPublished *event.ContentPublished) error {
+//             HandleFunc: func(ctx context.Context, cfg *config.Config, contentPublished *models.ContentPublished) error {
 // 	               panic("mock out the Handle method")
 //             },
 //         }
@@ -35,7 +36,7 @@ var _ event.Handler = &HandlerMock{}
 //     }
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, cfg *config.Config, contentPublished *event.ContentPublished) error
+	HandleFunc func(ctx context.Context, cfg *config.Config, contentPublished *models.ContentPublished) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -46,20 +47,20 @@ type HandlerMock struct {
 			// Cfg is the cfg argument value.
 			Cfg *config.Config
 			// ContentPublished is the contentPublished argument value.
-			ContentPublished *event.ContentPublished
+			ContentPublished *models.ContentPublished
 		}
 	}
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, contentPublished *event.ContentPublished) error {
+func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, contentPublished *models.ContentPublished) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
 		Ctx              context.Context
 		Cfg              *config.Config
-		ContentPublished *event.ContentPublished
+		ContentPublished *models.ContentPublished
 	}{
 		Ctx:              ctx,
 		Cfg:              cfg,
@@ -77,12 +78,12 @@ func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, content
 func (mock *HandlerMock) HandleCalls() []struct {
 	Ctx              context.Context
 	Cfg              *config.Config
-	ContentPublished *event.ContentPublished
+	ContentPublished *models.ContentPublished
 } {
 	var calls []struct {
 		Ctx              context.Context
 		Cfg              *config.Config
-		ContentPublished *event.ContentPublished
+		ContentPublished *models.ContentPublished
 	}
 	lockHandlerMockHandle.RLock()
 	calls = mock.calls.Handle

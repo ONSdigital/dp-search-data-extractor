@@ -12,6 +12,7 @@ import (
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -20,7 +21,7 @@ var testCtx = context.Background()
 
 var errHandler = errors.New("handler error")
 
-var testEvent = event.ContentPublished{
+var testEvent = models.ContentPublished{
 	URL:          "moo.com",
 	DataType:     "Thing",
 	CollectionID: "Col123",
@@ -45,7 +46,7 @@ func TestConsume(t *testing.T) {
 
 		handlerWg := &sync.WaitGroup{}
 		mockEventHandler := &mock.HandlerMock{
-			HandleFunc: func(ctx context.Context, config *config.Config, event *event.ContentPublished) error {
+			HandleFunc: func(ctx context.Context, config *config.Config, event *models.ContentPublished) error {
 				defer handlerWg.Done()
 				return nil
 			},
@@ -105,7 +106,7 @@ func TestConsume(t *testing.T) {
 		})
 
 		Convey("With a failing handler and a kafka message with the valid schema being sent to the Upstream channel", func() {
-			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *event.ContentPublished) error {
+			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *models.ContentPublished) error {
 				defer handlerWg.Done()
 				return errHandler
 			}
@@ -134,7 +135,7 @@ func TestConsume(t *testing.T) {
 }
 
 // marshal helper method to marshal a event into a []byte
-func marshal(event event.ContentPublished) []byte {
+func marshal(event models.ContentPublished) []byte {
 	bytes, err := schema.ContentPublishedEvent.Marshal(event)
 	So(err, ShouldBeNil)
 	return bytes

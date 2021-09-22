@@ -1,54 +1,67 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"os"
-	"os/signal"
+	"time"
 
-	"github.com/ONSdigital/dp-search-data-extractor/service"
+	kafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-search-data-extractor/config"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/pkg/errors"
 )
 
 const serviceName = "dp-search-data-extractor"
 
-var (
-	// BuildTime represents the time in which the service was built
-	BuildTime string
-	// GitCommit represents the commit (SHA-1) hash of the service that is running
-	GitCommit string
-	// Version represents the version of the service that is running
-	Version string
-)
-
 func main() {
 	log.Namespace = serviceName
 	ctx := context.Background()
-
-	if err := run(ctx); err != nil {
-		log.Fatal(ctx, "fatal runtime error", err)
+	// Get Config
+	config, err := config.Get()
+	if err != nil {
+		log.Fatal(ctx, "error getting config", err)
 		os.Exit(1)
+	}
+	// Create Kafka Producer
+	pChannels := kafka.CreateProducerChannels()
+	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.ContentPublishedTopic, pChannels, &kafka.ProducerConfig{
+		KafkaVersion: &config.KafkaVersion,
+	})
+	if err != nil {
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": config.ContentPublishedTopic})
+		os.Exit(1)
+	}
+	// kafka error logging go-routines
+	kafkaProducer.Channels().LogErrors(ctx, "kafka producer")
+	time.Sleep(500 * time.Millisecond)
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		e := scanEvent(scanner)
+		log.Info(ctx, "sending content-published event", log.Data{"contentPublishedEvent": e})
+		bytes, err := schema.ContentPublishedEvent.Marshal(e)
+		if err != nil {
+			log.Fatal(ctx, "content-published event error", err)
+			os.Exit(1)
+		}
+		// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
+		kafkaProducer.Initialise(ctx)
+		kafkaProducer.Channels().Output <- bytes
 	}
 }
 
-func run(ctx context.Context) error {
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, os.Kill)
+// scanEvent creates a ContentPublished event according to the user input
+func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
+	fmt.Println("--- [Send Kafka ContentPublished] ---")
 
-	// Run the service, providing an error channel for fatal errors
-	svcErrors := make(chan error, 1)
-	svcList := service.NewServiceList(&service.Init{})
-	svc, err := service.Run(ctx, svcList, BuildTime, GitCommit, Version, svcErrors)
-	if err != nil {
-		return errors.Wrap(err, "running service failed")
-	}
+	fmt.Println("Please type the URL")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	name := scanner.Text()
 
-	// blocks until an os interrupt or a fatal error occurs
-	select {
-	case err := <-svcErrors:
-		log.Error(ctx, "service error received", err)
-	case sig := <-signals:
-		log.Info(ctx, "os signal received", log.Data{"signal": sig})
+	return &models.ContentPublished{
+		URL: name,
 	}
-	return svc.Close(ctx)
 }

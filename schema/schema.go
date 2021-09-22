@@ -18,3 +18,26 @@ var contentPublishedEvent = `{
 var ContentPublishedEvent = &avro.Schema{
 	Definition: contentPublishedEvent,
 }
+
+var searchDataImportEvent = `{
+  "type": "record",
+  "name": "search-data-import",
+  "fields": [
+    {"name": "data_type", "type": "string", "default": ""},
+    {"name": "job_id", "type": "string", "default": ""},
+    {"name": "search_index", "type": "string", "default": ""},
+    {"name": "cdid", "type": "string", "default": ""},
+    {"name": "dataset_id", "type": "string", "default": ""},
+    {"name": "keywords", "type": "string", "default": ""},
+    {"name": "meta_description", "type": "int", "default": ""},
+    {"name": "release_date", "type": "string", "default": ""},
+    {"name": "summary", "type": "string", "default": ""},
+    {"name": "title", "type": "string", "default": ""}
+    {"name": "trace_id", "type": "string", "default": ""}
+  ]
+}`
+
+// SearchDataImportEvent the Avro schema for search-data-import messages.
+var SearchDataImportEvent = &avro.Schema{
+	Definition: searchDataImportEvent,
+}

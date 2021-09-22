@@ -6,6 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"net/http"
@@ -16,6 +17,7 @@ var (
 	lockInitialiserMockDoGetHTTPServer    sync.RWMutex
 	lockInitialiserMockDoGetHealthCheck   sync.RWMutex
 	lockInitialiserMockDoGetKafkaConsumer sync.RWMutex
+	lockInitialiserMockDoGetKafkaProducer sync.RWMutex
 	lockInitialiserMockDoGetZebedeeClient sync.RWMutex
 )
 
@@ -38,7 +40,10 @@ var _ service.Initialiser = &InitialiserMock{}
 //             DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
 // 	               panic("mock out the DoGetKafkaConsumer method")
 //             },
-//             DoGetZebedeeClientFunc: func(ctx context.Context, cfg *config.Config) service.ZebedeeClient {
+//             DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
+// 	               panic("mock out the DoGetKafkaProducer method")
+//             },
+//             DoGetZebedeeClientFunc: func(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
 // 	               panic("mock out the DoGetZebedeeClient method")
 //             },
 //         }
@@ -57,8 +62,11 @@ type InitialiserMock struct {
 	// DoGetKafkaConsumerFunc mocks the DoGetKafkaConsumer method.
 	DoGetKafkaConsumerFunc func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error)
 
+	// DoGetKafkaProducerFunc mocks the DoGetKafkaProducer method.
+	DoGetKafkaProducerFunc func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error)
+
 	// DoGetZebedeeClientFunc mocks the DoGetZebedeeClient method.
-	DoGetZebedeeClientFunc func(ctx context.Context, cfg *config.Config) service.ZebedeeClient
+	DoGetZebedeeClientFunc func(ctx context.Context, cfg *config.Config) clients.ZebedeeClient
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -82,6 +90,13 @@ type InitialiserMock struct {
 		}
 		// DoGetKafkaConsumer holds details about calls to the DoGetKafkaConsumer method.
 		DoGetKafkaConsumer []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
+		}
+		// DoGetKafkaProducer holds details about calls to the DoGetKafkaProducer method.
+		DoGetKafkaProducer []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cfg is the cfg argument value.
@@ -210,8 +225,43 @@ func (mock *InitialiserMock) DoGetKafkaConsumerCalls() []struct {
 	return calls
 }
 
+// DoGetKafkaProducer calls DoGetKafkaProducerFunc.
+func (mock *InitialiserMock) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
+	if mock.DoGetKafkaProducerFunc == nil {
+		panic("InitialiserMock.DoGetKafkaProducerFunc: method is nil but Initialiser.DoGetKafkaProducer was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Cfg *config.Config
+	}{
+		Ctx: ctx,
+		Cfg: cfg,
+	}
+	lockInitialiserMockDoGetKafkaProducer.Lock()
+	mock.calls.DoGetKafkaProducer = append(mock.calls.DoGetKafkaProducer, callInfo)
+	lockInitialiserMockDoGetKafkaProducer.Unlock()
+	return mock.DoGetKafkaProducerFunc(ctx, cfg)
+}
+
+// DoGetKafkaProducerCalls gets all the calls that were made to DoGetKafkaProducer.
+// Check the length with:
+//     len(mockedInitialiser.DoGetKafkaProducerCalls())
+func (mock *InitialiserMock) DoGetKafkaProducerCalls() []struct {
+	Ctx context.Context
+	Cfg *config.Config
+} {
+	var calls []struct {
+		Ctx context.Context
+		Cfg *config.Config
+	}
+	lockInitialiserMockDoGetKafkaProducer.RLock()
+	calls = mock.calls.DoGetKafkaProducer
+	lockInitialiserMockDoGetKafkaProducer.RUnlock()
+	return calls
+}
+
 // DoGetZebedeeClient calls DoGetZebedeeClientFunc.
-func (mock *InitialiserMock) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) service.ZebedeeClient {
+func (mock *InitialiserMock) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
 	if mock.DoGetZebedeeClientFunc == nil {
 		panic("InitialiserMock.DoGetZebedeeClientFunc: method is nil but Initialiser.DoGetZebedeeClient was just called")
 	}

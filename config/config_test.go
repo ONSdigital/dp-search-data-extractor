@@ -30,6 +30,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaNumWorkers, ShouldEqual, 1)
 				So(cfg.ContentPublishedGroup, ShouldEqual, "dp-search-data-extractor")
 				So(cfg.ContentPublishedTopic, ShouldEqual, "content-published")
+				So(cfg.KafkaProducerTopic, ShouldEqual, "search-data-import")
 				So(cfg.ZebedeeAPIURL, ShouldEqual, "http://localhost:8082")
 			})
 

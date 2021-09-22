@@ -5,22 +5,22 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/dp-search-data-extractor/event"
 )
 
 //go:generate moq -out mock/initialiser.go -pkg mock . Initialiser
 //go:generate moq -out mock/server.go -pkg mock . HTTPServer
 //go:generate moq -out mock/healthCheck.go -pkg mock . HealthChecker
-//go:generate moq -out mock/zebedee.go -pkg mock . ZebedeeClient
 
 // Initialiser defines the methods to initialise external services
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error)
-	DoGetZebedeeClient(ctx context.Context, cfg *config.Config) ZebedeeClient
+	DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error)
+	DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error)
+	DoGetZebedeeClient(ctx context.Context, cfg *config.Config) clients.ZebedeeClient
 }
 
 // HTTPServer defines the required methods from the HTTP server
@@ -43,7 +43,7 @@ type EventConsumer interface {
 }
 
 // ZebedeeClient defines the zebedee client
-type ZebedeeClient interface {
-	event.ZebedeeClient
-	Checker(context.Context, *healthcheck.CheckState) error
-}
+// type ZebedeeClient interface {
+// 	event.ZebedeeClient
+// 	Checker(context.Context, *healthcheck.CheckState) error
+// }
