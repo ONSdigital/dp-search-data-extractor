@@ -16,19 +16,20 @@ type Marshaller interface {
 	Marshal(s interface{}) ([]byte, error)
 }
 
-// InstanceCompletedProducer produces kafka messages for instances which have been successfully processed.
+// SearchDataImportProducer produces kafka messages for instances which have been successfully processed.
 type SearchDataImportProducer struct {
 	Marshaller Marshaller
 	Producer   kafka.IProducer
 }
 
 // SearchDataImport produce a kafka message for an instance which has been successfully processed.
-func (p SearchDataImportProducer) SearchDataImport(ctx context.Context, e *models.SearchDataImport) error {
-	bytes, avroError := p.Marshaller.Marshal(e)
-	if avroError != nil {
-		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", e), avroError)
+func (p SearchDataImportProducer) SearchDataImport(ctx context.Context, event models.SearchDataImport) error {
+	bytes, err := p.Marshaller.Marshal(event)
+	if err != nil {
+		log.Fatal(ctx, "Marshaller.Marshal", err)
+		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", event), err)
 	}
 	p.Producer.Channels().Output <- bytes
-	log.Info(ctx, "completed successfully", log.Data{"event": e, "package": "message.InstanceCompletedProducer"})
+	log.Info(ctx, "completed successfully", log.Data{"event": event, "package": "event.SearchDataImportProducer"})
 	return nil
 }

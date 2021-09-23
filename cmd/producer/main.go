@@ -46,7 +46,7 @@ func main() {
 		e := scanEvent(scanner)
 		log.Info(ctx, "sending content-published event", log.Data{"contentPublishedEvent": e})
 
-		bytes, err := schema.ContentPublishedEvent.Marshal(e)
+		bytes, err := schema.ContentPublishedSchema.Marshal(e)
 		if err != nil {
 			log.Fatal(ctx, "content-published event error", err)
 			os.Exit(1)

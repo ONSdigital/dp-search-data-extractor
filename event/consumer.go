@@ -49,6 +49,8 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 // After the message is handled, it is committed.
 func processMessage(ctx context.Context, message kafka.Message, handler Handler, cfg *config.Config) {
 
+	// log.Info(ctx, "processMessage", log.Data{"message": message})
+
 	// unmarshal - commit on failure (consuming the message again would result in the same error)
 	event, err := unmarshal(message)
 	if err != nil {
@@ -60,7 +62,7 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler,
 	log.Info(ctx, "event received", log.Data{"event": event})
 
 	// handle - commit on failure (implement error handling to not commit if message needs to be consumed again)
-	err = handler.Handle(ctx, cfg, event)
+	err = handler.Handle(ctx, cfg, &event)
 	if err != nil {
 		log.Error(ctx, "failed to handle event", err)
 		message.Commit()
@@ -73,7 +75,10 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler,
 }
 
 // unmarshal converts a event instance to []byte.
-func unmarshal(message kafka.Message) (event *models.ContentPublished, err error) {
-	err = schema.ContentPublishedEvent.Unmarshal(message.GetData(), &event)
+func unmarshal(message kafka.Message) (event models.ContentPublished, err error) {
+	err = schema.ContentPublishedSchema.Unmarshal(message.GetData(), &event)
+	if err != nil {
+		log.Error(context.Background(), "unmarshal error : ", err)
+	}
 	return event, err
 }

@@ -34,17 +34,17 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 		return err
 	}
 
+	logData = log.Data{
+		"contentPublished": string(contentPublished),
+	}
+	log.Info(ctx, "zebedee response ", logData)
+
 	//byte slice to Json & unMarshall Json
 	var zebedeeData models.ZebedeeData
 	err = json.Unmarshal(contentPublished, &zebedeeData)
 	if err != nil {
 		log.Fatal(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err)
 		return err
-	}
-	logData = log.Data{
-		"CDID":        zebedeeData.Description.CDID,
-		"DataType":    zebedeeData.DataType,
-		"Description": zebedeeData.Description,
 	}
 
 	//Mapping Json to Avro
@@ -61,8 +61,13 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 		TraceID:         traceID,
 	}
 
+	log.Info(ctx, "searchDataImport", log.Data{
+		"searchData":  searchData,
+		"zebedeeData": zebedeeData,
+	})
+
 	//Marshall Avro and sending message
-	if err := h.Producer.SearchDataImport(ctx, &searchData); err != nil {
+	if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
 		log.Fatal(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return err
 	}

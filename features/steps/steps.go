@@ -72,7 +72,7 @@ func (c *Component) convertToKafkaEvents(table *godog.Table) ([]*event.ContentPu
 }
 
 func (c *Component) sendToConsumer(e *event.ContentPublished) error {
-	bytes, err := schema.ContentPublishedEvent.Marshal(e)
+	bytes, err := schema.ContentPublishedSchema.Marshal(e)
 	if err != nil {
 		return err
 	}

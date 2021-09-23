@@ -30,9 +30,9 @@ var getPublishDataFuncInError = func(ctx context.Context, uriString string) ([]b
 	return nil, errZebedee
 }
 
-var contentPublishedTest = `{"cdid": "testCDID","data_type": "testDataType","description": "testDescription"}`
+var contentPublishedTestData = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
 var getPublishDataFunc = func(ctx context.Context, uriString string) ([]byte, error) {
-	data := []byte(contentPublishedTest)
+	data := []byte(contentPublishedTestData)
 	return data, nil
 }
 
@@ -97,28 +97,3 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 		So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
 	})
 }
-
-// func TestSearchDataImportEventHandler_Handle(t *testing.T) {
-
-// 	Convey("Given the handler has been configured", t, func() {
-// 		// Set up mocks
-// 		var zebedeeMock = &eventMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-// 		eventHandler := &event.ContentPublishedHandler{zebedeeMock}
-// 		filePath := "/tmp/dpSearchDataExtractor.txt"
-// 		os.Remove(filePath)
-
-// 		Convey("When given a valid event", func() {
-// 			err := eventHandler.Handle(testCtx,
-// 				&config.Config{OutputFilePath: filePath},
-// 				&testEvent)
-
-// 			Convey("Then Producer is called 1 time with the expected parameters", func() {
-// 				So(err, ShouldBeNil)
-// 				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
-// 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-// 				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
-// 				So(json.Unmarshal(contentPublishedTest, event.ZebedeeData), ShouldNotBeEmpty)
-// 			})
-// 		})
-// 	})
-// }

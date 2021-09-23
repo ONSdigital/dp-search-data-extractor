@@ -55,7 +55,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	}
 
 	searchDataImportProducer := event.SearchDataImportProducer{
-		Marshaller: schema.SearchDataImportEvent,
+		Marshaller: schema.SearchDataImportSchema,
 		Producer:   producer,
 	}
 
