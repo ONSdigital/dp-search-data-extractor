@@ -32,7 +32,7 @@ var searchDataImport = `{
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
-    {"name": "title", "type": "string", "default": ""}
+    {"name": "title", "type": "string", "default": ""},
     {"name": "trace_id", "type": "string", "default": ""}
   ]
 }`

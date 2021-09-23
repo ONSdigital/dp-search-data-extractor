@@ -84,7 +84,7 @@ func TestProducer_SearchDataImport(t *testing.T) {
 	})
 }
 
-func TestInstanceCompletedProducer_Completed_MarshalErr(t *testing.T) {
+func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 	Convey("Given InstanceCompletedProducer has been configured correctly", t, func() {
 
 		searchDataImportEvent := models.SearchDataImport{

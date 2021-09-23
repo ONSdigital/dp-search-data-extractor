@@ -61,11 +61,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 		TraceID:         traceID,
 	}
 
-	log.Info(ctx, "searchDataImport", log.Data{
-		"searchData":  searchData,
-		"zebedeeData": zebedeeData,
-	})
-
 	//Marshall Avro and sending message
 	if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
 		log.Fatal(ctx, "error while attempting to send SearchDataImport event to producer", err)
