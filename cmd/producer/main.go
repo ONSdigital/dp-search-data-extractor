@@ -9,7 +9,7 @@ import (
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/dp-search-data-extractor/event"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -46,7 +46,7 @@ func main() {
 		e := scanEvent(scanner)
 		log.Info(ctx, "sending content-published event", log.Data{"contentPublishedEvent": e})
 
-		bytes, err := schema.ContentPublishedSchema.Marshal(e)
+		bytes, err := schema.ContentPublishedEvent.Marshal(e)
 		if err != nil {
 			log.Fatal(ctx, "content-published event error", err)
 			os.Exit(1)
@@ -59,7 +59,7 @@ func main() {
 }
 
 // scanEvent creates a ContentPublished event according to the user input
-func scanEvent(scanner *bufio.Scanner) *event.ContentPublished {
+func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
 	fmt.Println("--- [Send Kafka ContentPublished] ---")
 
 	fmt.Println("Please type the URL")
@@ -67,7 +67,7 @@ func scanEvent(scanner *bufio.Scanner) *event.ContentPublished {
 	scanner.Scan()
 	name := scanner.Text()
 
-	return &event.ContentPublished{
+	return &models.ContentPublished{
 		URL: name,
 	}
 }

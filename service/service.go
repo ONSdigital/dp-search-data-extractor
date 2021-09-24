@@ -131,15 +131,6 @@ func (svc *Service) Close(ctx context.Context) error {
 			log.Error(ctx, "failed to shutdown http server", err)
 			hasShutdownError = true
 		}
-		// If kafka consumer exists, close it.
-		if svc.serviceList.KafkaConsumer {
-			log.Info(ctx, "closing kafka consumer")
-			if err := svc.consumer.Close(ctx); err != nil {
-				log.Error(ctx, "error closing kafka consumer", err)
-				hasShutdownError = true
-			}
-			log.Info(ctx, "closed kafka consumer")
-		}
 
 		// If kafka producder exists, close it.
 		if svc.serviceList.KafkaProducer {
@@ -149,6 +140,16 @@ func (svc *Service) Close(ctx context.Context) error {
 				hasShutdownError = true
 			}
 			log.Info(ctx, "closed kafka producer")
+		}
+
+		// If kafka consumer exists, close it.
+		if svc.serviceList.KafkaConsumer {
+			log.Info(ctx, "closing kafka consumer")
+			if err := svc.consumer.Close(ctx); err != nil {
+				log.Error(ctx, "error closing kafka consumer", err)
+				hasShutdownError = true
+			}
+			log.Info(ctx, "closed kafka consumer")
 		}
 
 		if !hasShutdownError {

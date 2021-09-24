@@ -14,8 +14,8 @@ var contentPublished = `{
   ]
 }`
 
-// ContentPublishedSchema is the Avro schema for Content Published messages.
-var ContentPublishedSchema = &avro.Schema{
+// ContentPublishedEvent is the Avro schema for Content Published messages.
+var ContentPublishedEvent = &avro.Schema{
 	Definition: contentPublished,
 }
 

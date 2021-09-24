@@ -3,6 +3,10 @@ package service_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"sync"
+	"testing"
+
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
@@ -11,9 +15,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	serviceMock "github.com/ONSdigital/dp-search-data-extractor/service/mock"
-	"net/http"
-	"sync"
-	"testing"
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"

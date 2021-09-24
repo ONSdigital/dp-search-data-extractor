@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	"github.com/ONSdigital/dp-search-data-extractor/event"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/cucumber/godog"
@@ -62,17 +62,17 @@ func (c *Component) theseKafkaEventsAreConsumed(table *godog.Table) error {
 	return nil
 }
 
-func (c *Component) convertToKafkaEvents(table *godog.Table) ([]*event.ContentPublished, error) {
+func (c *Component) convertToKafkaEvents(table *godog.Table) ([]*models.ContentPublished, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&event.ContentPublished{}, table)
+	events, err := assist.CreateSlice(&models.ContentPublished{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*event.ContentPublished), nil
+	return events.([]*models.ContentPublished), nil
 }
 
-func (c *Component) sendToConsumer(e *event.ContentPublished) error {
-	bytes, err := schema.ContentPublishedSchema.Marshal(e)
+func (c *Component) sendToConsumer(e *models.ContentPublished) error {
+	bytes, err := schema.ContentPublishedEvent.Marshal(e)
 	if err != nil {
 		return err
 	}
