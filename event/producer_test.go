@@ -18,25 +18,27 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var ctx = context.Background()
+var (
+	ctx = context.Background()
+
+	searchDataImportTestEvent = models.SearchDataImport{
+		DataType:        "testDataType",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        "",
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "",
+		TraceID:         "testTraceID",
+	}
+)
 
 func TestProducer_SearchDataImport(t *testing.T) {
 	Convey("Given SearchDataImportProducer has been configured correctly", t, func() {
-
-		searchDataImportEvent1 := models.SearchDataImport{
-			DataType:        "testDataType",
-			JobID:           "",
-			SearchIndex:     "ONS",
-			CDID:            "",
-			DatasetID:       "",
-			Keywords:        "",
-			MetaDescription: "",
-			Summary:         "",
-			ReleaseDate:     "",
-			Title:           "",
-			TraceID:         "testTraceID",
-		}
-		expectedSearchDataImport := marshalSearchDataImport(t, searchDataImportEvent1)
+		expectedSearchDataImport := marshalSearchDataImport(t, searchDataImportTestEvent)
 
 		pChannels := &kafka.ProducerChannels{
 			Output: make(chan []byte, 1),
@@ -61,7 +63,7 @@ func TestProducer_SearchDataImport(t *testing.T) {
 		}
 		Convey("When SearchDataImport is called on the event producer", func() {
 
-			err := searchDataImportProducer.SearchDataImport(ctx, searchDataImportEvent1)
+			err := searchDataImportProducer.SearchDataImport(ctx, searchDataImportTestEvent)
 			So(err, ShouldBeNil)
 
 			var avroBytes []byte
@@ -78,7 +80,7 @@ func TestProducer_SearchDataImport(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportSchema.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(searchDataImportEvent1, ShouldResemble, actual)
+				So(searchDataImportTestEvent, ShouldResemble, actual)
 			})
 		})
 	})
@@ -86,20 +88,6 @@ func TestProducer_SearchDataImport(t *testing.T) {
 
 func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 	Convey("Given InstanceCompletedProducer has been configured correctly", t, func() {
-
-		searchDataImportEvent := models.SearchDataImport{
-			DataType:        "testDataType",
-			JobID:           "",
-			SearchIndex:     "ONS",
-			CDID:            "",
-			DatasetID:       "",
-			Keywords:        "",
-			MetaDescription: "",
-			Summary:         "",
-			ReleaseDate:     "",
-			Title:           "",
-			TraceID:         "testTraceID",
-		}
 
 		pChannels := &kafka.ProducerChannels{
 			Output: make(chan []byte, 1),
@@ -124,10 +112,10 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 		}
 
 		Convey("When marshaller.Marshal returns an error", func() {
-			err := searchDataImportProducer.SearchDataImport(ctx, searchDataImportEvent)
+			err := searchDataImportProducer.SearchDataImport(ctx, searchDataImportTestEvent)
 
 			Convey("Then the expected error is returned", func() {
-				expectedError := fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", searchDataImportEvent), errors.New("mock error"))
+				expectedError := fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", searchDataImportTestEvent), errors.New("mock error"))
 				So(err.Error(), ShouldEqual, expectedError.Error())
 			})
 

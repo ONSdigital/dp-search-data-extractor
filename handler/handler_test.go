@@ -19,35 +19,14 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var testEvent = models.ContentPublished{
-	URL:          "moo.com",
-	DataType:     "Thing",
-	CollectionID: "Col123",
-}
+var (
+	testEvent = models.ContentPublished{
+		URL:          "moo.com",
+		DataType:     "Thing",
+		CollectionID: "Col123",
+	}
 
-var errorMock = errors.New("mock error")
-
-var errZebedee = errors.New("zebedee test error")
-var getPublishDataFuncInError = func(ctx context.Context, uriString string) ([]byte, error) {
-	return nil, errZebedee
-}
-
-var contentPublishedTestData = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
-var getPublishDataFunc = func(ctx context.Context, uriString string) ([]byte, error) {
-	data := []byte(contentPublishedTestData)
-	return data, nil
-}
-
-var pChannels = &kafka.ProducerChannels{
-	Output: make(chan []byte, 1),
-}
-var getChannelFunc = func() *kafka.ProducerChannels {
-	return pChannels
-}
-
-func TestContentPublishedHandler_Handle(t *testing.T) {
-
-	searchDataImportEvent1 := models.SearchDataImport{
+	searchDataImportEvent = models.SearchDataImport{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",
@@ -60,7 +39,28 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 		Title:           "",
 		TraceID:         "testTraceID",
 	}
-	expectedSearchDataImport := marshalSearchDataImport(t, searchDataImportEvent1)
+
+	errZebedee                = errors.New("zebedee test error")
+	getPublishDataFuncInError = func(ctx context.Context, uriString string) ([]byte, error) {
+		return nil, errZebedee
+	}
+
+	contentPublishedTestData = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
+	getPublishDataFunc       = func(ctx context.Context, uriString string) ([]byte, error) {
+		data := []byte(contentPublishedTestData)
+		return data, nil
+	}
+
+	pChannels = &kafka.ProducerChannels{
+		Output: make(chan []byte, 1),
+	}
+	getChannelFunc = func() *kafka.ProducerChannels {
+		return pChannels
+	}
+)
+
+func TestContentPublishedHandler_Handle(t *testing.T) {
+	expectedSearchDataImport := marshalSearchDataImport(t, searchDataImportEvent)
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
 		ChannelsFunc: getChannelFunc,
@@ -104,7 +104,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportSchema.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(searchDataImportEvent1, ShouldResemble, actual)
+				So(searchDataImportEvent, ShouldResemble, actual)
 			})
 		})
 	})
@@ -124,7 +124,6 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 			})
 		})
 	})
-
 }
 
 // marshalSearchDataImport helper method to marshal a event into a []byte
@@ -135,58 +134,3 @@ func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte
 	}
 	return bytes
 }
-
-// func TestContentPublishedHandler_Handle(t *testing.T) {
-
-// 	var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-// 	kafkaProducerMock := &kafkatest.IProducerMock{
-// 		ChannelsFunc: getChannelFunc,
-// 	}
-
-// 	marshallerMock := &mock.MarshallerMock{
-// 		MarshalFunc: func(s interface{}) ([]byte, error) {
-// 			return nil, nil
-// 		},
-// 	}
-// 	producerMock := &event.SearchDataImportProducer{
-// 		Producer:   kafkaProducerMock,
-// 		Marshaller: marshallerMock,
-// 	}
-
-// 	Convey("Given a successful event handler, when Handle is triggered", t, func() {
-
-// 		// eventHandler := &event.ContentPublishedHandler{zebedeeMock}
-// 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
-// 		filePath := "/tmp/dpSearchDataExtractor.txt"
-// 		os.Remove(filePath)
-// 		err := eventHandler.Handle(context.Background(), &config.Config{OutputFilePath: filePath}, &testEvent)
-// 		So(err, ShouldBeNil)
-// 		So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
-// 		So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-// 		So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
-// 	})
-
-// 	Convey("Given a un-successful event handler, when Handle is triggered", t, func() {
-// 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
-// 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, *producerMock}
-// 		filePath := ""
-// 		err := eventHandler.Handle(context.Background(), &config.Config{OutputFilePath: filePath}, &testEvent)
-// 		So(err, ShouldNotBeNil)
-// 		So(err.Error(), ShouldEqual, errZebedee.Error())
-// 		So(zebedeeMockInError.GetPublishedDataCalls(), ShouldNotBeEmpty)
-// 		So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 1)
-// 		So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
-// 	})
-
-// 	Convey("handler returns an error when cannot write to file", t, func() {
-// 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-
-// 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
-// 		filePath := ""
-// 		err := eventHandler.Handle(context.Background(), &config.Config{OutputFilePath: filePath}, &testEvent)
-// 		So(err, ShouldNotBeNil)
-// 		So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
-// 		So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-// 		So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
-// 	})
-// }
