@@ -37,7 +37,7 @@ var searchDataImport = `{
   ]
 }`
 
-// SearchDataImportSchema the Avro schema for search-data-import messages.
-var SearchDataImportSchema = &avro.Schema{
+// SearchDataImportEvent the Avro schema for search-data-import messages.
+var SearchDataImportEvent = &avro.Schema{
 	Definition: searchDataImport,
 }

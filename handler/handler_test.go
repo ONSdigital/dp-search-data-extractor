@@ -102,7 +102,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
-				err = schema.SearchDataImportSchema.Unmarshal(avroBytes, &actual)
+				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
 				So(searchDataImportEvent, ShouldResemble, actual)
 			})
@@ -128,7 +128,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
-	bytes, err := schema.SearchDataImportSchema.Marshal(event)
+	bytes, err := schema.SearchDataImportEvent.Marshal(event)
 	if err != nil {
 		t.Fatalf("avro mashalling failed with error : %v", err)
 	}
