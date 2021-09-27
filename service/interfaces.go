@@ -41,9 +41,3 @@ type HealthChecker interface {
 type EventConsumer interface {
 	Close(ctx context.Context) (err error)
 }
-
-// ZebedeeClient defines the zebedee client
-// type ZebedeeClient interface {
-// 	event.ZebedeeClient
-// 	Checker(context.Context, *healthcheck.CheckState) error
-// }

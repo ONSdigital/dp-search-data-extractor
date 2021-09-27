@@ -16,6 +16,11 @@ This service takes the URL, from the consumed event, and calls /publisheddata en
 http://localhost:8082/publisheddata?uri=businessindustryandtrade
 This service then logs whether Zebedee has retrieved the data successfully.
 
+###  healthcheck
+
+        make debug and then 
+        check http://localhost:25800/health
+
 **TODO** : we are simply writing the retrieved content to a file for now but in future this will be passed on to another service via an as yet unwritten kafka producer.
 
 ### Getting started
