@@ -77,7 +77,7 @@ func (e *ExternalServiceList) GetZebedee(ctx context.Context, cfg *config.Config
 
 // DoGetZebedeeClient gets and initialises the Zebedee Client
 func (e *Init) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
-	zebedeeClient := zebedee.New(cfg.ZebedeeAPIURL)
+	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
 	return zebedeeClient
 }
 

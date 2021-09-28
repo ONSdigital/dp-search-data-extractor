@@ -20,7 +20,7 @@ type Config struct {
 	ContentPublishedTopic      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 	KafkaProducerTopic         string        `envconfig:"KAFKA_PRODUCER_TOPIC"`
-	ZebedeeAPIURL              string        `envconfig:"ZEBEDEE_API_URL"`
+	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 }
 
 var cfg *Config
@@ -45,7 +45,7 @@ func Get() (*Config, error) {
 		ContentPublishedTopic:      "content-published",
 		OutputFilePath:             "/tmp/dpSearchDataExtractor.txt",
 		KafkaProducerTopic:         "search-data-import",
-		ZebedeeAPIURL:              "http://localhost:8082",
+		ZebedeeURL:                 "http://localhost:8082",
 	}
 
 	return cfg, envconfig.Process("", cfg)
