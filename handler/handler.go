@@ -31,10 +31,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 	log.Info(ctx, "event handler called", logData)
 
 	// Strip off data.json
-	uri := event.URL
-	if strings.Contains(event.URL, "/data.json") {
-		uri = strings.TrimSuffix(event.URL, "/data.json")
-	}
+	uri := strings.TrimSuffix(event.URL, "/data.json")
 	log.Info(ctx, "event.URL strip off uri", log.Data{"uri": uri})
 
 	contentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, uri)
