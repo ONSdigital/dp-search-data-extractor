@@ -21,9 +21,15 @@ import (
 
 var (
 	testEvent = models.ContentPublished{
-		URL:          "moo.com",
+		URL:          "/test",
 		DataType:     "Thing",
 		CollectionID: "Col123",
+	}
+
+	invalidTestEvent = models.ContentPublished{
+		URL:          "test/data.json",
+		DataType:     "Thing2",
+		CollectionID: "Col456",
 	}
 
 	searchDataImportEvent = models.SearchDataImport{
@@ -123,6 +129,19 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
 			})
 		})
+
+		Convey("When given a inValid event", func() {
+			err := eventHandler.Handle(context.Background(), &config.Config{}, &invalidTestEvent)
+			Convey("Then Zebedee is called 1 time with the expected error ", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldEqual, errZebedee.Error())
+				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldNotBeEmpty)
+				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 1)
+				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, "test")
+			})
+
+		})
+
 	})
 }
 
