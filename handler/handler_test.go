@@ -21,7 +21,7 @@ import (
 
 var (
 	testEvent = models.ContentPublished{
-		URL:          "moo.com",
+		URI:          "testUri",
 		DataType:     "Thing",
 		CollectionID: "Col123",
 	}
@@ -77,7 +77,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 		Marshaller: marshallerMock,
 	}
 
-	Convey("Given an event handler working successfully, and an event containing a URL", t, func() {
+	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
 
@@ -98,7 +98,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 			Convey("And then get content published from zebedee", func() {
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
+				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URI)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
@@ -108,7 +108,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 			})
 		})
 	})
-	Convey("Given an event handler not working successfully, and an event containing a URL", t, func() {
+	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, *producerMock}
 
@@ -120,7 +120,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 				So(err.Error(), ShouldEqual, errZebedee.Error())
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URL)
+				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URI)
 			})
 		})
 	})

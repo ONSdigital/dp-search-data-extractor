@@ -8,11 +8,11 @@ This service listens to the "content-published" kafka topic for events of type c
   "contentPublishedEvent": {
   "CollectionID": "",
   "DataType": "",
-  "URL": "businessindustryandtrade"
+  "URI": "businessindustryandtrade"
   }
 }
 
-This service takes the URL, from the consumed event, and calls /publisheddata endpoint on zebedee. It passes in the URL as a path parameter e.g.
+This service takes the URI, from the consumed event, and calls /publisheddata endpoint on zebedee. It passes in the URI as a path parameter e.g.
 http://localhost:8082/publisheddata?uri=businessindustryandtrade
 This service then logs whether Zebedee has retrieved the data successfully.
 

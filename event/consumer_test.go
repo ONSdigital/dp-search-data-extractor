@@ -22,7 +22,7 @@ var testCtx = context.Background()
 var errHandler = errors.New("handler error")
 
 var testEvent = models.ContentPublished{
-	URL:          "moo.com",
+	URI:          "testUri",
 	DataType:     "Thing",
 	CollectionID: "Col123",
 }

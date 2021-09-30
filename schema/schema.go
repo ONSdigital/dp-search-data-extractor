@@ -8,7 +8,7 @@ var contentPublished = `{
   "type": "record",
   "name": "content-published",
   "fields": [
-    {"name": "url", "type": "string", "default": ""},
+    {"name": "uri", "type": "string", "default": ""},
     {"name": "data_type", "type": "string", "default": ""},
     {"name": "collection_id", "type": "string", "default": ""}
   ]

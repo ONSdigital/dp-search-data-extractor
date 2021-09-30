@@ -62,12 +62,12 @@ func main() {
 func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
 	fmt.Println("--- [Send Kafka ContentPublished] ---")
 
-	fmt.Println("Please type the URL")
+	fmt.Println("Please type the URI")
 	fmt.Printf("$ ")
 	scanner.Scan()
 	name := scanner.Text()
 
 	return &models.ContentPublished{
-		URL: name,
+		URI: name,
 	}
 }

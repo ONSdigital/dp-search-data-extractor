@@ -29,7 +29,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 	}
 	log.Info(ctx, "event handler called", logData)
 
-	contentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, event.URL)
+	contentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, event.URI)
 	if err != nil {
 		return err
 	}
