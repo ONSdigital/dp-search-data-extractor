@@ -27,7 +27,7 @@ var (
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        "",
+		Keywords:        []string{},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
