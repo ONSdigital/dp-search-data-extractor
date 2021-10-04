@@ -9,7 +9,7 @@ type ContentPublished struct {
 
 // SearchDataImport provides event data for a search data import
 type SearchDataImport struct {
-	DataType        string   `avro:"type"`
+	DataType        string   `avro:"data_type"`
 	JobID           string   `avro:"job_id"`
 	SearchIndex     string   `avro:"search_index"`
 	CDID            string   `avro:"cdid"`

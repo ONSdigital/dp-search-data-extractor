@@ -21,24 +21,23 @@ import (
 var (
 	ctx = context.Background()
 
-	searchDataImportTestEvent = models.SearchDataImport{
+	expectedSearchDataImportEvent = models.SearchDataImport{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        []string{},
+		Keywords:        []string{""},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "",
-		TraceID:         "testTraceID",
 	}
 )
 
 func TestProducer_SearchDataImport(t *testing.T) {
+
 	Convey("Given SearchDataImportProducer has been configured correctly", t, func() {
-		expectedSearchDataImport := marshalSearchDataImport(t, searchDataImportTestEvent)
 
 		pChannels := &kafka.ProducerChannels{
 			Output: make(chan []byte, 1),
@@ -52,7 +51,7 @@ func TestProducer_SearchDataImport(t *testing.T) {
 
 		marshallerMock := &mock.MarshallerMock{
 			MarshalFunc: func(s interface{}) ([]byte, error) {
-				return expectedSearchDataImport, nil
+				return schema.SearchDataImportEvent.Marshal(s)
 			},
 		}
 
@@ -63,13 +62,12 @@ func TestProducer_SearchDataImport(t *testing.T) {
 		}
 		Convey("When SearchDataImport is called on the event producer", func() {
 
-			err := searchDataImportProducer.SearchDataImport(ctx, searchDataImportTestEvent)
+			err := searchDataImportProducer.SearchDataImport(ctx, expectedSearchDataImportEvent)
 			So(err, ShouldBeNil)
 
 			var avroBytes []byte
 			select {
 			case avroBytes = <-pChannels.Output:
-				fmt.Printf("avroBytes: %v\n", avroBytes)
 				log.Event(ctx, "avro byte sent to producer output", log.INFO)
 			case <-time.After(time.Second * 5):
 				log.Event(ctx, "failing test due to timed out", log.INFO)
@@ -80,7 +78,8 @@ func TestProducer_SearchDataImport(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(searchDataImportTestEvent, ShouldResemble, actual)
+				So(expectedSearchDataImportEvent, ShouldResemble, actual)
+				So(actual.TraceID, ShouldNotBeEmpty)
 			})
 		})
 	})
@@ -112,10 +111,10 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 		}
 
 		Convey("When marshaller.Marshal returns an error", func() {
-			err := searchDataImportProducer.SearchDataImport(ctx, searchDataImportTestEvent)
+			err := searchDataImportProducer.SearchDataImport(ctx, expectedSearchDataImportEvent)
 
 			Convey("Then the expected error is returned", func() {
-				expectedError := fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", searchDataImportTestEvent), errors.New("mock error"))
+				expectedError := fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", expectedSearchDataImportEvent), errors.New("mock error"))
 				So(err.Error(), ShouldEqual, expectedError.Error())
 			})
 
@@ -124,13 +123,4 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 			})
 		})
 	})
-}
-
-// marshalSearchDataImport helper method to marshal a event into a []byte
-func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
-	bytes, err := schema.SearchDataImportEvent.Marshal(event)
-	if err != nil {
-		t.Fatalf("avro mashalling failed with error : %v", err)
-	}
-	return bytes
 }

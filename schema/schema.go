@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"github.com/ONSdigital/go-ns/avro"
+	"github.com/ONSdigital/dp-kafka/v2/avro"
 )
 
 var contentPublished = `{
@@ -23,12 +23,12 @@ var searchDataImport = `{
   "type": "record",
   "name": "search-data-import",
   "fields": [
-    {"name": "type", "type": "string", "default": ""},
+    {"name": "data_type", "type": "string", "default": ""},
     {"name": "job_id", "type": "string", "default": ""},
     {"name": "search_index", "type": "string", "default": ""},
     {"name": "cdid", "type": "string", "default": ""},
     {"name": "dataset_id", "type": "string", "default": ""},
-    {"name": "keywords","type":[{"type":"array","items":"string"}]},
+    {"name": "keywords","type":["null",{"type":"array","items":"string"}]},
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},

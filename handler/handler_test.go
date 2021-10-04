@@ -26,13 +26,13 @@ var (
 		CollectionID: "Col123",
 	}
 
-	searchDataImportEvent = models.SearchDataImport{
+	expectedSearchDataImportEvent = models.SearchDataImport{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        []string{},
+		Keywords:        []string{"testkeyword1", "testkeyword2"},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
@@ -60,12 +60,13 @@ var (
 )
 
 func TestContentPublishedHandler_Handle(t *testing.T) {
-	expectedSearchDataImport := marshalSearchDataImport(t, searchDataImportEvent)
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
 		ChannelsFunc: getChannelFunc,
 	}
 
+	//for mock marshaller
+	expectedSearchDataImport := marshalSearchDataImport(t, expectedSearchDataImportEvent)
 	marshallerMock := &mock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {
 			return expectedSearchDataImport, nil
@@ -104,7 +105,7 @@ func TestContentPublishedHandler_Handle(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(searchDataImportEvent, ShouldResemble, actual)
+				So(expectedSearchDataImportEvent, ShouldResemble, actual)
 			})
 		})
 	})
