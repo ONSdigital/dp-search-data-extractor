@@ -28,19 +28,6 @@ var (
 		CollectionID: "Col123",
 	}
 
-	expectedSearchDataImportEvent = models.SearchDataImport{
-		DataType:        "testDataType",
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            "",
-		DatasetID:       "",
-		Keywords:        []string{"testkeyword1", "testkeyword2"},
-		MetaDescription: "",
-		Summary:         "",
-		ReleaseDate:     "",
-		Title:           "testTitle",
-	}
-
 	errZebedee                = errors.New("zebedee test error")
 	getPublishDataFuncInError = func(ctx context.Context, uriString string) ([]byte, error) {
 		return nil, errZebedee
@@ -60,7 +47,20 @@ var (
 	}
 )
 
-func TestContentPublishedHandlerForZebedeeReturingMandatoryFields(t *testing.T) {
+func TestHandlerForZebedeeReturingMandatoryFields(t *testing.T) {
+
+	expectedSearchDataImportEvent := models.SearchDataImport{
+		DataType:        "testDataType",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword1", "testkeyword2"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTitle",
+	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
 		ChannelsFunc: getChannelFunc,
@@ -132,15 +132,6 @@ func TestContentPublishedHandlerForZebedeeReturingMandatoryFields(t *testing.T) 
 			})
 		})
 	})
-}
-
-// marshalSearchDataImport helper method to marshal a event into a []byte
-func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
-	bytes, err := schema.SearchDataImportEvent.Marshal(event)
-	if err != nil {
-		t.Fatalf("avro mashalling failed with error : %v", err)
-	}
-	return bytes
 }
 
 func TestHandlerForZebedeeReturingAllFields(t *testing.T) {
@@ -215,10 +206,16 @@ func TestHandlerForZebedeeReturingAllFields(t *testing.T) {
 				So(expectedFullSearchDataImportEvent.JobID, ShouldResemble, actual.JobID)
 				So(expectedFullSearchDataImportEvent.Keywords, ShouldResemble, actual.Keywords)
 				So(actual.TraceID, ShouldNotBeNil)
-
-				// So(expectedFullSearchDataImportEvent, ShouldResemble, actual)
 			})
 		})
 	})
+}
 
+// marshalSearchDataImport helper method to marshal a event into a []byte
+func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
+	bytes, err := schema.SearchDataImportEvent.Marshal(event)
+	if err != nil {
+		t.Fatalf("avro mashalling failed with error : %v", err)
+	}
+	return bytes
 }
