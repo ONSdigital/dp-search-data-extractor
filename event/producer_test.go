@@ -66,20 +66,18 @@ func TestProducer_SearchDataImport(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			var avroBytes []byte
+			var testTimeout = time.Second * 5
 			select {
 			case avroBytes = <-pChannels.Output:
 				log.Event(ctx, "avro byte sent to producer output", log.INFO)
-			case <-time.After(time.Second * 5):
-				log.Event(ctx, "failing test due to timed out", log.INFO)
+			case <-time.After(testTimeout):
+				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
 			}
 
 			Convey("Then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
-
-				fmt.Printf("******avroBytes, %v", string(avroBytes))
-
 				So(err, ShouldBeNil)
 				So(expectedSearchDataImportEvent, ShouldResemble, actual)
 			})
