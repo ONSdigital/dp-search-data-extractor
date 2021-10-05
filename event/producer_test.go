@@ -77,9 +77,11 @@ func TestProducer_SearchDataImport(t *testing.T) {
 			Convey("Then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
+
+				fmt.Printf("******avroBytes, %v", string(avroBytes))
+
 				So(err, ShouldBeNil)
 				So(expectedSearchDataImportEvent, ShouldResemble, actual)
-				So(actual.TraceID, ShouldNotBeEmpty)
 			})
 		})
 	})
