@@ -10,7 +10,6 @@ require (
 	github.com/ONSdigital/dp-healthcheck v1.1.0
 	github.com/ONSdigital/dp-kafka/v2 v2.4.2
 	github.com/ONSdigital/dp-net v1.2.0
-	github.com/ONSdigital/log.go v1.1.0
 	github.com/ONSdigital/log.go/v2 v2.0.9
 	github.com/aws/aws-sdk-go v1.38.45 // indirect
 	github.com/cucumber/godog v0.11.0

@@ -19,8 +19,6 @@ import (
 )
 
 var (
-	ctx = context.Background()
-
 	testTimeout = time.Second * 5
 
 	testEvent = models.ContentPublished{
@@ -108,15 +106,16 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(expectedSearchDataImportEvent.DataType, ShouldEqual, actual.DataType)
-				So(expectedSearchDataImportEvent.JobID, ShouldEqual, actual.JobID)
-				So(expectedSearchDataImportEvent.Keywords[0], ShouldEqual, actual.Keywords[0])
-				So(expectedSearchDataImportEvent.Keywords[1], ShouldEqual, actual.Keywords[1])
-				So(expectedSearchDataImportEvent.Keywords, ShouldHaveLength, 2)
+				So(actual.DataType, ShouldEqual, expectedSearchDataImportEvent.DataType)
+				So(actual.JobID, ShouldEqual, expectedSearchDataImportEvent.JobID)
+				So(actual.Keywords, ShouldHaveLength, 2)
+				So(actual.Keywords[0], ShouldEqual, expectedSearchDataImportEvent.Keywords[0])
+				So(actual.Keywords[1], ShouldEqual, expectedSearchDataImportEvent.Keywords[1])
+				So(actual.MetaDescription, ShouldEqual, expectedSearchDataImportEvent.MetaDescription)
+				So(actual.Summary, ShouldEqual, expectedSearchDataImportEvent.Summary)
+				So(actual.ReleaseDate, ShouldEqual, expectedSearchDataImportEvent.ReleaseDate)
+				So(actual.Title, ShouldEqual, expectedSearchDataImportEvent.Title)
 				So(actual.TraceID, ShouldNotBeNil)
-				So(expectedSearchDataImportEvent.MetaDescription, ShouldEqual, actual.MetaDescription)
-				So(expectedSearchDataImportEvent.Summary, ShouldEqual, actual.Summary)
-				So(expectedSearchDataImportEvent.ReleaseDate, ShouldEqual, actual.ReleaseDate)
 			})
 		})
 	})
@@ -205,10 +204,17 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(expectedFullSearchDataImportEvent.DataType, ShouldEqual, actual.DataType)
-				So(expectedFullSearchDataImportEvent.JobID, ShouldEqual, actual.JobID)
-				So(expectedFullSearchDataImportEvent.Keywords[0], ShouldResemble, actual.Keywords[0])
+				So(actual.DataType, ShouldEqual, expectedFullSearchDataImportEvent.DataType)
+				So(actual.JobID, ShouldEqual, expectedFullSearchDataImportEvent.JobID)
 				So(expectedFullSearchDataImportEvent.Keywords, ShouldHaveLength, 1)
+				So(actual.Keywords[0], ShouldEqual, expectedFullSearchDataImportEvent.Keywords[0])
+				So(actual.SearchIndex, ShouldEqual, expectedFullSearchDataImportEvent.SearchIndex)
+				So(actual.CDID, ShouldEqual, expectedFullSearchDataImportEvent.CDID)
+				So(actual.DatasetID, ShouldEqual, expectedFullSearchDataImportEvent.DatasetID)
+				So(actual.MetaDescription, ShouldEqual, expectedFullSearchDataImportEvent.MetaDescription)
+				So(actual.Summary, ShouldEqual, expectedFullSearchDataImportEvent.Summary)
+				So(actual.ReleaseDate, ShouldEqual, expectedFullSearchDataImportEvent.ReleaseDate)
+				So(actual.Title, ShouldEqual, expectedFullSearchDataImportEvent.Title)
 				So(actual.TraceID, ShouldNotBeNil)
 			})
 		})
