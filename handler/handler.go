@@ -50,7 +50,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config
 	//Mapping Json to Avro
 	searchData := models.SearchDataImport{
 		DataType:        zebedeeData.DataType,
-		JobID:           "JobId",
+		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            zebedeeData.Description.CDID,
 		DatasetID:       zebedeeData.Description.DatasetID,

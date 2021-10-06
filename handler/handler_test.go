@@ -15,12 +15,13 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/handler"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
-	"github.com/ONSdigital/log.go/log"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
 	ctx = context.Background()
+
+	testTimeout = time.Second * 5
 
 	testEvent = models.ContentPublished{
 		URI:          "testUri",
@@ -47,7 +48,7 @@ var (
 	}
 )
 
-func TestHandlerForZebedeeReturingMandatoryFields(t *testing.T) {
+func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 
 	expectedSearchDataImportEvent := models.SearchDataImport{
 		DataType:        "testDataType",
@@ -87,10 +88,9 @@ func TestHandlerForZebedeeReturingMandatoryFields(t *testing.T) {
 			err := eventHandler.Handle(context.Background(), &config.Config{}, &testEvent)
 
 			var avroBytes []byte
-			var testTimeout = time.Second * 5
 			select {
 			case avroBytes = <-pChannels.Output:
-				log.Event(ctx, "avro byte sent to producer output", log.INFO)
+				t.Log("avro byte sent to producer output")
 			case <-time.After(testTimeout):
 				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
@@ -108,11 +108,15 @@ func TestHandlerForZebedeeReturingMandatoryFields(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(expectedSearchDataImportEvent.DataType, ShouldResemble, actual.DataType)
-				So(expectedSearchDataImportEvent.JobID, ShouldResemble, actual.JobID)
-				So(expectedSearchDataImportEvent.Keywords, ShouldResemble, actual.Keywords)
-				So(expectedSearchDataImportEvent.Title, ShouldResemble, actual.Title)
+				So(expectedSearchDataImportEvent.DataType, ShouldEqual, actual.DataType)
+				So(expectedSearchDataImportEvent.JobID, ShouldEqual, actual.JobID)
+				So(expectedSearchDataImportEvent.Keywords[0], ShouldEqual, actual.Keywords[0])
+				So(expectedSearchDataImportEvent.Keywords[1], ShouldEqual, actual.Keywords[1])
+				So(expectedSearchDataImportEvent.Keywords, ShouldHaveLength, 2)
 				So(actual.TraceID, ShouldNotBeNil)
+				So(expectedSearchDataImportEvent.MetaDescription, ShouldEqual, actual.MetaDescription)
+				So(expectedSearchDataImportEvent.Summary, ShouldEqual, actual.Summary)
+				So(expectedSearchDataImportEvent.ReleaseDate, ShouldEqual, actual.ReleaseDate)
 			})
 		})
 	})
@@ -134,11 +138,11 @@ func TestHandlerForZebedeeReturingMandatoryFields(t *testing.T) {
 	})
 }
 
-func TestHandlerForZebedeeReturingAllFields(t *testing.T) {
+func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 	expectedFullSearchDataImportEvent := models.SearchDataImport{
 		DataType:        "testDataType",
-		JobID:           "JobId",
+		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "testCDID",
 		DatasetID:       "testDaetasetId",
@@ -181,10 +185,9 @@ func TestHandlerForZebedeeReturingAllFields(t *testing.T) {
 			err := eventHandler.Handle(context.Background(), &config.Config{}, &testEvent)
 
 			var avroBytes []byte
-			var testTimeout = time.Second * 5
 			select {
 			case avroBytes = <-pChannels.Output:
-				log.Event(ctx, "avro byte sent to producer output", log.INFO)
+				t.Log("avro byte sent to producer output")
 			case <-time.After(testTimeout):
 				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
@@ -202,9 +205,10 @@ func TestHandlerForZebedeeReturingAllFields(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(expectedFullSearchDataImportEvent.DataType, ShouldResemble, actual.DataType)
-				So(expectedFullSearchDataImportEvent.JobID, ShouldResemble, actual.JobID)
-				So(expectedFullSearchDataImportEvent.Keywords, ShouldResemble, actual.Keywords)
+				So(expectedFullSearchDataImportEvent.DataType, ShouldEqual, actual.DataType)
+				So(expectedFullSearchDataImportEvent.JobID, ShouldEqual, actual.JobID)
+				So(expectedFullSearchDataImportEvent.Keywords[0], ShouldResemble, actual.Keywords[0])
+				So(expectedFullSearchDataImportEvent.Keywords, ShouldHaveLength, 1)
 				So(actual.TraceID, ShouldNotBeNil)
 			})
 		})

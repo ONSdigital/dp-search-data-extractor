@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
-	"github.com/ONSdigital/log.go/log"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -69,7 +68,7 @@ func TestProducer_SearchDataImport(t *testing.T) {
 			var testTimeout = time.Second * 5
 			select {
 			case avroBytes = <-pChannels.Output:
-				log.Event(ctx, "avro byte sent to producer output", log.INFO)
+				t.Log("avro byte sent to producer output")
 			case <-time.After(testTimeout):
 				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
