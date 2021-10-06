@@ -206,7 +206,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual.DataType, ShouldEqual, expectedFullSearchDataImportEvent.DataType)
 				So(actual.JobID, ShouldEqual, expectedFullSearchDataImportEvent.JobID)
-				So(expectedFullSearchDataImportEvent.Keywords, ShouldHaveLength, 1)
+				So(actual.Keywords, ShouldHaveLength, 1)
 				So(actual.Keywords[0], ShouldEqual, expectedFullSearchDataImportEvent.Keywords[0])
 				So(actual.SearchIndex, ShouldEqual, expectedFullSearchDataImportEvent.SearchIndex)
 				So(actual.CDID, ShouldEqual, expectedFullSearchDataImportEvent.CDID)
