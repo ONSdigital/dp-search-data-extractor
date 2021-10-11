@@ -69,7 +69,7 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler,
 
 	log.Info(ctx, "event processed - committing message", log.Data{"event": event})
 	message.Commit()
-	log.Info(ctx, "message committed", log.Data{"event": event})
+	log.Info(ctx, "consumed message committed", log.Data{"event": event})
 }
 
 // unmarshal converts a event instance to []byte.

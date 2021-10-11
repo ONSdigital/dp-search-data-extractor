@@ -94,7 +94,19 @@ func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.
 // DoGetKafkaConsumer returns a Kafka Consumer group
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
-	kafkaOffset := dpkafka.OffsetNewest
+
+	pConfig := &dpkafka.ProducerConfig{
+		KafkaVersion: &cfg.KafkaVersion,
+	}
+	if cfg.KafkaSecProtocol == "TLS" {
+		pConfig.SecurityConfig = dpkafka.GetSecurityConfig(
+			cfg.KafkaSecCACerts,
+			cfg.KafkaSecClientCert,
+			cfg.KafkaSecClientKey,
+			cfg.KafkaSecSkipVerify,
+		)
+	}
+	kafkaOffset := dpkafka.OffsetOldest
 	if cfg.KafkaOffsetOldest {
 		kafkaOffset = dpkafka.OffsetOldest
 	}
@@ -130,6 +142,15 @@ func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpka
 	pChannels := dpkafka.CreateProducerChannels()
 	pConfig := &dpkafka.ProducerConfig{
 		KafkaVersion: &cfg.KafkaVersion,
+	}
+
+	if cfg.KafkaSecProtocol == "TLS" {
+		pConfig.SecurityConfig = dpkafka.GetSecurityConfig(
+			cfg.KafkaSecCACerts,
+			cfg.KafkaSecClientCert,
+			cfg.KafkaSecClientKey,
+			cfg.KafkaSecSkipVerify,
+		)
 	}
 	producer, err := dpkafka.NewProducer(ctx, cfg.KafkaAddr, cfg.KafkaProducerTopic, pChannels, pConfig)
 	if err != nil {

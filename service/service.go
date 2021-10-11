@@ -41,6 +41,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	// Get the zebedee client
 	zebedeeClient := serviceList.GetZebedee(ctx, cfg)
 	// Get Kafka consumer
+
 	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
@@ -115,6 +116,7 @@ func (svc *Service) Close(ctx context.Context) error {
 		if svc.serviceList.HealthCheck {
 			svc.healthCheck.Stop()
 		}
+		
 		// If kafka consumer exists, stop listening to it.
 		// This will automatically stop the event consumer loops and no more messages will be processed.
 		// The kafka consumer will be closed after the service shuts down.
