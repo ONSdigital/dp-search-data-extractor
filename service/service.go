@@ -116,7 +116,7 @@ func (svc *Service) Close(ctx context.Context) error {
 		if svc.serviceList.HealthCheck {
 			svc.healthCheck.Stop()
 		}
-		
+
 		// If kafka consumer exists, stop listening to it.
 		// This will automatically stop the event consumer loops and no more messages will be processed.
 		// The kafka consumer will be closed after the service shuts down.

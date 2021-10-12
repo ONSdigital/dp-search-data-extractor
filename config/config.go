@@ -12,7 +12,7 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"                     json:"-"`
+	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"                   json:"-"`
 	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
@@ -20,7 +20,7 @@ type Config struct {
 	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"`
 	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
 	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
-	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`	
+	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	ContentPublishedGroup      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_GROUP"`
 	ContentPublishedTopic      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
@@ -44,6 +44,11 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		KafkaAddr:                  []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
+		KafkaSecProtocol:           "",
+		KafkaSecCACerts:            "",
+		KafkaSecClientCert:         "",
+		KafkaSecClientKey:          "",
+		KafkaSecSkipVerify:         false,
 		KafkaOffsetOldest:          true,
 		KafkaNumWorkers:            1,
 		ContentPublishedGroup:      "dp-search-data-extractor",
