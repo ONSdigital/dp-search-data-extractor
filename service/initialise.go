@@ -10,6 +10,7 @@ import (
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
@@ -98,8 +99,13 @@ func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
 
+	kafkaOffset := dpkafka.OffsetNewest
+	if cfg.KafkaOffsetOldest {
+		kafkaOffset = dpkafka.OffsetOldest
+	}
 	cConfig := &dpkafka.ConsumerGroupConfig{
 		KafkaVersion: &cfg.KafkaVersion,
+		Offset:       &kafkaOffset,
 	}
 	if cfg.KafkaSecProtocol == KafkaTLSProtocolFlag {
 		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
@@ -109,20 +115,14 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 			cfg.KafkaSecSkipVerify,
 		)
 	}
-	kafkaOffset := dpkafka.OffsetNewest
-	if cfg.KafkaOffsetOldest {
-		kafkaOffset = dpkafka.OffsetOldest
-	}
+
 	kafkaConsumer, err := dpkafka.NewConsumerGroup(
 		ctx,
 		cfg.KafkaAddr,
 		cfg.ContentPublishedTopic,
 		cfg.ContentPublishedGroup,
 		cgChannels,
-		&dpkafka.ConsumerGroupConfig{
-			KafkaVersion: &cfg.KafkaVersion,
-			Offset:       &kafkaOffset,
-		},
+		cConfig,
 	)
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpka
 	}
 	producer, err := dpkafka.NewProducer(ctx, cfg.KafkaAddr, cfg.KafkaProducerTopic, pChannels, pConfig)
 	if err != nil {
-		// log.Fatal(ctx, "new kafka producer returned an error", err, log.Data{"topic": topic})
+		log.Fatal(ctx, "kafka producer returned an error", err, log.Data{"topic": cfg.KafkaProducerTopic})
 		return nil, err
 	}
 

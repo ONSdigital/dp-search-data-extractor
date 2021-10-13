@@ -12,7 +12,7 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"                   json:"-"`
+	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"`
 	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
