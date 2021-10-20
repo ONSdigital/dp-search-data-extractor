@@ -46,7 +46,7 @@ func TestConsume(t *testing.T) {
 
 		handlerWg := &sync.WaitGroup{}
 		mockEventHandler := &mock.HandlerMock{
-			HandleFunc: func(ctx context.Context, config *config.Config, event *models.ContentPublished) error {
+			HandleFunc: func(ctx context.Context, event *models.ContentPublished) error {
 				defer handlerWg.Done()
 				return nil
 			},
@@ -106,7 +106,7 @@ func TestConsume(t *testing.T) {
 		})
 
 		Convey("With a failing handler and a kafka message with the valid schema being sent to the Upstream channel", func() {
-			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *models.ContentPublished) error {
+			mockEventHandler.HandleFunc = func(ctx context.Context, event *models.ContentPublished) error {
 				defer handlerWg.Done()
 				return errHandler
 			}

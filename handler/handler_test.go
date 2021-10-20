@@ -9,7 +9,6 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
-	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/handler"
@@ -83,7 +82,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &config.Config{}, &testEvent)
+			err := eventHandler.Handle(context.Background(), &testEvent)
 
 			var avroBytes []byte
 			select {
@@ -124,7 +123,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &config.Config{}, &testEvent)
+			err := eventHandler.Handle(context.Background(), &testEvent)
 
 			Convey("Then Zebedee is called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
@@ -181,7 +180,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 		Convey("When given a valid event", func() {
 
-			err := eventHandler.Handle(context.Background(), &config.Config{}, &testEvent)
+			err := eventHandler.Handle(context.Background(), &testEvent)
 
 			var avroBytes []byte
 			select {

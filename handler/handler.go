@@ -7,7 +7,6 @@ import (
 	"github.com/ONSdigital/dp-net/request"
 
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
-	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -20,7 +19,7 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, cfg *config.Config, event *models.ContentPublished) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished) (err error) {
 
 	traceID := request.NewRequestID(16)
 
