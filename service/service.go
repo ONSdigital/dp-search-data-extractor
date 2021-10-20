@@ -134,7 +134,7 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		// If kafka producder exists, close it.
+		// If kafka producer exists, close it.
 		if svc.serviceList.KafkaProducer {
 			log.Info(ctx, "closing kafka producer")
 			if err := svc.producer.Close(ctx); err != nil {
