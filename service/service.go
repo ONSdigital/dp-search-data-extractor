@@ -39,7 +39,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	r := mux.NewRouter()
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 	// Get the zebedee client
-	zebedeeClient := serviceList.GetZebedee(ctx, cfg)
+	zebedeeClient := serviceList.GetZebedee(cfg)
 	// Get Kafka consumer
 
 	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)

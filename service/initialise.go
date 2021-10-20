@@ -73,14 +73,14 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // GetZebedee return zebedee client
-func (e *ExternalServiceList) GetZebedee(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
-	zebedeeClient := e.Init.DoGetZebedeeClient(ctx, cfg)
+func (e *ExternalServiceList) GetZebedee(cfg *config.Config) clients.ZebedeeClient {
+	zebedeeClient := e.Init.DoGetZebedeeClient(cfg)
 	e.ZebedeeClient = true
 	return zebedeeClient
 }
 
 // DoGetZebedeeClient gets and initialises the Zebedee Client
-func (e *Init) DoGetZebedeeClient(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
+func (e *Init) DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient {
 	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
 	return zebedeeClient
 }

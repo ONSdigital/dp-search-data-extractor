@@ -92,7 +92,7 @@ func TestRun(t *testing.T) {
 			return serverMock
 		}
 
-		funcDoGetZebedeeOk := func(ctx context.Context, cfg *config.Config) clients.ZebedeeClient {
+		funcDoGetZebedeeOk := func(cfg *config.Config) clients.ZebedeeClient {
 			return zebedeeMock
 		}
 
@@ -245,7 +245,7 @@ func TestClose(t *testing.T) {
 				},
 				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) { return consumerMock, nil },
 				DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) { return producerMock, nil },
-				DoGetZebedeeClientFunc: func(ctx context.Context, cfg *config.Config) clients.ZebedeeClient { return zebedeeMock },
+				DoGetZebedeeClientFunc: func(cfg *config.Config) clients.ZebedeeClient { return zebedeeMock },
 			}
 
 			svcErrors := make(chan error, 1)
@@ -273,7 +273,7 @@ func TestClose(t *testing.T) {
 				},
 				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) { return consumerMock, nil },
 				DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) { return producerMock, nil },
-				DoGetZebedeeClientFunc: func(ctx context.Context, cfg *config.Config) clients.ZebedeeClient { return zebedeeMock },
+				DoGetZebedeeClientFunc: func(cfg *config.Config) clients.ZebedeeClient { return zebedeeMock },
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)

@@ -20,7 +20,7 @@ type Initialiser interface {
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
 	DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error)
 	DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error)
-	DoGetZebedeeClient(ctx context.Context, cfg *config.Config) clients.ZebedeeClient
+	DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient
 }
 
 // HTTPServer defines the required methods from the HTTP server
