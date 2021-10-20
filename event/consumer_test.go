@@ -6,9 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ONSdigital/dp-search-data-extractor/config"
-
 	kafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
@@ -25,14 +24,6 @@ var testEvent = models.ContentPublished{
 	URI:          "testUri",
 	DataType:     "Thing",
 	CollectionID: "Col123",
-}
-
-// kafkaStubConsumer mock which exposes Channels function returning empty channels
-// to be used on tests that are not supposed to receive any kafka message
-var kafkaStubConsumer = &kafkatest.IConsumerGroupMock{
-	ChannelsFunc: func() *kafka.ConsumerGroupChannels {
-		return &kafka.ConsumerGroupChannels{}
-	},
 }
 
 func TestConsume(t *testing.T) {
