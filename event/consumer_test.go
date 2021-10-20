@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
