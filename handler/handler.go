@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	"github.com/ONSdigital/dp-net/request"
-
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
@@ -13,7 +12,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-// ContentPublishedHandler
+// ContentPublishedHandler struct to hold handle for zebedee client and the producer
 type ContentPublishedHandler struct {
 	ZebedeeCli clients.ZebedeeClient
 	Producer   event.SearchDataImportProducer

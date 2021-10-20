@@ -90,7 +90,6 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 			case avroBytes = <-pChannels.Output:
 				t.Log("avro byte sent to producer output")
 			case <-time.After(testTimeout):
-				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
 			}
 
@@ -188,7 +187,6 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 			case avroBytes = <-pChannels.Output:
 				t.Log("avro byte sent to producer output")
 			case <-time.After(testTimeout):
-				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
 			}
 

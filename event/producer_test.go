@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
-
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -35,7 +34,6 @@ var (
 )
 
 func TestProducer_SearchDataImport(t *testing.T) {
-
 	Convey("Given SearchDataImportProducer has been configured correctly", t, func() {
 
 		pChannels := &kafka.ProducerChannels{
