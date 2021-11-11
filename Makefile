@@ -9,6 +9,10 @@ LDFLAGS = -ldflags "-X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMM
 .PHONY: all
 all: audit test build
 
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
 .PHONY: audit
 audit:
 	go list -m all | nancy sleuth
@@ -17,7 +21,7 @@ lint:
 	exit
 
 .PHONY: build
-build:
+build: fmt
 	go build -tags 'production' $(LDFLAGS) -o $(BINPATH)/dp-search-data-extractor
 
 .PHONY: debug
@@ -26,8 +30,8 @@ debug:
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-search-data-extractor
 
 .PHONY: test
-test:
-	go test -race -cover ./...
+test: fmt
+	go test -count=1 -race -cover ./...
 
 .PHONY: produce
 produce:

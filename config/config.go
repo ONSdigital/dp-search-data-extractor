@@ -23,7 +23,6 @@ type Config struct {
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	ContentPublishedGroup      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_GROUP"`
 	ContentPublishedTopic      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
-	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 	KafkaProducerTopic         string        `envconfig:"KAFKA_PRODUCER_TOPIC"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 }
@@ -53,7 +52,6 @@ func Get() (*Config, error) {
 		KafkaNumWorkers:            1,
 		ContentPublishedGroup:      "dp-search-data-extractor",
 		ContentPublishedTopic:      "content-published",
-		OutputFilePath:             "/tmp/dpSearchDataExtractor.txt",
 		KafkaProducerTopic:         "search-data-import",
 		ZebedeeURL:                 "http://localhost:8082",
 	}

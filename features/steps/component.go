@@ -15,6 +15,9 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/service/mock"
 )
 
+// outputFilePath is used for event received by the service.
+const outputFilePath = "/tmp/dpSearchDataExtractor.txt"
+
 type Component struct {
 	componenttest.ErrorFeature
 	serviceList   *service.ExternalServiceList
@@ -53,11 +56,11 @@ func NewComponent() *Component {
 }
 
 func (c *Component) Close() {
-	os.Remove(c.cfg.OutputFilePath)
+	os.Remove(outputFilePath)
 }
 
 func (c *Component) Reset() {
-	os.Remove(c.cfg.OutputFilePath)
+	os.Remove(outputFilePath)
 }
 
 func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {

@@ -23,7 +23,7 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (c *Component) iShouldReceiveAKafkaResponse() error {
-	content, err := ioutil.ReadFile(c.cfg.OutputFilePath)
+	content, err := ioutil.ReadFile(outputFilePath)
 	if err != nil {
 		return err
 	}
