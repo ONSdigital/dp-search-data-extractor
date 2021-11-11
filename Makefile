@@ -30,7 +30,7 @@ debug:
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-search-data-extractor
 
 .PHONY: test
-test: fmt
+test:
 	go test -count=1 -race -cover ./...
 
 .PHONY: produce
