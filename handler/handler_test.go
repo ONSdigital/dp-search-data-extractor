@@ -218,6 +218,38 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 	})
 }
 
+func TestValidateMoreThanFiveKeywords(t *testing.T) {
+
+	Convey("Given a keywords as received from zebedee", t, func() {
+		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
+
+		Convey("When passed to validate the keywords", func() {
+			actual := handler.ValidateKeywords(testKeywords)
+
+			Convey("Then keywords should be validated with correct size with expected elements", func() {
+				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5"}
+				So(actual, ShouldResemble, expectedKeywords)
+			})
+		})
+	})
+}
+
+func TestValidateLessThanFiveKeywords(t *testing.T) {
+
+	Convey("Given a keywords as received from zebedee", t, func() {
+		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4"}
+
+		Convey("When passed to validate the keywords", func() {
+			actual := handler.ValidateKeywords(testKeywords)
+
+			Convey("Then the same keywords should be returned", func() {
+				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4"}
+				So(actual, ShouldResemble, expectedKeywords)
+			})
+		})
+	})
+}
+
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
 	bytes, err := schema.SearchDataImportEvent.Marshal(event)

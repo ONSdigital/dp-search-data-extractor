@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
@@ -45,6 +46,9 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		return err
 	}
 
+	//keywords validation
+	validKeywords := ValidateKeywords(zebedeeData.Description.Keywords)
+
 	//Mapping Json to Avro
 	searchData := models.SearchDataImport{
 		DataType:        zebedeeData.DataType,
@@ -52,7 +56,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		SearchIndex:     "ONS",
 		CDID:            zebedeeData.Description.CDID,
 		DatasetID:       zebedeeData.Description.DatasetID,
-		Keywords:        zebedeeData.Description.Keywords,
+		Keywords:        validKeywords,
 		MetaDescription: zebedeeData.Description.MetaDescription,
 		Summary:         zebedeeData.Description.Summary,
 		ReleaseDate:     zebedeeData.Description.ReleaseDate,
@@ -67,6 +71,25 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 	}
 
 	log.Info(ctx, "event successfully handled", logData)
-
 	return nil
+}
+
+// incoming keywords validation
+func ValidateKeywords(keywords []string) []string {
+
+	var strArray []string
+	validKeywords := make([]string, 0)
+
+	for i := range keywords {
+		strArray = strings.Split(keywords[i], ",")
+		for j := range strArray {
+			validKeywords = append(validKeywords, strArray[j])
+		}
+	}
+
+	if len(validKeywords) < 5 {
+		return validKeywords
+	} else {
+		return validKeywords[:5]
+	}
 }
