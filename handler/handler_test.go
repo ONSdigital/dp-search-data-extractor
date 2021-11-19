@@ -250,6 +250,37 @@ func TestValidateLessThanFiveKeywords(t *testing.T) {
 	})
 }
 
+func TestValidateWithEmptyKeywords(t *testing.T) {
+
+	Convey("Given a keywords as received from zebedee", t, func() {
+		testKeywords := []string{""}
+
+		Convey("When passed to validate the keywords", func() {
+			actual := handler.ValidateKeywords(testKeywords)
+
+			Convey("Then keywords should be validated with correct size with expected elements", func() {
+				So(actual, ShouldResemble, testKeywords)
+			})
+		})
+	})
+}
+
+func TestValidateWithTrimmingKeywords(t *testing.T) {
+
+	Convey("Given a keywords as received from zebedee", t, func() {
+		testKeywords := []string{"  testKeywords1,testKeywords2   "}
+
+		Convey("When passed to validate the keywords", func() {
+			actual := handler.ValidateKeywords(testKeywords)
+
+			Convey("Then keywords should be validated with correct size with expected elements", func() {
+				expectedKeywords := []string{"testKeywords1","testKeywords2"}
+				So(actual, ShouldResemble, expectedKeywords)
+			})
+		})
+	})
+}
+
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
 	bytes, err := schema.SearchDataImportEvent.Marshal(event)

@@ -12,6 +12,8 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
+const keywordsSize = 5
+
 // ContentPublishedHandler struct to hold handle for zebedee client and the producer
 type ContentPublishedHandler struct {
 	ZebedeeCli clients.ZebedeeClient
@@ -82,14 +84,16 @@ func ValidateKeywords(keywords []string) []string {
 
 	for i := range keywords {
 		strArray = strings.Split(keywords[i], ",")
+
 		for j := range strArray {
-			validKeywords = append(validKeywords, strArray[j])
+			keyword := strings.TrimSpace(strArray[j])
+			validKeywords = append(validKeywords, keyword)
 		}
 	}
 
-	if len(validKeywords) < 5 {
+	if len(validKeywords) < keywordsSize {
 		return validKeywords
-	} else {
-		return validKeywords[:5]
 	}
+
+	return validKeywords[:keywordsSize]
 }
