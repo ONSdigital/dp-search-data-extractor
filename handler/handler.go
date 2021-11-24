@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	"github.com/ONSdigital/dp-net/request"
@@ -12,8 +13,6 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-const keywordsSize = 5
-
 // ContentPublishedHandler struct to hold handle for zebedee client and the producer
 type ContentPublishedHandler struct {
 	ZebedeeCli clients.ZebedeeClient
@@ -21,7 +20,7 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit string) (err error) {
 
 	traceID := request.NewRequestID(16)
 
@@ -49,7 +48,15 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 	}
 
 	//keywords validation
-	validKeywords := ValidateKeywords(zebedeeData.Description.Keywords)
+	logData = log.Data{
+		"keywords":      zebedeeData.Description.Keywords,
+		"keywordsLimit": keywordsLimit,
+	}
+	validKeywords, err := ValidateKeywords(zebedeeData.Description.Keywords, keywordsLimit)
+	if err != nil {
+		log.Info(ctx, "failed to get keywords limit", logData)
+		return err
+	}
 
 	//Mapping Json to Avro
 	searchData := models.SearchDataImport{
@@ -77,7 +84,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 }
 
 // incoming keywords validation
-func ValidateKeywords(keywords []string) []string {
+func ValidateKeywords(keywords []string, keywordsLimit string) ([]string, error) {
 
 	var strArray []string
 	validKeywords := make([]string, 0)
@@ -91,9 +98,18 @@ func ValidateKeywords(keywords []string) []string {
 		}
 	}
 
-	if len(validKeywords) < keywordsSize {
-		return validKeywords
+	intKeywordsLimit, err := strconv.Atoi(keywordsLimit) //ASCII to integer
+	if err != nil {
+		return keywords, err
 	}
 
-	return validKeywords[:keywordsSize]
+	if intKeywordsLimit == 0 {
+		return []string{""}, nil
+	}
+
+	if (len(validKeywords) < intKeywordsLimit) || (intKeywordsLimit == -1) {
+		return validKeywords, nil
+	}
+
+	return validKeywords[:intKeywordsLimit], nil
 }
