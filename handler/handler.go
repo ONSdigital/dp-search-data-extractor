@@ -89,15 +89,6 @@ func ValidateKeywords(keywords []string, keywordsLimit string) ([]string, error)
 	var strArray []string
 	validKeywords := make([]string, 0)
 
-	for i := range keywords {
-		strArray = strings.Split(keywords[i], ",")
-
-		for j := range strArray {
-			keyword := strings.TrimSpace(strArray[j])
-			validKeywords = append(validKeywords, keyword)
-		}
-	}
-
 	intKeywordsLimit, err := strconv.Atoi(keywordsLimit) //ASCII to integer
 	if err != nil {
 		return keywords, err
@@ -105,6 +96,15 @@ func ValidateKeywords(keywords []string, keywordsLimit string) ([]string, error)
 
 	if intKeywordsLimit == 0 {
 		return []string{""}, nil
+	}
+
+	for i := range keywords {
+		strArray = strings.Split(keywords[i], ",")
+
+		for j := range strArray {
+			keyword := strings.TrimSpace(strArray[j])
+			validKeywords = append(validKeywords, keyword)
+		}
 	}
 
 	if (len(validKeywords) < intKeywordsLimit) || (intKeywordsLimit == -1) {
