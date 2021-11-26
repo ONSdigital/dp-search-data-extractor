@@ -82,7 +82,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &testEvent, "-1")
+			err := eventHandler.Handle(context.Background(), &testEvent, -1)
 
 			var avroBytes []byte
 			select {
@@ -122,7 +122,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &testEvent, "1")
+			err := eventHandler.Handle(context.Background(), &testEvent, 1)
 
 			Convey("Then Zebedee is called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
@@ -179,7 +179,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 		Convey("When given a valid event with default keywords limit", func() {
 
-			err := eventHandler.Handle(context.Background(), &testEvent, "-1")
+			err := eventHandler.Handle(context.Background(), &testEvent, -1)
 
 			var avroBytes []byte
 			select {
@@ -224,7 +224,7 @@ func TestValidateWithEmptyKeywordsAndDefaultLimit(t *testing.T) {
 		testKeywords := []string{""}
 
 		Convey("When passed to validate the keywords with default keywords limit", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "-1")
+			actual, err := handler.ValidateKeywords(testKeywords, -1)
 
 			Convey("Then keywords should be validated as expected empty keywords", func() {
 				So(err, ShouldBeNil)
@@ -240,7 +240,7 @@ func TestValidateWithTrimmingKeywordsAndDefaultLimit(t *testing.T) {
 		testKeywords := []string{"  testKeywords1,testKeywords2   "}
 
 		Convey("When passed to validate keywords with keywords limits as 2", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "-1")
+			actual, err := handler.ValidateKeywords(testKeywords, -1)
 
 			Convey("Then keywords should be validated with correct size and expected trimmed elements", func() {
 				So(err, ShouldBeNil)
@@ -257,7 +257,7 @@ func TestValidateLessFourKeywordsAndDefaultLimit(t *testing.T) {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4"}
 
 		Convey("When passed to validate the keywords with default keywords limit", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "-1")
+			actual, err := handler.ValidateKeywords(testKeywords, -1)
 
 			Convey("Then all the same keywords should be returned", func() {
 				So(err, ShouldBeNil)
@@ -274,7 +274,7 @@ func TestValidateWithEightKeywordsAndZeroAsLimit(t *testing.T) {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
 
 		Convey("When passed to validate the keywords with default keywords limits", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "0")
+			actual, err := handler.ValidateKeywords(testKeywords, 0)
 
 			Convey("Then keywords should be validated with empty keyword elements", func() {
 				expectedKeywords := []string{""}
@@ -291,7 +291,7 @@ func TestValidateWithEightKeywordsAndDefaultLimit(t *testing.T) {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
 
 		Convey("When passed to validate the keywords with default keywords limits", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "-1")
+			actual, err := handler.ValidateKeywords(testKeywords, -1)
 
 			Convey("Then keywords should be validated with correct size with all keyword elements", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5", "testKeywords6", "testkeyword7", "testKeywords8"}
@@ -308,7 +308,7 @@ func TestValidateEightKeywordsAndFiveAsLimit(t *testing.T) {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
 
 		Convey("When passed to validate the keywords with keywords limit as 5", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "5")
+			actual, err := handler.ValidateKeywords(testKeywords, 5)
 
 			Convey("Then keywords should be validated with correct size with expected elements", func() {
 				So(err, ShouldBeNil)
@@ -325,7 +325,7 @@ func TestValidateEightKeywordsAndTenAsLimit(t *testing.T) {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
 
 		Convey("When passed to validate the keywords with keywords limit as 5", func() {
-			actual, err := handler.ValidateKeywords(testKeywords, "10")
+			actual, err := handler.ValidateKeywords(testKeywords, 10)
 
 			Convey("Then keywords should be validated with correct size with expected elements", func() {
 				So(err, ShouldBeNil)

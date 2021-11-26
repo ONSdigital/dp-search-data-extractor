@@ -24,7 +24,7 @@ var _ event.Handler = &HandlerMock{}
 //
 //         // make and configure a mocked event.Handler
 //         mockedHandler := &HandlerMock{
-//             HandleFunc: func(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit string) error {
+//             HandleFunc: func(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int) error {
 // 	               panic("mock out the Handle method")
 //             },
 //         }
@@ -35,7 +35,7 @@ var _ event.Handler = &HandlerMock{}
 //     }
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit string) error
+	HandleFunc func(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -46,20 +46,20 @@ type HandlerMock struct {
 			// ContentPublished is the contentPublished argument value.
 			ContentPublished *models.ContentPublished
 			// KeywordsLimit is the keywordsLimit argument value.
-			KeywordsLimit string
+			KeywordsLimit int
 		}
 	}
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit string) error {
+func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
 		Ctx              context.Context
 		ContentPublished *models.ContentPublished
-		KeywordsLimit    string
+		KeywordsLimit    int
 	}{
 		Ctx:              ctx,
 		ContentPublished: contentPublished,
@@ -77,12 +77,12 @@ func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.Co
 func (mock *HandlerMock) HandleCalls() []struct {
 	Ctx              context.Context
 	ContentPublished *models.ContentPublished
-	KeywordsLimit    string
+	KeywordsLimit    int
 } {
 	var calls []struct {
 		Ctx              context.Context
 		ContentPublished *models.ContentPublished
-		KeywordsLimit    string
+		KeywordsLimit    int
 	}
 	lockHandlerMockHandle.RLock()
 	calls = mock.calls.Handle

@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	"strings"
 
 	"github.com/ONSdigital/dp-net/request"
@@ -20,7 +19,7 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit string) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit int) (err error) {
 
 	traceID := request.NewRequestID(16)
 
@@ -84,17 +83,12 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 }
 
 // incoming keywords validation
-func ValidateKeywords(keywords []string, keywordsLimit string) ([]string, error) {
+func ValidateKeywords(keywords []string, keywordsLimit int) ([]string, error) {
 
 	var strArray []string
 	validKeywords := make([]string, 0)
 
-	intKeywordsLimit, err := strconv.Atoi(keywordsLimit) //ASCII to integer
-	if err != nil {
-		return keywords, err
-	}
-
-	if intKeywordsLimit == 0 {
+	if keywordsLimit == 0 {
 		return []string{""}, nil
 	}
 
@@ -107,9 +101,9 @@ func ValidateKeywords(keywords []string, keywordsLimit string) ([]string, error)
 		}
 	}
 
-	if (len(validKeywords) < intKeywordsLimit) || (intKeywordsLimit == -1) {
+	if (len(validKeywords) < keywordsLimit) || (keywordsLimit == -1) {
 		return validKeywords, nil
 	}
 
-	return validKeywords[:intKeywordsLimit], nil
+	return validKeywords[:keywordsLimit], nil
 }

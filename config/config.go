@@ -25,7 +25,7 @@ type Config struct {
 	ContentPublishedTopic      string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
 	KafkaProducerTopic         string        `envconfig:"KAFKA_PRODUCER_TOPIC"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
-	KeywordsLimit              string        `envconfig:"KEYWORDS_LIMITS"`
+	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
 }
 
 var cfg *Config
@@ -55,7 +55,7 @@ func Get() (*Config, error) {
 		ContentPublishedTopic:      "content-published",
 		KafkaProducerTopic:         "search-data-import",
 		ZebedeeURL:                 "http://localhost:8082",
-		KeywordsLimit:              "-1",
+		KeywordsLimit:              -1,
 	}
 
 	return cfg, envconfig.Process("", cfg)

@@ -14,7 +14,7 @@ import (
 
 // Handler represents a handler for processing a single event.
 type Handler interface {
-	Handle(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit string) error
+	Handle(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int) error
 }
 
 // Consume converts messages to event instances, and pass the event to the provided handler.
