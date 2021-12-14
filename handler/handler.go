@@ -3,8 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"strings"
-
 	"github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
@@ -51,26 +49,12 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		"keywords":      zebedeeData.Description.Keywords,
 		"keywordsLimit": keywordsLimit,
 	}
-	validKeywords, err := ValidateKeywords(zebedeeData.Description.Keywords, keywordsLimit)
-	if err != nil {
-		log.Info(ctx, "failed to get keywords limit", logData)
-		return err
-	}
 
 	//Mapping Json to Avro
-	searchData := models.SearchDataImport{
-		DataType:        zebedeeData.DataType,
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            zebedeeData.Description.CDID,
-		DatasetID:       zebedeeData.Description.DatasetID,
-		Keywords:        validKeywords,
-		MetaDescription: zebedeeData.Description.MetaDescription,
-		Summary:         zebedeeData.Description.Summary,
-		ReleaseDate:     zebedeeData.Description.ReleaseDate,
-		Title:           zebedeeData.Description.Title,
-		TraceID:         traceID,
-	}
+	searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, keywordsLimit)
+	searchData.TraceID = traceID
+	searchData.JobID = ""
+	searchData.SearchIndex = "ONS"
 
 	//Marshall Avro and sending message
 	if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
@@ -80,30 +64,4 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
-}
-
-// incoming keywords validation
-func ValidateKeywords(keywords []string, keywordsLimit int) ([]string, error) {
-
-	var strArray []string
-	validKeywords := make([]string, 0)
-
-	if keywordsLimit == 0 {
-		return []string{""}, nil
-	}
-
-	for i := range keywords {
-		strArray = strings.Split(keywords[i], ",")
-
-		for j := range strArray {
-			keyword := strings.TrimSpace(strArray[j])
-			validKeywords = append(validKeywords, keyword)
-		}
-	}
-
-	if (len(validKeywords) < keywordsLimit) || (keywordsLimit == -1) {
-		return validKeywords, nil
-	}
-
-	return validKeywords[:keywordsLimit], nil
 }
