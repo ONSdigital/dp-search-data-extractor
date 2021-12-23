@@ -57,6 +57,9 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_SEC_SKIP_VERIFY          | false                    | ignore server certificate issues if set to `true` [[1]](#notes_1)
 | KAFKA_CONTENT_PUBLISHED_GROUP  | dp-search-data-extractor | The consumer group this application to consume ImageUploaded messages
 | KAFKA_CONTENT_PUBLISHED_TOPIC  | content-published        | The name of the topic to consume messages from
+| ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
+| KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
+| DATASET_API_URL                | `http://localhost:22000` | The URL for the DatasetAPI
 
 **Notes:**
 

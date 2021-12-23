@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	lockInitialiserMockDoGetDatasetClient sync.RWMutex
 	lockInitialiserMockDoGetHTTPServer    sync.RWMutex
 	lockInitialiserMockDoGetHealthCheck   sync.RWMutex
 	lockInitialiserMockDoGetKafkaConsumer sync.RWMutex
@@ -31,6 +32,9 @@ var _ service.Initialiser = &InitialiserMock{}
 //
 //         // make and configure a mocked service.Initialiser
 //         mockedInitialiser := &InitialiserMock{
+//             DoGetDatasetClientFunc: func(cfg *config.Config) clients.DatasetClient {
+// 	               panic("mock out the DoGetDatasetClient method")
+//             },
 //             DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
 // 	               panic("mock out the DoGetHTTPServer method")
 //             },
@@ -53,6 +57,9 @@ var _ service.Initialiser = &InitialiserMock{}
 //
 //     }
 type InitialiserMock struct {
+	// DoGetDatasetClientFunc mocks the DoGetDatasetClient method.
+	DoGetDatasetClientFunc func(cfg *config.Config) clients.DatasetClient
+
 	// DoGetHTTPServerFunc mocks the DoGetHTTPServer method.
 	DoGetHTTPServerFunc func(bindAddr string, router http.Handler) service.HTTPServer
 
@@ -70,6 +77,11 @@ type InitialiserMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// DoGetDatasetClient holds details about calls to the DoGetDatasetClient method.
+		DoGetDatasetClient []struct {
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
+		}
 		// DoGetHTTPServer holds details about calls to the DoGetHTTPServer method.
 		DoGetHTTPServer []struct {
 			// BindAddr is the bindAddr argument value.
@@ -108,6 +120,37 @@ type InitialiserMock struct {
 			Cfg *config.Config
 		}
 	}
+}
+
+// DoGetDatasetClient calls DoGetDatasetClientFunc.
+func (mock *InitialiserMock) DoGetDatasetClient(cfg *config.Config) clients.DatasetClient {
+	if mock.DoGetDatasetClientFunc == nil {
+		panic("InitialiserMock.DoGetDatasetClientFunc: method is nil but Initialiser.DoGetDatasetClient was just called")
+	}
+	callInfo := struct {
+		Cfg *config.Config
+	}{
+		Cfg: cfg,
+	}
+	lockInitialiserMockDoGetDatasetClient.Lock()
+	mock.calls.DoGetDatasetClient = append(mock.calls.DoGetDatasetClient, callInfo)
+	lockInitialiserMockDoGetDatasetClient.Unlock()
+	return mock.DoGetDatasetClientFunc(cfg)
+}
+
+// DoGetDatasetClientCalls gets all the calls that were made to DoGetDatasetClient.
+// Check the length with:
+//     len(mockedInitialiser.DoGetDatasetClientCalls())
+func (mock *InitialiserMock) DoGetDatasetClientCalls() []struct {
+	Cfg *config.Config
+} {
+	var calls []struct {
+		Cfg *config.Config
+	}
+	lockInitialiserMockDoGetDatasetClient.RLock()
+	calls = mock.calls.DoGetDatasetClient
+	lockInitialiserMockDoGetDatasetClient.RUnlock()
+	return calls
 }
 
 // DoGetHTTPServer calls DoGetHTTPServerFunc.

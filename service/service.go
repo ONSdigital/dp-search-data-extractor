@@ -38,10 +38,14 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	// Get HTTP Server with collectionID checkHeader middleware
 	r := mux.NewRouter()
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
+
 	// Get the zebedee client
 	zebedeeClient := serviceList.GetZebedee(cfg)
-	// Get Kafka consumer
 
+	// Get the DatasetApi Client
+	datasetapiClient := serviceList.GetDatasetClient(cfg)
+
+	// Get Kafka consumer
 	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
@@ -79,7 +83,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, zebedeeClient, consumer, producer); err != nil {
+	if err := registerCheckers(ctx, hc, zebedeeClient, consumer, producer, datasetapiClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -169,7 +173,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, hc HealthChecker, zebedeeClient clients.ZebedeeClient, consumer kafka.IConsumerGroup, producer kafka.IProducer) (err error) {
+func registerCheckers(ctx context.Context, hc HealthChecker, zebedeeClient clients.ZebedeeClient, consumer kafka.IConsumerGroup, producer kafka.IProducer, datasetClient clients.DatasetClient) (err error) {
 
 	hasErrors := false
 
@@ -186,6 +190,11 @@ func registerCheckers(ctx context.Context, hc HealthChecker, zebedeeClient clien
 	if err := hc.AddCheck("Kafka producer", producer.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for Kafka producer", err)
+	}
+
+	if err := hc.AddCheck("DatasetAPI client", datasetClient.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for DatasetClient", err)
 	}
 
 	if hasErrors {

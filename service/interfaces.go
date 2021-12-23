@@ -21,6 +21,7 @@ type Initialiser interface {
 	DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error)
 	DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error)
 	DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient
+	DoGetDatasetClient(cfg *config.Config) clients.DatasetClient
 }
 
 // HTTPServer defines the required methods from the HTTP server

@@ -26,6 +26,7 @@ type Config struct {
 	KafkaProducerTopic         string        `envconfig:"KAFKA_PRODUCER_TOPIC"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
+	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
 }
 
 var cfg *Config
@@ -56,6 +57,7 @@ func Get() (*Config, error) {
 		KafkaProducerTopic:         "search-data-import",
 		ZebedeeURL:                 "http://localhost:8082",
 		KeywordsLimit:              -1,
+		DatasetAPIURL:              "http://localhost:22000",
 	}
 
 	return cfg, envconfig.Process("", cfg)

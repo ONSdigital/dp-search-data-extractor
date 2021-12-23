@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
@@ -23,6 +24,7 @@ type ExternalServiceList struct {
 	KafkaProducer bool
 	Init          Initialiser
 	ZebedeeClient bool
+	DatasetClient bool
 }
 
 // NewServiceList creates a new service list with the provided initialiser
@@ -33,6 +35,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 		KafkaProducer: false,
 		Init:          initialiser,
 		ZebedeeClient: false,
+		DatasetClient: false,
 	}
 }
 
@@ -83,6 +86,19 @@ func (e *ExternalServiceList) GetZebedee(cfg *config.Config) clients.ZebedeeClie
 func (e *Init) DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient {
 	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
 	return zebedeeClient
+}
+
+// GetZebedee return zebedee client
+func (e *ExternalServiceList) GetDatasetClient(cfg *config.Config) clients.DatasetClient {
+	datasetClient := e.Init.DoGetDatasetClient(cfg)
+	e.DatasetClient = true
+	return datasetClient
+}
+
+// DoGetZebedeeClient gets and initialises the Zebedee Client
+func (e *Init) DoGetDatasetClient(cfg *config.Config) clients.DatasetClient {
+	datasetClient := dataset.NewAPIClient(cfg.DatasetAPIURL)
+	return datasetClient
 }
 
 // GetKafkaConsumer creates a Kafka consumer and sets the consumer flag to true
