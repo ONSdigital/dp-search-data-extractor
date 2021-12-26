@@ -21,3 +21,10 @@ type SearchDataImport struct {
 	Title           string   `avro:"title"`
 	TraceID         string   `avro:"trace_id"`
 }
+
+type DatasetAPISearchDataImport struct {
+	Edition string `avro:"edition"`
+	ID      string `avro:"id"`
+	Links   string `avro:"links"`
+	State   string `avro:"state"`
+}

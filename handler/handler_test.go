@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
@@ -20,10 +21,10 @@ import (
 var (
 	testTimeout = time.Second * 5
 
-	testEvent = models.ContentPublished{
-		URI:          "testUri",
-		DataType:     "Thing",
-		CollectionID: "Col123",
+	testZebedeeEvent = models.ContentPublished{
+		URI:          "testZebdeeUri",
+		DataType:     "Reviewed-uris",
+		CollectionID: "testZebdeeCollectionID",
 	}
 
 	errZebedee                = errors.New("zebedee test error")
@@ -31,10 +32,26 @@ var (
 		return nil, errZebedee
 	}
 
-	contentPublishedTestData = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
-	getPublishDataFunc       = func(ctx context.Context, uriString string) ([]byte, error) {
-		data := []byte(contentPublishedTestData)
+	mockZebedeePublishedResponse = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
+	getPublishDataFunc           = func(ctx context.Context, uriString string) ([]byte, error) {
+		data := []byte(mockZebedeePublishedResponse)
 		return data, nil
+	}
+
+	mockedEditionResponse = dataset.Edition{
+		Edition: "edition-1",
+		ID:      "id",
+		// Links: "links",
+		State: "State",
+	}
+	getDatasetEditionFunc = func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, editionID string) (dataset.Edition, error) {
+		data := mockedEditionResponse
+		return data, nil
+	}
+
+	errDatasetAPI                = errors.New("dataset api test error")
+	getDatasetEditionFuncInError = func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, editionID string) (dataset.Edition, error) {
+		return dataset.Edition{}, errDatasetAPI
 	}
 
 	pChannels = &kafka.ProducerChannels{
@@ -79,10 +96,11 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 
 	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
+		var datasetMock = &clientMock.DatasetClientMock{GetEditionFunc: getDatasetEditionFunc}
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &testEvent, -1)
+			err := eventHandler.Handle(context.Background(), &testZebedeeEvent, -1)
 
 			var avroBytes []byte
 			select {
@@ -98,7 +116,8 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 			Convey("And then get content published from zebedee", func() {
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URI)
+				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
+				So(len(datasetMock.GetEditionCalls()), ShouldEqual, 0)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
@@ -119,17 +138,19 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 	})
 	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, *producerMock}
+		var datasetMockInError = &clientMock.DatasetClientMock{GetEditionFunc: getDatasetEditionFuncInError}
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &testEvent, 1)
+			err := eventHandler.Handle(context.Background(), &testZebedeeEvent, 1)
 
 			Convey("Then Zebedee is called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, errZebedee.Error())
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URI)
+				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
+				So(len(datasetMockInError.GetEditionCalls()), ShouldEqual, 0)
 			})
 		})
 	})
@@ -175,11 +196,12 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 		}
 
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getFullPublishDataFunc}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, *producerMock}
+		var datasetMock = &clientMock.DatasetClientMock{GetEditionFunc: getDatasetEditionFunc}
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event with default keywords limit", func() {
 
-			err := eventHandler.Handle(context.Background(), &testEvent, -1)
+			err := eventHandler.Handle(context.Background(), &testZebedeeEvent, -1)
 
 			var avroBytes []byte
 			select {
@@ -195,7 +217,8 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 			Convey("And then get content published from zebedee", func() {
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testEvent.URI)
+				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
+				So(len(datasetMock.GetEditionCalls()), ShouldEqual, 0)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport

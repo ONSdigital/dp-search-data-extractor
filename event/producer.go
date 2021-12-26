@@ -22,6 +22,11 @@ type SearchDataImportProducer struct {
 	Producer   kafka.IProducer
 }
 
+type SearchDataImportDatasetProducer struct {
+	Marshaller Marshaller
+	Producer   kafka.IProducer
+}
+
 // SearchDataImport produce a kafka message for an instance which has been successfully processed.
 func (p SearchDataImportProducer) SearchDataImport(ctx context.Context, event models.SearchDataImport) error {
 	bytes, err := p.Marshaller.Marshal(event)
@@ -30,6 +35,23 @@ func (p SearchDataImportProducer) SearchDataImport(ctx context.Context, event mo
 		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", event), err)
 	}
 	p.Producer.Channels().Output <- bytes
+	log.Info(ctx, "completed successfully", log.Data{"event": event, "package": "event.SearchDataImportProducer"})
+	return nil
+}
+
+// SearchDataImport produce a kafka message for an instance which has been successfully processed.
+func (p SearchDataImportProducer) DatasetAPIImport(ctx context.Context, event models.DatasetAPISearchDataImport) error {
+	bytes, err := p.Marshaller.Marshal(event)
+	if err != nil {
+		log.Fatal(ctx, "Marshaller.Marshal", err)
+		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", event), err)
+	}
+
+	p.Producer.Channels().Output <- bytes
+	// time.Sleep(time.Duration(time.Second))
+	if p.Producer.Close(ctx) != nil {
+		p.Producer.Close(ctx)
+	}
 	log.Info(ctx, "completed successfully", log.Data{"event": event, "package": "event.SearchDataImportProducer"})
 	return nil
 }

@@ -1,6 +1,8 @@
 package models
 
-import "strings"
+import (
+	"strings"
+)
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
 // It also optionally takes a limit which truncates the keywords to the desired amount. This value can be -1 for no
@@ -45,4 +47,17 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 	}
 
 	return rectifiedKeywords[:keywordsLimit]
+}
+
+// MapDatasetApiToSearchDataImport performs default mapping of zebedee data to a edition struct.
+func MapDatasetApiToSearchDataImport(edition Edition) DatasetAPISearchDataImport {
+	editionData := DatasetAPISearchDataImport{
+		Edition: edition.Edition,
+		ID:      edition.ID,
+		// Links:   edition.Links,
+		State: edition.State,
+	}
+
+	return editionData
+
 }

@@ -41,3 +41,19 @@ var searchDataImport = `{
 var SearchDataImportEvent = &avro.Schema{
 	Definition: searchDataImport,
 }
+
+var searchDataDatasetImport = `{
+  "type": "record",
+  "name": "search-data-import",
+  "fields": [
+    {"name": "edition", "type": "string", "default": ""},
+    {"name": "id", "type": "string", "default": ""},
+    // {"name": "links", "type": "string", "default": ""},
+    {"name": "state", "type": "string", "default": ""},
+  ]
+}`
+
+// SearchDataImportEvent the Avro schema for search-data-import messages.
+var SearchDataImportDatasetEvent = &avro.Schema{
+	Definition: searchDataDatasetImport,
+}

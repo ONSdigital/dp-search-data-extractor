@@ -1,9 +1,10 @@
 package models_test
 
 import (
+	"testing"
+
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 const (
@@ -21,6 +22,11 @@ const (
 	someReleaseDate     = "2021-12-13"
 	someSummary         = "Some Amazing Summary"
 	someTitle           = "Some Incredible Title"
+
+	edition = "edition"
+	id      = "id"
+	// links =
+	state = "state"
 )
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
@@ -187,6 +193,27 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5", "testKeywords6", "testkeyword7", "testKeywords8"}
 				So(actual, ShouldResemble, expectedKeywords)
+			})
+		})
+	})
+}
+
+func TestMapDatasetApiToSearchDataImport(t *testing.T) {
+
+	Convey("Given some valid DatasetAPI data with", t, func() {
+		datasetApiTestEdition := models.Edition{
+			Edition: edition,
+			ID:      id,
+			// Links:   dataset.Links{},
+			State: state,
+		}
+		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
+			actual := models.MapDatasetApiToSearchDataImport(datasetApiTestEdition)
+
+			Convey("Then keywords should be rectified with correct size with expected elements", func() {
+				So(actual.Edition, ShouldResemble, edition)
+				So(actual.ID, ShouldResemble, id)
+				So(actual.State, ShouldResemble, state)
 			})
 		})
 	})

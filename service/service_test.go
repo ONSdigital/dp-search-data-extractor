@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
@@ -25,29 +26,27 @@ var (
 	testBuildTime = "BuildTime"
 	testGitCommit = "GitCommit"
 	testVersion   = "Version"
-)
 
-var (
 	errKafkaConsumer = errors.New("Kafka consumer error")
 	errKafkaProducer = errors.New("Kafka producer error")
 	errHealthcheck   = errors.New("healthCheck error")
+
+	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+		return nil, errKafkaConsumer
+	}
+
+	funcDoGetKafkaProducerErr = func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
+		return nil, errKafkaProducer
+	}
+
+	funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+		return nil, errHealthcheck
+	}
+
+	funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
+		return nil
+	}
 )
-
-var funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
-	return nil, errKafkaConsumer
-}
-
-var funcDoGetKafkaProducerErr = func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
-	return nil, errKafkaProducer
-}
-
-var funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-	return nil, errHealthcheck
-}
-
-var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
-	return nil
-}
 
 func TestRun(t *testing.T) {
 	Convey("Having a set of mocked dependencies", t, func() {
