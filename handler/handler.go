@@ -3,9 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
+	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -16,7 +21,7 @@ const (
 	DATASETAPI_DATATYPE = "Dataset-uris"
 )
 
-// ContentPublishedHandler struct to hold handle for zebedee client and the producer
+// ContentPublishedHandler struct to hold handle for config with zebedee, datasetAPI client and the producer
 type ContentPublishedHandler struct {
 	ZebedeeCli clients.ZebedeeClient
 	DatasetCli clients.DatasetClient
@@ -24,7 +29,7 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit int) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit int, cfg config.Config) (err error) {
 
 	traceID := request.NewRequestID(16)
 
@@ -68,40 +73,51 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 
 		//Marshall Avro and sending message
 		if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
-			log.Fatal(ctx, "error while attempting to send SearchDataImport event to producer", err)
+			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 			return err
 		}
 
 	} else if event.DataType == DATASETAPI_DATATYPE {
 
-		// Make a call to DatasetAPI
-		datasetContentPublished, err := h.DatasetCli.GetEdition(
-			ctx, "userAuthToken", "serviceAuthToken", "collectionID", "datasetID", "edition")
+		datasetId, edition, version, err := getIDsFromUri(event.URI)
 		if err != nil {
-			log.Info(ctx, "cannot get dataset published contents from api")
+			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", err)
+			return err
+		}
+
+		//ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition> e.g. cpih-timeseries
+		generatedID := fmt.Sprintf("%s-%s", datasetId, edition)
+
+		// Make a call to DatasetAPI
+		datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, cfg.UserAuthToken, cfg.ServiceAuthToken, event.CollectionID, datasetId, edition, version)
+		if err != nil {
+			log.Error(ctx, "cannot get dataset published contents version %s from api", err)
 			return err
 		}
 
 		logData = log.Data{
-			"datasetContentPublished": datasetContentPublished,
+			"ID generated":            generatedID,
+			"datasetContentPublished": datasetMetadataPublished,
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
 
 		//Mapping Json to Avro
-		editionData := models.Edition{
-			Edition: datasetContentPublished.Edition,
-			ID:      datasetContentPublished.ID,
-			// Links: datasetContentPublished.Links,
-			State: datasetContentPublished.State,
+		versionData := models.VersionMetadata{
+			CollectionId: event.CollectionID,
+			Edition:      edition,
+			ID:           generatedID,
+			DatasetId:    datasetId,
+			ReleaseDate:  datasetMetadataPublished.ReleaseDate,
+			Version:      version,
 		}
-		datasetApiEditionData := models.MapDatasetApiToSearchDataImport(editionData)
+		datasetVersionData := models.MapDatasetVersionToSearchDataImport(versionData)
 		logData = log.Data{
-			"datasetApiEditionData": datasetApiEditionData,
+			"datasetVersionData": datasetVersionData,
 		}
 		log.Info(ctx, "datasetApiEditionData ", logData)
 
 		// Marshall Avro and sending message
-		if err := h.Producer.DatasetAPIImport(ctx, datasetApiEditionData); err != nil {
+		if err := h.Producer.SearchDatasetVersionMetadataImport(ctx, datasetVersionData); err != nil {
 			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", err)
 			return err
 		}
@@ -112,4 +128,20 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
+}
+
+func getIDsFromUri(uri string) (datasetID, editionID, versionID string, err error) {
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	s := strings.Split(parsedURL.Path, "/")
+	if len(s) < 7 {
+		return "", "", "", errors.New("not enough arguments in path")
+	}
+	datasetID = s[1]
+	editionID = s[3]
+	versionID = s[5]
+	return datasetID, editionID, versionID, nil
 }

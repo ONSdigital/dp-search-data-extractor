@@ -37,6 +37,8 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaProducerTopic, ShouldEqual, "search-data-import")
 				So(cfg.ZebedeeURL, ShouldEqual, "http://localhost:8082")
 				So(cfg.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
+				So(cfg.UserAuthToken, ShouldEqual, "")
+				So(cfg.ServiceAuthToken, ShouldEqual, "")
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

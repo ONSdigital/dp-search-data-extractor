@@ -31,6 +31,15 @@ var (
 		ReleaseDate:     "",
 		Title:           "",
 	}
+
+	expectedVersionResponse = models.SearchDataVersionMetadataImport{
+		CollectionId: "someCollectioinId",
+		Edition:      "edition-1",
+		ID:           "someId",
+		DatasetId:    "somedatasetId",
+		Version:      "1",
+		ReleaseDate:  "2020-11-07T00:00:00.000Z",
+	}
 )
 
 func TestProducer_SearchDataImport(t *testing.T) {
@@ -117,6 +126,55 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 
 			Convey("And producer.Output is never called", func() {
 				So(len(kafkaProducerMock.ChannelsCalls()), ShouldEqual, 0)
+			})
+		})
+	})
+}
+
+func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
+	Convey("Given SearchDatasetVersionMetadataImport has been configured correctly", t, func() {
+
+		pChannels := &kafka.ProducerChannels{
+			Output: make(chan []byte, 1),
+		}
+
+		kafkaProducerMock := &kafkatest.IProducerMock{
+			ChannelsFunc: func() *kafka.ProducerChannels {
+				return pChannels
+			},
+		}
+
+		marshallerMock := &mock.MarshallerMock{
+			MarshalFunc: func(s interface{}) ([]byte, error) {
+				return schema.SearchDatasetVersionMetadataEvent.Marshal(s)
+			},
+		}
+
+		//event is message
+		searchDataVersionImportProducer := event.SearchDataImportProducer{
+			Producer:   kafkaProducerMock,
+			Marshaller: marshallerMock,
+		}
+		Convey("When SearchDatasetVersionMetadataImport is called on the event producer", func() {
+
+			err := searchDataVersionImportProducer.SearchDatasetVersionMetadataImport(ctx, expectedVersionResponse)
+			So(err, ShouldBeNil)
+
+			var avroBytes []byte
+			var testTimeout = time.Second * 5
+			select {
+			case avroBytes = <-pChannels.Output:
+				t.Log("avro byte sent to producer output")
+			case <-time.After(testTimeout):
+				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
+				t.FailNow()
+			}
+
+			Convey("Then the expected bytes are sent to producer.output", func() {
+				var actual models.SearchDataVersionMetadataImport
+				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
+				So(err, ShouldBeNil)
+				So(expectedVersionResponse, ShouldResemble, actual)
 			})
 		})
 	})

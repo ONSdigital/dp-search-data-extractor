@@ -42,18 +42,20 @@ var SearchDataImportEvent = &avro.Schema{
 	Definition: searchDataImport,
 }
 
-var searchDataDatasetImport = `{
+var searchDatasetVersionMetadataImport = `{
   "type": "record",
   "name": "search-data-import",
   "fields": [
-    {"name": "edition", "type": "string", "default": ""},
-    {"name": "id", "type": "string", "default": ""},
-    // {"name": "links", "type": "string", "default": ""},
-    {"name": "state", "type": "string", "default": ""},
+    {"name": "collectionId",      "type": "string", "default": ""},
+    {"name": "edition",      "type": "string", "default": ""},
+    {"name": "id",      "type": "string", "default": ""},
+    {"name": "dataset_id",   "type": "string", "default": ""},
+    {"name": "version",      "type": "string", "default": ""},
+    {"name": "release_date", "type": "string", "default": ""},
   ]
 }`
 
 // SearchDataImportEvent the Avro schema for search-data-import messages.
-var SearchDataImportDatasetEvent = &avro.Schema{
-	Definition: searchDataDatasetImport,
+var SearchDatasetVersionMetadataEvent = &avro.Schema{
+	Definition: searchDatasetVersionMetadataImport,
 }

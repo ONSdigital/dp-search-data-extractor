@@ -71,10 +71,11 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	producer.Channels().LogErrors(ctx, "kafka producer channels error")
 
 	// Event Handler for Kafka Consumer
-	event.Consume(ctx, consumer, &handler.ContentPublishedHandler{
+	handler := &handler.ContentPublishedHandler{
 		ZebedeeCli: zebedeeClient,
 		Producer:   searchDataImportProducer,
-	}, cfg)
+	}
+	event.Consume(ctx, consumer, handler, cfg)
 
 	// Get HealthCheck
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)

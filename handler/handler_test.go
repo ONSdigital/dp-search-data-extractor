@@ -10,6 +10,7 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
+	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/handler"
@@ -20,11 +21,18 @@ import (
 
 var (
 	testTimeout = time.Second * 5
+	ctx         = context.Background()
 
 	testZebedeeEvent = models.ContentPublished{
 		URI:          "testZebdeeUri",
 		DataType:     "Reviewed-uris",
 		CollectionID: "testZebdeeCollectionID",
+	}
+
+	testDatasetApiEvent = models.ContentPublished{
+		URI:          "/datasets/datasetid/editions/edition/versions/version/metadata",
+		DataType:     "Dataset-uris",
+		CollectionID: "testDatasetApiCollectionID",
 	}
 
 	errZebedee                = errors.New("zebedee test error")
@@ -38,20 +46,16 @@ var (
 		return data, nil
 	}
 
-	mockedEditionResponse = dataset.Edition{
-		Edition: "edition-1",
-		ID:      "id",
-		// Links: "links",
-		State: "State",
-	}
-	getDatasetEditionFunc = func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, editionID string) (dataset.Edition, error) {
-		data := mockedEditionResponse
+	jsonMockDatasetApiResponse = dataset.Metadata{}
+	// jsonMockDatasetApiResponse = setupMetadata
+	getVersionMetadataFunc = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
+		data := jsonMockDatasetApiResponse
 		return data, nil
 	}
 
-	errDatasetAPI                = errors.New("dataset api test error")
-	getDatasetEditionFuncInError = func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, editionID string) (dataset.Edition, error) {
-		return dataset.Edition{}, errDatasetAPI
+	errDatasetApi                 = errors.New("dataset api version metadata test error")
+	getVersionMetadataFuncInError = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
+		return dataset.Metadata{}, errDatasetApi
 	}
 
 	pChannels = &kafka.ProducerChannels{
@@ -60,6 +64,8 @@ var (
 	getChannelFunc = func() *kafka.ProducerChannels {
 		return pChannels
 	}
+
+	cfg, _ = config.Get()
 )
 
 func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
@@ -96,11 +102,12 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 
 	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-		var datasetMock = &clientMock.DatasetClientMock{GetEditionFunc: getDatasetEditionFunc}
+		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
+
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &testZebedeeEvent, -1)
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, -1, *cfg)
 
 			var avroBytes []byte
 			select {
@@ -117,7 +124,8 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
 				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-				So(len(datasetMock.GetEditionCalls()), ShouldEqual, 0)
+
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
@@ -138,11 +146,11 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 	})
 	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
-		var datasetMockInError = &clientMock.DatasetClientMock{GetEditionFunc: getDatasetEditionFuncInError}
+		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(context.Background(), &testZebedeeEvent, 1)
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, 1, *cfg)
 
 			Convey("Then Zebedee is called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
@@ -150,7 +158,8 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 1)
 				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-				So(len(datasetMockInError.GetEditionCalls()), ShouldEqual, 0)
+
+				So(len(datasetMockInError.GetVersionMetadataCalls()), ShouldEqual, 0)
 			})
 		})
 	})
@@ -196,12 +205,12 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 		}
 
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getFullPublishDataFunc}
-		var datasetMock = &clientMock.DatasetClientMock{GetEditionFunc: getDatasetEditionFunc}
+		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event with default keywords limit", func() {
 
-			err := eventHandler.Handle(context.Background(), &testZebedeeEvent, -1)
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, -1, *cfg)
 
 			var avroBytes []byte
 			select {
@@ -218,7 +227,8 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
 				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-				So(len(datasetMock.GetEditionCalls()), ShouldEqual, 0)
+
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
@@ -241,6 +251,88 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 	})
 }
 
+func TestHandlerForDatasetVersionMetadata(t *testing.T) {
+
+	expectedVersionMetadataResponse := models.SearchDataVersionMetadataImport{
+		CollectionId: "collectionId",
+		Edition:      "edition-1",
+		ID:           "version-1",
+		DatasetId:    "datasetId",
+		Version:      "1",
+		ReleaseDate:  "2020-11-07T00:00:00.000Z",
+	}
+	// expectedVersionMetadataResponse := models.SearchDataVersionMetadataImport{}
+
+	kafkaProducerMock := &kafkatest.IProducerMock{
+		ChannelsFunc: getChannelFunc,
+	}
+
+	//for mock marshaller
+	expectedDatasetVersionMetadataSearchDataImport := marshalDatasetVersionMetadataSearchDataImport(t, expectedVersionMetadataResponse)
+	marshallerMock := &mock.MarshallerMock{
+		MarshalFunc: func(s interface{}) ([]byte, error) {
+			return expectedDatasetVersionMetadataSearchDataImport, nil
+		},
+	}
+
+	producerMock := &event.SearchDataImportProducer{
+		Producer:   kafkaProducerMock,
+		Marshaller: marshallerMock,
+	}
+
+	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
+		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
+		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
+
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+
+		Convey("When given a valid event", func() {
+			err := eventHandler.Handle(ctx, &testDatasetApiEvent, -1, *cfg)
+
+			var avroBytes []byte
+			select {
+			case avroBytes = <-pChannels.Output:
+				t.Log("avro byte sent to producer output")
+			case <-time.After(testTimeout):
+				t.FailNow()
+			}
+
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("And then get content published from datasetAPI but no action for zebedee", func() {
+				So(len(zebedeeMock.GetPublishedDataCalls()), ShouldEqual, 0)
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 1)
+			})
+			Convey("And then the expected bytes are sent to producer.output", func() {
+				var actual models.SearchDataImport
+				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
+				So(err, ShouldBeNil)
+				So(actual.ReleaseDate, ShouldEqual, "2020-11-07T00:00:00.000Z")
+			})
+		})
+	})
+	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
+		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
+		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
+
+		Convey("When given a valid event", func() {
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, 1, *cfg)
+
+			Convey("Then Zebedee is called 1 time with the expected error ", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldEqual, errDatasetApi.Error())
+				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
+
+				So(len(datasetMockInError.GetVersionMetadataCalls()), ShouldEqual, 1)
+				So(datasetMockInError.GetVersionMetadataCalls(), ShouldNotBeEmpty)
+				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+}
+
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
 	bytes, err := schema.SearchDataImportEvent.Marshal(event)
@@ -248,4 +340,79 @@ func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte
 		t.Fatalf("avro mashalling failed with error : %v", err)
 	}
 	return bytes
+}
+
+// marshalDatasetVersionSearchDataImport helper method to marshal a event into a []byte
+func marshalDatasetVersionMetadataSearchDataImport(t *testing.T, event models.SearchDataVersionMetadataImport) []byte {
+	bytes, err := schema.SearchDatasetVersionMetadataEvent.Marshal(event)
+	if err != nil {
+		t.Fatalf("avro mashalling failed with error : %v", err)
+	}
+	return bytes
+}
+
+func setupMetadata() dataset.Metadata {
+	m := dataset.Metadata{
+		Version: dataset.Version{
+			ReleaseDate: "release date",
+			LatestChanges: []dataset.Change{
+				{
+					Description: "change description",
+					Name:        "change name",
+					Type:        "change type",
+				},
+			},
+			Downloads: map[string]dataset.Download{
+				"download1": {
+					URL:     "url",
+					Size:    "size",
+					Public:  "public",
+					Private: "private",
+				},
+			},
+		},
+		DatasetDetails: dataset.DatasetDetails{
+			Title:       "title",
+			Description: "description",
+			Publisher: &dataset.Publisher{
+				URL:  "url",
+				Name: "name",
+				Type: "type",
+			},
+			Contacts: &[]dataset.Contact{
+				{
+					Name:      "Bob",
+					Email:     "bob@test.com",
+					Telephone: "01657923723",
+				},
+			},
+			Keywords:          &[]string{"keyword_1", "keyword_2"},
+			NextRelease:       "next release",
+			ReleaseFrequency:  "release frequency",
+			UnitOfMeasure:     "unit of measure",
+			License:           "license",
+			NationalStatistic: true,
+			Methodologies: &[]dataset.Methodology{
+				{
+					Description: "methodology description",
+					URL:         "methodology url",
+					Title:       "methodology title",
+				},
+			},
+			Publications: &[]dataset.Publication{
+				{
+					Description: "publication description",
+					URL:         "publication url",
+					Title:       "publication title",
+				},
+			},
+			RelatedDatasets: &[]dataset.RelatedDataset{
+				{
+					URL:   "related dataset url",
+					Title: "related dataset title",
+				},
+			},
+		},
+	}
+	return m
 }

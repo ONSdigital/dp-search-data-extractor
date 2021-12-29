@@ -23,10 +23,11 @@ const (
 	someSummary         = "Some Amazing Summary"
 	someTitle           = "Some Incredible Title"
 
-	edition = "edition"
-	id      = "id"
-	// links =
-	state = "state"
+	someCollectionId = "collectionId"
+	someId           = "id"
+	someDatasetId    = "datasetId"
+	someState        = "state"
+	someVersion      = "version"
 )
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
@@ -201,19 +202,25 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 func TestMapDatasetApiToSearchDataImport(t *testing.T) {
 
 	Convey("Given some valid DatasetAPI data with", t, func() {
-		datasetApiTestEdition := models.Edition{
-			Edition: edition,
-			ID:      id,
-			// Links:   dataset.Links{},
-			State: state,
+		datasetVersionTestEdition := models.VersionMetadata{
+			CollectionId: someCollectionId,
+			Edition:      someEdition,
+			ID:           someId,
+			DatasetId:    someDatasetId,
+			Version:      someVersion,
+			ReleaseDate:  someReleaseDate,
 		}
+
 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
-			actual := models.MapDatasetApiToSearchDataImport(datasetApiTestEdition)
+			actual := models.MapDatasetVersionToSearchDataImport(datasetVersionTestEdition)
 
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
-				So(actual.Edition, ShouldResemble, edition)
-				So(actual.ID, ShouldResemble, id)
-				So(actual.State, ShouldResemble, state)
+				So(actual.CollectionId, ShouldResemble, someCollectionId)
+				So(actual.Edition, ShouldResemble, someEdition)
+				So(actual.ID, ShouldResemble, someId)
+				So(actual.DatasetId, ShouldResemble, someDatasetId)
+				So(actual.Version, ShouldResemble, someVersion)
+				So(actual.ReleaseDate, ShouldResemble, someReleaseDate)
 			})
 		})
 	})

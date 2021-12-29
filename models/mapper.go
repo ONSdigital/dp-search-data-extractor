@@ -49,15 +49,15 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 	return rectifiedKeywords[:keywordsLimit]
 }
 
-// MapDatasetApiToSearchDataImport performs default mapping of zebedee data to a edition struct.
-func MapDatasetApiToSearchDataImport(edition Edition) DatasetAPISearchDataImport {
-	editionData := DatasetAPISearchDataImport{
-		Edition: edition.Edition,
-		ID:      edition.ID,
-		// Links:   edition.Links,
-		State: edition.State,
+// MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version struct.
+func MapDatasetVersionToSearchDataImport(versionMetadata VersionMetadata) SearchDataVersionMetadataImport {
+	versionData := SearchDataVersionMetadataImport{
+		CollectionId: versionMetadata.CollectionId,
+		Edition:      versionMetadata.Edition,
+		ID:           versionMetadata.ID,
+		DatasetId:    versionMetadata.DatasetId,
+		Version:      versionMetadata.Version,
+		ReleaseDate:  versionMetadata.ReleaseDate,
 	}
-
-	return editionData
-
+	return versionData
 }

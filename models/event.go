@@ -22,9 +22,11 @@ type SearchDataImport struct {
 	TraceID         string   `avro:"trace_id"`
 }
 
-type DatasetAPISearchDataImport struct {
-	Edition string `avro:"edition"`
-	ID      string `avro:"id"`
-	Links   string `avro:"links"`
-	State   string `avro:"state"`
+type SearchDataVersionMetadataImport struct {
+	CollectionId string `avro:"collection_id"`
+	Edition      string `avro:"edition"`
+	ID           string `avro:"id"`
+	DatasetId    string `avro:"dataset_id"`
+	Version      string `avro:"version"`
+	ReleaseDate  string `avro:"release_date"`
 }

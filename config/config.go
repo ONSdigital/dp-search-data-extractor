@@ -27,6 +27,8 @@ type Config struct {
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
+	UserAuthToken              string        `envconfig:"USER_AUTH_TOKEN"`
+	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"`
 }
 
 var cfg *Config
@@ -58,6 +60,8 @@ func Get() (*Config, error) {
 		ZebedeeURL:                 "http://localhost:8082",
 		KeywordsLimit:              -1,
 		DatasetAPIURL:              "http://localhost:22000",
+		UserAuthToken:              "",
+		ServiceAuthToken:           "",
 	}
 
 	return cfg, envconfig.Process("", cfg)

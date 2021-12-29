@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	datasetclient "github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
@@ -12,5 +12,6 @@ import (
 // DatasetApiClient defines the zebedee client
 type DatasetClient interface {
 	Checker(context.Context, *healthcheck.CheckState) error
-	GetEdition(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition string) (m dataset.Edition, err error)
+	// GetVersion(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceAuthToken, collectionID, datasetID, edition, version string) (m datasetclient.Version, err error)
+	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (m datasetclient.Metadata, err error)
 }
