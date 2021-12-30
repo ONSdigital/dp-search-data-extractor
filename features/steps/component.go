@@ -10,7 +10,9 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
+	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/ONSdigital/dp-search-data-extractor/service/mock"
 )
@@ -20,8 +22,11 @@ const outputFilePath = "/tmp/dpSearchDataExtractor.txt"
 
 type Component struct {
 	componenttest.ErrorFeature
+	inputData     models.ZebedeeData
 	serviceList   *service.ExternalServiceList
 	KafkaConsumer kafka.IConsumerGroup
+	KafkaProducer kafka.IProducer
+	zebedeeClient clients.ZebedeeClient
 	killChannel   chan os.Signal
 	apiFeature    *componenttest.APIFeature
 	errorChan     chan error
@@ -37,6 +42,10 @@ func NewComponent() *Component {
 	consumer.CheckerFunc = funcCheck
 	c.KafkaConsumer = consumer
 
+	producer := kafkatest.NewMessageProducer(false)
+	producer.CheckerFunc = funcCheck
+	c.KafkaProducer = producer
+
 	cfg, err := config.Get()
 	if err != nil {
 		return nil
@@ -46,8 +55,10 @@ func NewComponent() *Component {
 
 	initMock := &mock.InitialiserMock{
 		DoGetKafkaConsumerFunc: c.DoGetConsumer,
+		DoGetKafkaProducerFunc: c.DoGetProducer,
 		DoGetHealthCheckFunc:   c.DoGetHealthCheck,
 		DoGetHTTPServerFunc:    c.DoGetHTTPServer,
+		DoGetZebedeeClientFunc: c.DoGetZebedeeClient,
 	}
 
 	c.serviceList = service.NewServiceList(initMock)
@@ -77,6 +88,14 @@ func (c *Component) DoGetHTTPServer(bindAddr string, router http.Handler) servic
 
 func (c *Component) DoGetConsumer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IConsumerGroup, err error) {
 	return c.KafkaConsumer, nil
+}
+
+func (c *Component) DoGetProducer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IProducer, err error) {
+	return c.KafkaProducer, nil
+}
+
+func (c *Component) DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient {
+	return c.zebedeeClient
 }
 
 func funcCheck(ctx context.Context, state *healthcheck.CheckState) error {

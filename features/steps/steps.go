@@ -2,62 +2,91 @@ package steps
 
 import (
 	"context"
-	"io/ioutil"
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	zClientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/cucumber/godog"
 	"github.com/rdumont/assistdog"
-	"github.com/stretchr/testify/assert"
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^these kafka events are consumed:$`, c.theseKafkaEventsAreConsumed)
-	ctx.Step(`^I should receive a kafka response$`, c.iShouldReceiveAKafkaResponse)
+	ctx.Step(`^I send a kafka event to content published topic$`, c.sendKafkafkaEvent)
+	ctx.Step(`^The kafka event is processed$`, c.processKafkaEvent)
+	ctx.Step(`^I should receive the published data$`, c.iShouldReceivePublishedData)
 }
 
-func (c *Component) iShouldReceiveAKafkaResponse() error {
-	content, err := ioutil.ReadFile(outputFilePath)
-	if err != nil {
-		return err
-	}
-
-	assert.Equal(c, "Hello, testURL.com", string(content))
-
-	return c.StepError()
-}
-
-func (c *Component) theseKafkaEventsAreConsumed(table *godog.Table) error {
+func (c *Component) sendKafkafkaEvent(table *godog.Table) error {
 
 	observationEvents, err := c.convertToKafkaEvents(table)
 	if err != nil {
 		return err
 	}
 
-	signals := registerInterrupt()
-
-	// run application in separate goroutine
-	go func() {
-		c.svc, err = service.Run(context.Background(), c.serviceList, "", "", "", c.errorChan)
-	}()
-
-	// consume extracted observations
 	for _, e := range observationEvents {
 		if err := c.sendToConsumer(e); err != nil {
 			return err
 		}
 	}
 
-	time.Sleep(300 * time.Millisecond)
+	return nil
+}
+
+func (c *Component) processKafkaEvent() error {
+	c.inputData = models.ZebedeeData{
+		DataType: "something",
+		Description: models.Description{
+			CDID:      "123",
+			DatasetID: "456",
+			Edition:   "something",
+		},
+	}
+
+	marshelledData, err := json.Marshal(&c.inputData)
+	if err != nil {
+		return fmt.Errorf("error marshalling input data")
+	}
+	c.zebedeeClient = &zClientMock.ZebedeeClientMock{
+		CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error { return nil },
+		GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
+			return marshelledData, nil
+		},
+	}
+	// run application in separate goroutine
+	go func() {
+		c.svc, err = service.Run(context.Background(), c.serviceList, "", "", "", c.errorChan)
+	}()
+
+	signals := registerInterrupt()
 
 	// kill application
 	signals <- os.Interrupt
+
+	return err
+}
+
+func (c *Component) iShouldReceivePublishedData() error {
+	outputData := <-c.KafkaProducer.Channels().Output
+
+	var data = &models.SearchDataImport{}
+
+	schema.SearchDataImportEvent.Unmarshal(outputData, data)
+
+	if data.CDID != c.inputData.Description.CDID {
+		return fmt.Errorf("Expected CDID: %v Recevived CDID: %v", c.inputData.Description.CDID, data.CDID)
+	}
+
+	if data.DatasetID != c.inputData.Description.DatasetID {
+		return fmt.Errorf("Expected DatasetID: %v Recevived DatasetID: %v", c.inputData.Description.DatasetID, data.DatasetID)
+	}
 
 	return nil
 }
