@@ -88,7 +88,7 @@ func (e *Init) DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient {
 	return zebedeeClient
 }
 
-// GetZebedee return zebedee client
+// GetDatasetClient return DatasetAPI client
 func (e *ExternalServiceList) GetDatasetClient(cfg *config.Config) clients.DatasetClient {
 	datasetClient := e.Init.DoGetDatasetClient(cfg)
 	e.DatasetClient = true

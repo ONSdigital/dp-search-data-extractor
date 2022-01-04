@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/ONSdigital/dp-net/request"
@@ -31,8 +32,6 @@ type ContentPublishedHandler struct {
 // Handle takes a single event.
 func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit int, cfg config.Config) (err error) {
 
-	traceID := request.NewRequestID(16)
-
 	logData := log.Data{
 		"event":    event,
 		"datatype": event.DataType,
@@ -40,6 +39,8 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 	log.Info(ctx, "event handler called with datatype", logData)
 
 	if event.DataType == ZEBEDEE_DATATYPE {
+
+		traceID := request.NewRequestID(16)
 
 		// Make a call to Zebedee
 		zebedeeContentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, event.URI)
@@ -85,7 +86,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 			return err
 		}
 
-		//ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition> e.g. cpih-timeseries
+		//ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition>
 		generatedID := fmt.Sprintf("%s-%s", datasetId, edition)
 
 		// Make a call to DatasetAPI
@@ -101,31 +102,43 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
 
-		//Mapping Json to Avro
-		versionData := models.VersionMetadata{
-			CollectionId: event.CollectionID,
-			Edition:      edition,
-			ID:           generatedID,
-			DatasetId:    datasetId,
-			ReleaseDate:  datasetMetadataPublished.ReleaseDate,
-			Version:      version,
+		// Mapping Json to Avro
+		versionDetails := models.VersionDetails{
+			ReleaseDate: datasetMetadataPublished.ReleaseDate,
+			// LatestChanges: datasetMetadataPublished.LatestChanges,
 		}
-		datasetVersionData := models.MapDatasetVersionToSearchDataImport(versionData)
+
+		datasetDetailsData := models.DatasetDetails{
+			Title:             datasetMetadataPublished.Title,
+			Description:       datasetMetadataPublished.Description,
+			Keywords:          *datasetMetadataPublished.Keywords,
+			ReleaseFrequency:  datasetMetadataPublished.ReleaseFrequency,
+			NextRelease:       datasetMetadataPublished.NextRelease,
+			UnitOfMeasure:     datasetMetadataPublished.UnitOfMeasure,
+			License:           datasetMetadataPublished.License,
+			NationalStatistic: strconv.FormatBool(datasetMetadataPublished.NationalStatistic),
+		}
+
+		versionMetadata := models.CMDData{
+			VersionDetails: versionDetails,
+			DatasetDetails: datasetDetailsData,
+		}
+
+		datasetVersionMetadata := models.MapDatasetVersionToSearchDataImport(versionMetadata)
 		logData = log.Data{
-			"datasetVersionData": datasetVersionData,
+			"datasetVersionData": datasetVersionMetadata,
 		}
-		log.Info(ctx, "datasetApiEditionData ", logData)
+		log.Info(ctx, "datasetVersionMetadata ", logData)
 
 		// Marshall Avro and sending message
-		if err := h.Producer.SearchDatasetVersionMetadataImport(ctx, datasetVersionData); err != nil {
+		if err := h.Producer.SearchDatasetVersionMetadataImport(ctx, datasetVersionMetadata); err != nil {
 			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", err)
 			return err
 		}
 	} else {
-		log.Info(ctx, "Invalid data type received, no action")
+		log.Info(ctx, "Invalid content data type received, no action")
 		return
 	}
-
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
 }
@@ -138,10 +151,10 @@ func getIDsFromUri(uri string) (datasetID, editionID, versionID string, err erro
 
 	s := strings.Split(parsedURL.Path, "/")
 	if len(s) < 7 {
-		return "", "", "", errors.New("not enough arguments in path")
+		return "", "", "", errors.New("not enough arguments in path for version metadata endpoint")
 	}
-	datasetID = s[1]
-	editionID = s[3]
-	versionID = s[5]
+	datasetID = s[2]
+	editionID = s[4]
+	versionID = s[6]
 	return datasetID, editionID, versionID, nil
 }

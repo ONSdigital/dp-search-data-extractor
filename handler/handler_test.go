@@ -19,6 +19,28 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	somekeyword0 = "keyword0"
+	somekeyword1 = "keyword1"
+	somekeyword2 = "keyword2"
+	somekeyword3 = "keyword3"
+
+	someMetaDescription = "meta desc"
+	someReleaseDate     = "release date"
+	someTitle           = "Some-Incredible-Title"
+
+	someLatestChanges0 = "latestchanges0"
+	someLatestChanges1 = "latestchanges1"
+	someLatestChanges2 = "latestchanges2"
+	someLatestChanges3 = "latestchanges3"
+
+	someReleaseFrequency   = "releasefrequency"
+	someNextRelease        = "nextRelease"
+	someUnitOfMeasure      = "unitOfMesure"
+	someLicense            = "licence"
+	someNationalStatistics = "false"
+)
+
 var (
 	testTimeout = time.Second * 5
 	ctx         = context.Background()
@@ -30,7 +52,7 @@ var (
 	}
 
 	testDatasetApiEvent = models.ContentPublished{
-		URI:          "/datasets/datasetid/editions/edition/versions/version/metadata",
+		URI:          "/datasets/cphi01/editions/timeseries/versions/version/metadata",
 		DataType:     "Dataset-uris",
 		CollectionID: "testDatasetApiCollectionID",
 	}
@@ -46,9 +68,8 @@ var (
 		return data, nil
 	}
 
-	jsonMockDatasetApiResponse = dataset.Metadata{}
-	// jsonMockDatasetApiResponse = setupMetadata
-	getVersionMetadataFunc = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
+	jsonMockDatasetApiResponse = setupMetadata()
+	getVersionMetadataFunc     = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
 		data := jsonMockDatasetApiResponse
 		return data, nil
 	}
@@ -253,25 +274,28 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 
-	expectedVersionMetadataResponse := models.SearchDataVersionMetadataImport{
-		CollectionId: "collectionId",
-		Edition:      "edition-1",
-		ID:           "version-1",
-		DatasetId:    "datasetId",
-		Version:      "1",
-		ReleaseDate:  "2020-11-07T00:00:00.000Z",
+	expectedVersionMetadataEvent := models.SearchDataVersionMetadataImport{
+		ReleaseDate:       "release date",
+		LatestChanges:     []string{someLatestChanges0, someLatestChanges1},
+		Title:             someTitle,
+		Description:       someMetaDescription,
+		Keywords:          []string{somekeyword0, somekeyword1},
+		ReleaseFrequency:  someReleaseFrequency,
+		NextRelease:       someNextRelease,
+		UnitOfMeasure:     someUnitOfMeasure,
+		License:           someLicense,
+		NationalStatistic: someNationalStatistics,
 	}
-	// expectedVersionMetadataResponse := models.SearchDataVersionMetadataImport{}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
 		ChannelsFunc: getChannelFunc,
 	}
 
 	//for mock marshaller
-	expectedDatasetVersionMetadataSearchDataImport := marshalDatasetVersionMetadataSearchDataImport(t, expectedVersionMetadataResponse)
+	expectedVersionMetadataSearchDataImport := marshalVersionMetadataSearchDataImport(t, expectedVersionMetadataEvent)
 	marshallerMock := &mock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {
-			return expectedDatasetVersionMetadataSearchDataImport, nil
+			return expectedVersionMetadataSearchDataImport, nil
 		},
 	}
 
@@ -305,10 +329,24 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 1)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
-				var actual models.SearchDataImport
-				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
+				var actual models.SearchDataVersionMetadataImport
+				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(actual.ReleaseDate, ShouldEqual, "2020-11-07T00:00:00.000Z")
+				So(actual.ReleaseDate, ShouldEqual, someReleaseDate)
+				So(actual.LatestChanges, ShouldHaveLength, 2)
+				So(actual.LatestChanges[0], ShouldEqual, someLatestChanges0)
+				So(actual.LatestChanges[1], ShouldEqual, someLatestChanges1)
+
+				So(actual.Title, ShouldEqual, someTitle)
+				So(actual.Description, ShouldEqual, someMetaDescription)
+				So(actual.Keywords, ShouldHaveLength, 2)
+				So(actual.Keywords[0], ShouldEqual, somekeyword0)
+				So(actual.Keywords[1], ShouldEqual, somekeyword1)
+				So(actual.ReleaseFrequency, ShouldEqual, someReleaseFrequency)
+				So(actual.NextRelease, ShouldEqual, someNextRelease)
+				So(actual.UnitOfMeasure, ShouldEqual, someUnitOfMeasure)
+				So(actual.License, ShouldEqual, someLicense)
+				So(actual.NationalStatistic, ShouldEqual, someNationalStatistics)
 			})
 		})
 	})
@@ -318,9 +356,9 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, 1, *cfg)
+			err := eventHandler.Handle(ctx, &testDatasetApiEvent, 1, *cfg)
 
-			Convey("Then Zebedee is called 1 time with the expected error ", func() {
+			Convey("Then Zebedee is called 0 time and Dataset called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, errDatasetApi.Error())
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
@@ -342,8 +380,7 @@ func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte
 	return bytes
 }
 
-// marshalDatasetVersionSearchDataImport helper method to marshal a event into a []byte
-func marshalDatasetVersionMetadataSearchDataImport(t *testing.T, event models.SearchDataVersionMetadataImport) []byte {
+func marshalVersionMetadataSearchDataImport(t *testing.T, event models.SearchDataVersionMetadataImport) []byte {
 	bytes, err := schema.SearchDatasetVersionMetadataEvent.Marshal(event)
 	if err != nil {
 		t.Fatalf("avro mashalling failed with error : %v", err)
@@ -362,56 +399,16 @@ func setupMetadata() dataset.Metadata {
 					Type:        "change type",
 				},
 			},
-			Downloads: map[string]dataset.Download{
-				"download1": {
-					URL:     "url",
-					Size:    "size",
-					Public:  "public",
-					Private: "private",
-				},
-			},
 		},
 		DatasetDetails: dataset.DatasetDetails{
-			Title:       "title",
-			Description: "description",
-			Publisher: &dataset.Publisher{
-				URL:  "url",
-				Name: "name",
-				Type: "type",
-			},
-			Contacts: &[]dataset.Contact{
-				{
-					Name:      "Bob",
-					Email:     "bob@test.com",
-					Telephone: "01657923723",
-				},
-			},
+			Title:             "title",
+			Description:       "description",
 			Keywords:          &[]string{"keyword_1", "keyword_2"},
 			NextRelease:       "next release",
 			ReleaseFrequency:  "release frequency",
 			UnitOfMeasure:     "unit of measure",
 			License:           "license",
 			NationalStatistic: true,
-			Methodologies: &[]dataset.Methodology{
-				{
-					Description: "methodology description",
-					URL:         "methodology url",
-					Title:       "methodology title",
-				},
-			},
-			Publications: &[]dataset.Publication{
-				{
-					Description: "publication description",
-					URL:         "publication url",
-					Title:       "publication title",
-				},
-			},
-			RelatedDatasets: &[]dataset.RelatedDataset{
-				{
-					URL:   "related dataset url",
-					Title: "related dataset title",
-				},
-			},
 		},
 	}
 	return m

@@ -46,16 +46,20 @@ var searchDatasetVersionMetadataImport = `{
   "type": "record",
   "name": "search-data-import",
   "fields": [
-    {"name": "collectionId",      "type": "string", "default": ""},
-    {"name": "edition",      "type": "string", "default": ""},
-    {"name": "id",      "type": "string", "default": ""},
-    {"name": "dataset_id",   "type": "string", "default": ""},
-    {"name": "version",      "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
+    {"name": "latest_changes","type":["null",{"type":"array","items":"string"}]},
+    {"name": "title", "type": "string", "default": ""},
+    {"name": "description", "type": "string", "default": ""},
+    {"name": "keywords","type":["null",{"type":"array","items":"string"}]},
+    {"name": "release_frequency", "type": "string", "default": ""},
+    {"name": "next_release", "type": "string", "default": ""},
+    {"name": "unit_of_measure", "type": "string", "default": ""},
+    {"name": "license", "type": "string", "default": ""},
+    {"name": "national_statistic", "type": "string", "default": ""}
   ]
 }`
 
-// SearchDataImportEvent the Avro schema for search-data-import messages.
+// SearchDatasetVersionMetadataEvent the Avro schema for Search-Dataset-Version-Metadata messages.
 var SearchDatasetVersionMetadataEvent = &avro.Schema{
 	Definition: searchDatasetVersionMetadataImport,
 }

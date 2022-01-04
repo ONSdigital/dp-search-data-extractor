@@ -49,15 +49,21 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 	return rectifiedKeywords[:keywordsLimit]
 }
 
-// MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version struct.
-func MapDatasetVersionToSearchDataImport(versionMetadata VersionMetadata) SearchDataVersionMetadataImport {
-	versionData := SearchDataVersionMetadataImport{
-		CollectionId: versionMetadata.CollectionId,
-		Edition:      versionMetadata.Edition,
-		ID:           versionMetadata.ID,
-		DatasetId:    versionMetadata.DatasetId,
-		Version:      versionMetadata.Version,
-		ReleaseDate:  versionMetadata.ReleaseDate,
+// MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version metadata struct.
+func MapDatasetVersionToSearchDataImport(cmdData CMDData) SearchDataVersionMetadataImport {
+
+	versionMetaData := SearchDataVersionMetadataImport{
+		ReleaseDate:       cmdData.VersionDetails.ReleaseDate,
+		LatestChanges:     cmdData.VersionDetails.LatestChanges,
+		Title:             cmdData.DatasetDetails.Title,
+		Description:       cmdData.DatasetDetails.Description,
+		Keywords:          cmdData.DatasetDetails.Keywords,
+		ReleaseFrequency:  cmdData.DatasetDetails.ReleaseFrequency,
+		NextRelease:       cmdData.DatasetDetails.NextRelease,
+		UnitOfMeasure:     cmdData.DatasetDetails.UnitOfMeasure,
+		License:           cmdData.DatasetDetails.License,
+		NationalStatistic: cmdData.DatasetDetails.NationalStatistic,
 	}
-	return versionData
+
+	return versionMetaData
 }

@@ -23,11 +23,16 @@ const (
 	someSummary         = "Some Amazing Summary"
 	someTitle           = "Some Incredible Title"
 
-	someCollectionId = "collectionId"
-	someId           = "id"
-	someDatasetId    = "datasetId"
-	someState        = "state"
-	someVersion      = "version"
+	someLatestChanges0 = "latestchanges0"
+	someLatestChanges1 = "latestchanges1"
+	someLatestChanges2 = "latestchanges2"
+	someLatestChanges3 = "latestchanges3"
+
+	someReleaseFrequency   = "releasefrequency"
+	someNextRelease        = "nextRelease"
+	someUnitOfMeasure      = "unitOfMesure"
+	someLicense            = "licence"
+	someNationalStatistics = "somenationalstatics"
 )
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
@@ -202,25 +207,49 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 func TestMapDatasetApiToSearchDataImport(t *testing.T) {
 
 	Convey("Given some valid DatasetAPI data with", t, func() {
-		datasetVersionTestEdition := models.VersionMetadata{
-			CollectionId: someCollectionId,
-			Edition:      someEdition,
-			ID:           someId,
-			DatasetId:    someDatasetId,
-			Version:      someVersion,
-			ReleaseDate:  someReleaseDate,
-		}
 
+		CMDTestData := models.CMDData{
+			VersionDetails: models.VersionDetails{
+				ReleaseDate:   someReleaseDate,
+				LatestChanges: []string{someLatestChanges0, someLatestChanges1, someLatestChanges2, someLatestChanges3},
+			},
+			DatasetDetails: models.DatasetDetails{
+				Title:             someTitle,
+				Description:       someMetaDescription,
+				Keywords:          []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
+				ReleaseFrequency:  someReleaseFrequency,
+				NextRelease:       someNextRelease,
+				UnitOfMeasure:     someUnitOfMeasure,
+				License:           someLicense,
+				NationalStatistic: someNationalStatistics,
+			},
+		}
 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
-			actual := models.MapDatasetVersionToSearchDataImport(datasetVersionTestEdition)
+			actual := models.MapDatasetVersionToSearchDataImport(CMDTestData)
 
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
-				So(actual.CollectionId, ShouldResemble, someCollectionId)
-				So(actual.Edition, ShouldResemble, someEdition)
-				So(actual.ID, ShouldResemble, someId)
-				So(actual.DatasetId, ShouldResemble, someDatasetId)
-				So(actual.Version, ShouldResemble, someVersion)
+
 				So(actual.ReleaseDate, ShouldResemble, someReleaseDate)
+				So(actual.LatestChanges, ShouldNotBeEmpty)
+				So(actual.LatestChanges, ShouldHaveLength, 4)
+				So(actual.LatestChanges[0], ShouldResemble, someLatestChanges0)
+				So(actual.LatestChanges[1], ShouldResemble, someLatestChanges1)
+				So(actual.LatestChanges[2], ShouldResemble, someLatestChanges2)
+				So(actual.LatestChanges[3], ShouldResemble, someLatestChanges3)
+
+				So(actual.Title, ShouldResemble, someTitle)
+				So(actual.Description, ShouldResemble, someMetaDescription)
+				So(actual.ReleaseFrequency, ShouldResemble, someReleaseFrequency)
+				So(actual.NextRelease, ShouldResemble, someNextRelease)
+				So(actual.UnitOfMeasure, ShouldResemble, someUnitOfMeasure)
+				So(actual.License, ShouldResemble, someLicense)
+				So(actual.NationalStatistic, ShouldResemble, someNationalStatistics)
+				So(actual.Keywords, ShouldNotBeEmpty)
+				So(actual.Keywords, ShouldHaveLength, 4)
+				So(actual.Keywords[0], ShouldResemble, somekeyword0)
+				So(actual.Keywords[1], ShouldResemble, somekeyword1)
+				So(actual.Keywords[2], ShouldResemble, somekeyword2)
+				So(actual.Keywords[3], ShouldResemble, somekeyword3)
 			})
 		})
 	})

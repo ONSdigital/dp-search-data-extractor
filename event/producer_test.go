@@ -16,6 +16,29 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	somekeyword0 = "keyword0"
+	somekeyword1 = "keyword1"
+	somekeyword2 = "keyword2"
+	somekeyword3 = "keyword3"
+
+	someMetaDescription = "meta desc"
+	someReleaseDate     = "2021-12-13"
+	someSummary         = "Some-Amazing-Summary"
+	someTitle           = "Some-Incredible-Title"
+
+	someLatestChanges0 = "latestchanges0"
+	someLatestChanges1 = "latestchanges1"
+	someLatestChanges2 = "latestchanges2"
+	someLatestChanges3 = "latestchanges3"
+
+	someReleaseFrequency   = "releasefrequency"
+	someNextRelease        = "nextRelease"
+	someUnitOfMeasure      = "unitOfMesure"
+	someLicense            = "licence"
+	someNationalStatistics = "nationalstatistics"
+)
+
 var (
 	ctx = context.Background()
 
@@ -32,13 +55,17 @@ var (
 		Title:           "",
 	}
 
-	expectedVersionResponse = models.SearchDataVersionMetadataImport{
-		CollectionId: "someCollectioinId",
-		Edition:      "edition-1",
-		ID:           "someId",
-		DatasetId:    "somedatasetId",
-		Version:      "1",
-		ReleaseDate:  "2020-11-07T00:00:00.000Z",
+	expectedVersionMetadataEvent = models.SearchDataVersionMetadataImport{
+		ReleaseDate:       someReleaseDate,
+		LatestChanges:     []string{someLatestChanges0, someLatestChanges1},
+		Title:             someTitle,
+		Description:       someMetaDescription,
+		Keywords:          []string{somekeyword0, somekeyword1},
+		ReleaseFrequency:  someReleaseFrequency,
+		NextRelease:       someNextRelease,
+		UnitOfMeasure:     someUnitOfMeasure,
+		License:           someLicense,
+		NationalStatistic: someNationalStatistics,
 	}
 )
 
@@ -132,6 +159,7 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 }
 
 func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
+
 	Convey("Given SearchDatasetVersionMetadataImport has been configured correctly", t, func() {
 
 		pChannels := &kafka.ProducerChannels{
@@ -157,7 +185,7 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 		}
 		Convey("When SearchDatasetVersionMetadataImport is called on the event producer", func() {
 
-			err := searchDataVersionImportProducer.SearchDatasetVersionMetadataImport(ctx, expectedVersionResponse)
+			err := searchDataVersionImportProducer.SearchDatasetVersionMetadataImport(ctx, expectedVersionMetadataEvent)
 			So(err, ShouldBeNil)
 
 			var avroBytes []byte
@@ -174,7 +202,7 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 				var actual models.SearchDataVersionMetadataImport
 				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(expectedVersionResponse, ShouldResemble, actual)
+				So(expectedVersionMetadataEvent, ShouldResemble, actual)
 			})
 		})
 	})

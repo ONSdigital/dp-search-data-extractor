@@ -25,26 +25,20 @@ type SearchDataImportProducer struct {
 // SearchDataImport produce a kafka message for an instance which has been successfully processed.
 func (p SearchDataImportProducer) SearchDataImport(ctx context.Context, event models.SearchDataImport) error {
 	bytes, err := p.Marshaller.Marshal(event)
+	fmt.Printf(string(bytes))
 	if err != nil {
 		log.Fatal(ctx, "Marshaller.Marshal", err)
 		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", event), err)
 	}
 	p.Producer.Channels().Output <- bytes
-	log.Info(ctx, "++++++++++++completed successfully", log.Data{"event": event, "package": "event.SearchDataImport"})
+	log.Info(ctx, "completed successfully", log.Data{"event": event, "package": "event.SearchDataImport"})
 	return nil
 }
 
 // SearchDatasetVersionImport produce a kafka message for an instance which has been successfully processed.
 func (p SearchDataImportProducer) SearchDatasetVersionMetadataImport(ctx context.Context, event models.SearchDataVersionMetadataImport) error {
 
-	bytes, err := p.Marshaller.Marshal(&models.SearchDataVersionMetadataImport{
-		CollectionId: event.CollectionId,
-		Edition:      event.Edition,
-		ID:           event.ID,
-		DatasetId:    event.DatasetId,
-		Version:      event.Version,
-		ReleaseDate:  event.ReleaseDate,
-	})
+	bytes, err := p.Marshaller.Marshal(event)
 
 	if err != nil {
 		log.Fatal(ctx, "Marshaller.Marshal", err)
@@ -52,6 +46,6 @@ func (p SearchDataImportProducer) SearchDatasetVersionMetadataImport(ctx context
 	}
 
 	p.Producer.Channels().Output <- bytes
-	log.Info(ctx, "***************completed successfully", log.Data{"event": event, "package": "event.DatasetVersionSearchDataImport"})
+	log.Info(ctx, "completed successfully", log.Data{"event": event, "package": "event.SearchDataVersionMetadataImport"})
 	return nil
 }

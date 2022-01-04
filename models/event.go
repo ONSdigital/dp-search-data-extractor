@@ -23,10 +23,14 @@ type SearchDataImport struct {
 }
 
 type SearchDataVersionMetadataImport struct {
-	CollectionId string `avro:"collection_id"`
-	Edition      string `avro:"edition"`
-	ID           string `avro:"id"`
-	DatasetId    string `avro:"dataset_id"`
-	Version      string `avro:"version"`
-	ReleaseDate  string `avro:"release_date"`
+	ReleaseDate       string   `avro:"release_date"`
+	LatestChanges     []string `avro:"latest_changes"`
+	Title             string   `avro:"title"`
+	Description       string   `avro:"description"`
+	Keywords          []string `avro:"keywords"`
+	ReleaseFrequency  string   `avro:"release_frequency"`
+	NextRelease       string   `avro:"next_release"`
+	UnitOfMeasure     string   `avro:"unit_of_measure"`
+	License           string   `avro:"license"`
+	NationalStatistic string   `avro:"national_statistic"`
 }

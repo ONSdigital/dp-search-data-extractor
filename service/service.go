@@ -73,6 +73,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	// Event Handler for Kafka Consumer
 	handler := &handler.ContentPublishedHandler{
 		ZebedeeCli: zebedeeClient,
+		DatasetCli: datasetapiClient,
 		Producer:   searchDataImportProducer,
 	}
 	event.Consume(ctx, consumer, handler, cfg)

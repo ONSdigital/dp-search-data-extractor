@@ -1,11 +1,25 @@
 package models
 
+// CMDData provides model for datasetAPI metadata response
+type CMDData struct {
+	VersionDetails VersionDetails `json:"version"`
+	DatasetDetails DatasetDetails `json:"datasetdetails"`
+}
+
 // Version represents a version for an edition within a dataset
-type VersionMetadata struct {
-	CollectionId string `json:"collection_id,omitempty"`
-	Edition      string `json:"edition,omitempty"`
-	ID           string `json:"id,omitempty"`
-	DatasetId    string `json:"dataset_id,omitempty"`
-	ReleaseDate  string `json:"release_date,omitempty"`
-	Version      string `json:"version,omitempty"`
+type VersionDetails struct {
+	ReleaseDate   string   `json:"release_date,omitempty"`
+	LatestChanges []string `json:"latestchanges,omitempty"`
+}
+
+// DatasetDetails represents a DatasetDetails for an edition within a dataset
+type DatasetDetails struct {
+	Title             string   `json:"title"`
+	Description       string   `json:"description"`
+	Keywords          []string `json:"keywords,omitempty"`
+	ReleaseFrequency  string   `json:"releasefrequency,omitempty"`
+	NextRelease       string   `json:"nextrelease,omitempty"`
+	UnitOfMeasure     string   `json:"Unitofmeasure,omitempty"`
+	License           string   `json:"license,omitempty"`
+	NationalStatistic string   `json:"nationalstatistic,omitempty"`
 }
