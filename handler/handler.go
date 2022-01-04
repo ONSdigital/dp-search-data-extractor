@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
@@ -17,16 +18,16 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.ContentPublished, keywordsLimit int) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, keywordsLimit int) (err error) {
 
 	traceID := request.NewRequestID(16)
 
 	logData := log.Data{
-		"event": event,
+		"event": cpEvent,
 	}
 	log.Info(ctx, "event handler called", logData)
 
-	contentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, event.URI)
+	contentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, cpEvent.URI)
 	if err != nil {
 		return err
 	}

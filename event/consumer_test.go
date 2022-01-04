@@ -126,8 +126,8 @@ func TestConsume(t *testing.T) {
 }
 
 // marshal helper method to marshal a event into a []byte
-func marshal(event models.ContentPublished) []byte {
-	bytes, err := schema.ContentPublishedEvent.Marshal(event)
+func marshal(cpEvent models.ContentPublished) []byte {
+	bytes, err := schema.ContentPublishedEvent.Marshal(cpEvent)
 	So(err, ShouldBeNil)
 	return bytes
 }

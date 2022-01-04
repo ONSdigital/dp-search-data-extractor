@@ -1,9 +1,10 @@
 package models_test
 
 import (
+	"testing"
+
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 const (
