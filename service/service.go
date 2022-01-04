@@ -170,7 +170,6 @@ func (svc *Service) Close(ctx context.Context) error {
 }
 
 func registerCheckers(ctx context.Context, hc HealthChecker, zebedeeClient clients.ZebedeeClient, consumer kafka.IConsumerGroup, producer kafka.IProducer) (err error) {
-
 	hasErrors := false
 
 	if err := hc.AddCheck("Zebedee client", zebedeeClient.Checker); err != nil {

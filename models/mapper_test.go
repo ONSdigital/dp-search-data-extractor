@@ -83,7 +83,6 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 }
 
 func TestRectifyKeywords_WithEmptyKeywordsAndDefaultLimit(t *testing.T) {
-
 	Convey("Given an empty keywords as received from zebedee  with default keywords limit", t, func() {
 		testKeywords := []string{""}
 
@@ -98,7 +97,6 @@ func TestRectifyKeywords_WithEmptyKeywordsAndDefaultLimit(t *testing.T) {
 }
 
 func TestRectifyKeywords_WithTrimmingKeywordsAndDefaultLimit(t *testing.T) {
-
 	Convey("Given un-trimmed keywords as received from zebedee  with default keywords limit", t, func() {
 		testKeywords := []string{"  testKeywords1,testKeywords2   "}
 
@@ -114,13 +112,10 @@ func TestRectifyKeywords_WithTrimmingKeywordsAndDefaultLimit(t *testing.T) {
 }
 
 func TestRectifyKeywords_LessFourKeywordsAndDefaultLimit(t *testing.T) {
-
 	Convey("Given a keywords as received from zebedee with default keywords limit", t, func() {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4"}
-
 		Convey("When passed to rectify the keywords with default keywords limit", func() {
 			actual := models.RectifyKeywords(testKeywords, -1)
-
 			Convey("Then all the same keywords should be returned", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4"}
 				So(actual, ShouldResemble, expectedKeywords)
@@ -130,13 +125,10 @@ func TestRectifyKeywords_LessFourKeywordsAndDefaultLimit(t *testing.T) {
 }
 
 func TestRectifyKeywords_WithEightKeywordsAndZeroAsLimit(t *testing.T) {
-
 	Convey("Given a keywords as received from zebedee with zero keywords limit", t, func() {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
-
 		Convey("When passed to rectify the keywords with default keywords limits", func() {
 			actual := models.RectifyKeywords(testKeywords, 0)
-
 			Convey("Then keywords should be rectified with empty keyword elements", func() {
 				expectedKeywords := []string{""}
 				So(actual, ShouldResemble, expectedKeywords)
@@ -146,13 +138,10 @@ func TestRectifyKeywords_WithEightKeywordsAndZeroAsLimit(t *testing.T) {
 }
 
 func TestRectifyKeywords_WithEightKeywordsAndDefaultLimit(t *testing.T) {
-
 	Convey("Given a keywords as received from zebedee with default keywords limit", t, func() {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
-
 		Convey("When passed to rectify the keywords with default keywords limits", func() {
 			actual := models.RectifyKeywords(testKeywords, -1)
-
 			Convey("Then keywords should be rectified with correct size with all keyword elements", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5", "testKeywords6", "testkeyword7", "testKeywords8"}
 				So(actual, ShouldResemble, expectedKeywords)
@@ -162,13 +151,10 @@ func TestRectifyKeywords_WithEightKeywordsAndDefaultLimit(t *testing.T) {
 }
 
 func TestRectifyKeywords_EightKeywordsAndFiveAsLimit(t *testing.T) {
-
 	Convey("Given a keywords as received from zebedee with five keywords limit", t, func() {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
-
 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
 			actual := models.RectifyKeywords(testKeywords, 5)
-
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5"}
 				So(actual, ShouldResemble, expectedKeywords)
@@ -178,13 +164,10 @@ func TestRectifyKeywords_EightKeywordsAndFiveAsLimit(t *testing.T) {
 }
 
 func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
-
 	Convey("Given a keywords as received from zebedee with ten keywords limit", t, func() {
 		testKeywords := []string{"testkeyword1,testkeyword2", "testkeyword3,testKeywords4", "testkeyword5,testKeywords6,testkeyword7,testKeywords8"}
-
 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
 			actual := models.RectifyKeywords(testKeywords, 10)
-
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5", "testKeywords6", "testkeyword7", "testKeywords8"}
 				So(actual, ShouldResemble, expectedKeywords)

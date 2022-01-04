@@ -12,13 +12,10 @@ func TestConfig(t *testing.T) {
 	Convey("Given an environment with no environment variables set", t, func() {
 		os.Clearenv()
 		cfg, err := Get()
-
 		Convey("When the config values are retrieved", func() {
-
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
 			})
-
 			Convey("Then the values should be set to the expected defaults", func() {
 				So(cfg.BindAddr, ShouldEqual, "localhost:25800")
 				So(cfg.GracefulShutdownTimeout, ShouldEqual, 5*time.Second)

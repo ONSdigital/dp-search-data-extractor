@@ -35,11 +35,9 @@ var (
 
 func TestProducer_SearchDataImport(t *testing.T) {
 	Convey("Given SearchDataImportProducer has been configured correctly", t, func() {
-
 		pChannels := &kafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
-
 		kafkaProducerMock := &kafkatest.IProducerMock{
 			ChannelsFunc: func() *kafka.ProducerChannels {
 				return pChannels
@@ -52,13 +50,12 @@ func TestProducer_SearchDataImport(t *testing.T) {
 			},
 		}
 
-		//event is message
+		// event is message
 		searchDataImportProducer := event.SearchDataImportProducer{
 			Producer:   kafkaProducerMock,
 			Marshaller: marshallerMock,
 		}
 		Convey("When SearchDataImport is called on the event producer", func() {
-
 			err := searchDataImportProducer.SearchDataImport(ctx, expectedSearchDataImportEvent)
 			So(err, ShouldBeNil)
 
@@ -84,7 +81,6 @@ func TestProducer_SearchDataImport(t *testing.T) {
 
 func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 	Convey("Given InstanceCompletedProducer has been configured correctly", t, func() {
-
 		pChannels := &kafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
@@ -101,7 +97,7 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 			},
 		}
 
-		//event is message
+		// event is message
 		searchDataImportProducer := event.SearchDataImportProducer{
 			Producer:   kafkaProducerMock,
 			Marshaller: marshallerMock,

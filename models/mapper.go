@@ -23,7 +23,6 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 // any whitespace. It also optionally takes a limit which truncates the keywords to the desired amount. This value can
 // be -1 for no truncation.
 func RectifyKeywords(keywords []string, keywordsLimit int) []string {
-
 	var strArray []string
 	rectifiedKeywords := make([]string, 0)
 

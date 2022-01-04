@@ -16,7 +16,6 @@ type ComponentTest struct {
 }
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-
 	testComponent := steps.NewComponent()
 
 	ctx.BeforeScenario(func(*godog.Scenario) {

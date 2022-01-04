@@ -19,7 +19,6 @@ type ContentPublishedHandler struct {
 
 // Handle takes a single event.
 func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, keywordsLimit int) (err error) {
-
 	traceID := request.NewRequestID(16)
 
 	logData := log.Data{
@@ -37,7 +36,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 	}
 	log.Info(ctx, "zebedee response ", logData)
 
-	//byte slice to Json & unMarshall Json
+	// byte slice to Json & unMarshall Json
 	var zebedeeData models.ZebedeeData
 	err = json.Unmarshal(contentPublished, &zebedeeData)
 	if err != nil {
@@ -45,19 +44,19 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		return err
 	}
 
-	//keywords validation
+	// keywords validation
 	logData = log.Data{
 		"keywords":      zebedeeData.Description.Keywords,
 		"keywordsLimit": keywordsLimit,
 	}
 
-	//Mapping Json to Avro
+	// Mapping Json to Avro
 	searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, keywordsLimit)
 	searchData.TraceID = traceID
 	searchData.JobID = ""
 	searchData.SearchIndex = "ONS"
 
-	//Marshall Avro and sending message
+	// Marshall Avro and sending message
 	if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
 		log.Fatal(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return err
