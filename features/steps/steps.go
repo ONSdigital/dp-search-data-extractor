@@ -16,6 +16,7 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/cucumber/godog"
 	"github.com/rdumont/assistdog"
+	"github.com/stretchr/testify/assert"
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -80,15 +81,9 @@ func (c *Component) iShouldReceivePublishedData() error {
 
 	schema.SearchDataImportEvent.Unmarshal(outputData, data)
 
-	if data.CDID != c.inputData.Description.CDID {
-		return fmt.Errorf("Expected CDID: %v Recevived CDID: %v", c.inputData.Description.CDID, data.CDID)
-	}
-
-	if data.DatasetID != c.inputData.Description.DatasetID {
-		return fmt.Errorf("Expected DatasetID: %v Recevived DatasetID: %v", c.inputData.Description.DatasetID, data.DatasetID)
-	}
-
-	return nil
+	assert.Equal(&c.ErrorFeature, c.inputData.Description.CDID, data.CDID)
+	assert.Equal(&c.ErrorFeature, c.inputData.Description.DatasetID, data.DatasetID)
+	return c.ErrorFeature.StepError()
 }
 
 func (c *Component) convertToKafkaEvents(table *godog.Table) ([]*models.ContentPublished, error) {
