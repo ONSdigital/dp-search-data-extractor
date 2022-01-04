@@ -21,7 +21,6 @@ import (
 const outputFilePath = "/tmp/dpSearchDataExtractor.txt"
 
 type Component struct {
-	componenttest.ErrorFeature
 	inputData     models.ZebedeeData
 	serviceList   *service.ExternalServiceList
 	KafkaConsumer kafka.IConsumerGroup
