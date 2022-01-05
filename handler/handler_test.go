@@ -311,7 +311,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				var actual models.SearchDataVersionMetadataImport
 				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				// So(actual.id, ShouldEqual, expectedVersionMetadataEvent.id)
+				So(actual.DataId, ShouldEqual, expectedVersionMetadataEvent.DataId)
 				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEvent.ReleaseDate)
 				So(actual.LatestChanges, ShouldHaveLength, 2)
 				So(actual.LatestChanges[0], ShouldEqual, "someLatestChanges0")

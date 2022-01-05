@@ -104,7 +104,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		// Mapping Json to Avro
 		versionDetails := models.VersionDetails{
 			ReleaseDate: datasetMetadataPublished.ReleaseDate,
-			// LatestChanges: datasetMetadataPublished.LatestChanges,
 		}
 
 		datasetDetailsData := models.DatasetDetails{
