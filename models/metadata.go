@@ -2,6 +2,7 @@ package models
 
 // CMDData provides model for datasetAPI metadata response
 type CMDData struct {
+	DataId         string         `json:"dataid"`
 	VersionDetails VersionDetails `json:"version"`
 	DatasetDetails DatasetDetails `json:"datasetdetails"`
 }
@@ -21,5 +22,5 @@ type DatasetDetails struct {
 	NextRelease       string   `json:"nextrelease,omitempty"`
 	UnitOfMeasure     string   `json:"Unitofmeasure,omitempty"`
 	License           string   `json:"license,omitempty"`
-	NationalStatistic string   `json:"nationalstatistic,omitempty"`
+	NationalStatistic bool     `json:"nationalstatistic,omitempty"`
 }

@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
@@ -32,7 +33,7 @@ const (
 	someNextRelease        = "nextRelease"
 	someUnitOfMeasure      = "unitOfMesure"
 	someLicense            = "licence"
-	someNationalStatistics = "somenationalstatics"
+	someNationalStatistics = true
 )
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
@@ -243,7 +244,7 @@ func TestMapDatasetApiToSearchDataImport(t *testing.T) {
 				So(actual.NextRelease, ShouldResemble, someNextRelease)
 				So(actual.UnitOfMeasure, ShouldResemble, someUnitOfMeasure)
 				So(actual.License, ShouldResemble, someLicense)
-				So(actual.NationalStatistic, ShouldResemble, someNationalStatistics)
+				So(actual.NationalStatistic, ShouldResemble, strconv.FormatBool(someNationalStatistics))
 				So(actual.Keywords, ShouldNotBeEmpty)
 				So(actual.Keywords, ShouldHaveLength, 4)
 				So(actual.Keywords[0], ShouldResemble, somekeyword0)

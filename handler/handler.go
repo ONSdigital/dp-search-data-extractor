@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/ONSdigital/dp-net/request"
@@ -116,10 +115,11 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 			NextRelease:       datasetMetadataPublished.NextRelease,
 			UnitOfMeasure:     datasetMetadataPublished.UnitOfMeasure,
 			License:           datasetMetadataPublished.License,
-			NationalStatistic: strconv.FormatBool(datasetMetadataPublished.NationalStatistic),
+			NationalStatistic: datasetMetadataPublished.NationalStatistic,
 		}
 
 		versionMetadata := models.CMDData{
+			DataId:         generatedID,
 			VersionDetails: versionDetails,
 			DatasetDetails: datasetDetailsData,
 		}

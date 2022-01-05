@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
@@ -72,12 +72,12 @@ var (
 func TestProducer_SearchDataImport(t *testing.T) {
 	Convey("Given SearchDataImportProducer has been configured correctly", t, func() {
 
-		pChannels := &kafka.ProducerChannels{
+		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
 
 		kafkaProducerMock := &kafkatest.IProducerMock{
-			ChannelsFunc: func() *kafka.ProducerChannels {
+			ChannelsFunc: func() *dpkafka.ProducerChannels {
 				return pChannels
 			},
 		}
@@ -121,12 +121,12 @@ func TestProducer_SearchDataImport(t *testing.T) {
 func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 	Convey("Given InstanceCompletedProducer has been configured correctly", t, func() {
 
-		pChannels := &kafka.ProducerChannels{
+		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
 
 		kafkaProducerMock := &kafkatest.IProducerMock{
-			ChannelsFunc: func() *kafka.ProducerChannels {
+			ChannelsFunc: func() *dpkafka.ProducerChannels {
 				return pChannels
 			},
 		}
@@ -162,12 +162,12 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 
 	Convey("Given SearchDatasetVersionMetadataImport has been configured correctly", t, func() {
 
-		pChannels := &kafka.ProducerChannels{
+		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
 
 		kafkaProducerMock := &kafkatest.IProducerMock{
-			ChannelsFunc: func() *kafka.ProducerChannels {
+			ChannelsFunc: func() *dpkafka.ProducerChannels {
 				return pChannels
 			},
 		}

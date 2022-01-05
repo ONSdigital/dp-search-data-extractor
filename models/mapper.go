@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -53,6 +54,7 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 func MapDatasetVersionToSearchDataImport(cmdData CMDData) SearchDataVersionMetadataImport {
 
 	versionMetaData := SearchDataVersionMetadataImport{
+		DataId:            cmdData.DataId,
 		ReleaseDate:       cmdData.VersionDetails.ReleaseDate,
 		LatestChanges:     cmdData.VersionDetails.LatestChanges,
 		Title:             cmdData.DatasetDetails.Title,
@@ -62,7 +64,7 @@ func MapDatasetVersionToSearchDataImport(cmdData CMDData) SearchDataVersionMetad
 		NextRelease:       cmdData.DatasetDetails.NextRelease,
 		UnitOfMeasure:     cmdData.DatasetDetails.UnitOfMeasure,
 		License:           cmdData.DatasetDetails.License,
-		NationalStatistic: cmdData.DatasetDetails.NationalStatistic,
+		NationalStatistic: strconv.FormatBool(cmdData.DatasetDetails.NationalStatistic),
 	}
 
 	return versionMetaData

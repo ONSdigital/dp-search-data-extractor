@@ -23,6 +23,7 @@ type SearchDataImport struct {
 }
 
 type SearchDataVersionMetadataImport struct {
+	DataId            string   `avro:"data_id"`
 	ReleaseDate       string   `avro:"release_date"`
 	LatestChanges     []string `avro:"latest_changes"`
 	Title             string   `avro:"title"`

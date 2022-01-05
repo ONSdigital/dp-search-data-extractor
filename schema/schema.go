@@ -46,6 +46,7 @@ var searchDatasetVersionMetadataImport = `{
   "type": "record",
   "name": "search-data-import",
   "fields": [
+    {"name": "data_id", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "latest_changes","type":["null",{"type":"array","items":"string"}]},
     {"name": "title", "type": "string", "default": ""},

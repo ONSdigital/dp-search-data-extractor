@@ -7,38 +7,17 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/handler"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
+
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
+	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	. "github.com/smartystreets/goconvey/convey"
-)
-
-const (
-	somekeyword0 = "keyword0"
-	somekeyword1 = "keyword1"
-	somekeyword2 = "keyword2"
-	somekeyword3 = "keyword3"
-
-	someMetaDescription = "meta desc"
-	someReleaseDate     = "release date"
-	someTitle           = "Some-Incredible-Title"
-
-	someLatestChanges0 = "latestchanges0"
-	someLatestChanges1 = "latestchanges1"
-	someLatestChanges2 = "latestchanges2"
-	someLatestChanges3 = "latestchanges3"
-
-	someReleaseFrequency   = "releasefrequency"
-	someNextRelease        = "nextRelease"
-	someUnitOfMeasure      = "unitOfMesure"
-	someLicense            = "licence"
-	someNationalStatistics = "false"
 )
 
 var (
@@ -68,9 +47,9 @@ var (
 		return data, nil
 	}
 
-	jsonMockDatasetApiResponse = setupMetadata()
+	mockDatasetApiJsonResponse = setupMetadata()
 	getVersionMetadataFunc     = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
-		data := jsonMockDatasetApiResponse
+		data := mockDatasetApiJsonResponse
 		return data, nil
 	}
 
@@ -79,10 +58,10 @@ var (
 		return dataset.Metadata{}, errDatasetApi
 	}
 
-	pChannels = &kafka.ProducerChannels{
+	pChannels = &dpkafka.ProducerChannels{
 		Output: make(chan []byte, 1),
 	}
-	getChannelFunc = func() *kafka.ProducerChannels {
+	getChannelFunc = func() *dpkafka.ProducerChannels {
 		return pChannels
 	}
 
@@ -129,6 +108,17 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 
 		Convey("When given a valid event", func() {
 			err := eventHandler.Handle(ctx, &testZebedeeEvent, -1, *cfg)
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("And then get content published from zebedee", func() {
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
+				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
+
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
+			})
 
 			var avroBytes []byte
 			select {
@@ -137,17 +127,6 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 			case <-time.After(testTimeout):
 				t.FailNow()
 			}
-
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
-			})
-			Convey("And then get content published from zebedee", func() {
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-
-				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
-			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
@@ -275,16 +254,16 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 
 	expectedVersionMetadataEvent := models.SearchDataVersionMetadataImport{
-		ReleaseDate:       "release date",
-		LatestChanges:     []string{someLatestChanges0, someLatestChanges1},
-		Title:             someTitle,
-		Description:       someMetaDescription,
-		Keywords:          []string{somekeyword0, somekeyword1},
-		ReleaseFrequency:  someReleaseFrequency,
-		NextRelease:       someNextRelease,
-		UnitOfMeasure:     someUnitOfMeasure,
-		License:           someLicense,
-		NationalStatistic: someNationalStatistics,
+		ReleaseDate:       "2020-11-07T00:00:00.000Z",
+		LatestChanges:     []string{"someLatestChanges0", "someLatestChanges1"},
+		Title:             "someTitle",
+		Description:       "someDescription",
+		Keywords:          []string{"somekeyword0", "somekeyword1"},
+		ReleaseFrequency:  "someReleaseFrequency",
+		NextRelease:       "someNextRelease",
+		UnitOfMeasure:     "someUnitOfMeasure",
+		License:           "someLicense",
+		NationalStatistic: "true",
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -332,21 +311,22 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				var actual models.SearchDataVersionMetadataImport
 				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(actual.ReleaseDate, ShouldEqual, someReleaseDate)
+				// So(actual.id, ShouldEqual, expectedVersionMetadataEvent.id)
+				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEvent.ReleaseDate)
 				So(actual.LatestChanges, ShouldHaveLength, 2)
-				So(actual.LatestChanges[0], ShouldEqual, someLatestChanges0)
-				So(actual.LatestChanges[1], ShouldEqual, someLatestChanges1)
+				So(actual.LatestChanges[0], ShouldEqual, "someLatestChanges0")
+				So(actual.LatestChanges[1], ShouldEqual, "someLatestChanges1")
 
-				So(actual.Title, ShouldEqual, someTitle)
-				So(actual.Description, ShouldEqual, someMetaDescription)
+				So(actual.Title, ShouldEqual, expectedVersionMetadataEvent.Title)
+				So(actual.Description, ShouldEqual, expectedVersionMetadataEvent.Description)
 				So(actual.Keywords, ShouldHaveLength, 2)
-				So(actual.Keywords[0], ShouldEqual, somekeyword0)
-				So(actual.Keywords[1], ShouldEqual, somekeyword1)
-				So(actual.ReleaseFrequency, ShouldEqual, someReleaseFrequency)
-				So(actual.NextRelease, ShouldEqual, someNextRelease)
-				So(actual.UnitOfMeasure, ShouldEqual, someUnitOfMeasure)
-				So(actual.License, ShouldEqual, someLicense)
-				So(actual.NationalStatistic, ShouldEqual, someNationalStatistics)
+				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
+				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
+				So(actual.ReleaseFrequency, ShouldEqual, expectedVersionMetadataEvent.ReleaseFrequency)
+				So(actual.NextRelease, ShouldEqual, expectedVersionMetadataEvent.NextRelease)
+				So(actual.UnitOfMeasure, ShouldEqual, expectedVersionMetadataEvent.UnitOfMeasure)
+				So(actual.License, ShouldEqual, expectedVersionMetadataEvent.License)
+				So(actual.NationalStatistic, ShouldEqual, expectedVersionMetadataEvent.NationalStatistic)
 			})
 		})
 	})
