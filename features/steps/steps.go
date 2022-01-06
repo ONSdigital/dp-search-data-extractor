@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	zClientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
@@ -42,7 +43,7 @@ func (c *Component) sendKafkafkaEvent(table *godog.Table) error {
 
 func (c *Component) processKafkaEvent() error {
 	c.inputData = models.ZebedeeData{
-		DataType: "something",
+		DataType: "Reviewed-uris",
 		Description: models.Description{
 			CDID:      "123",
 			DatasetID: "456",
@@ -58,6 +59,23 @@ func (c *Component) processKafkaEvent() error {
 		CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error { return nil },
 		GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
 			return marshelledData, nil
+		},
+	}
+
+	datasetAPIJSONResponse := dataset.Metadata{
+		Version: dataset.Version{
+			ReleaseDate: "releasedate",
+		},
+		DatasetDetails: dataset.DatasetDetails{
+			Title:       "title",
+			Description: "description",
+			Keywords:    &[]string{"keyword1", "keyword2"},
+		},
+	}
+	c.datasetClient = &zClientMock.DatasetClientMock{
+		CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error { return nil },
+		GetVersionMetadataFunc: func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
+			return datasetAPIJSONResponse, nil
 		},
 	}
 	// run application in separate goroutine

@@ -23,6 +23,7 @@ type Component struct {
 	KafkaConsumer kafka.IConsumerGroup
 	KafkaProducer kafka.IProducer
 	zebedeeClient clients.ZebedeeClient
+	datasetClient clients.DatasetClient
 	errorChan     chan error
 	svc           *service.Service
 	cfg           *config.Config
@@ -52,6 +53,7 @@ func NewComponent() *Component {
 		DoGetHealthCheckFunc:   c.DoGetHealthCheck,
 		DoGetHTTPServerFunc:    c.DoGetHTTPServer,
 		DoGetZebedeeClientFunc: c.DoGetZebedeeClient,
+		DoGetDatasetClientFunc: c.DoGetDatasetClient,
 	}
 
 	c.serviceList = service.NewServiceList(initMock)
@@ -81,6 +83,10 @@ func (c *Component) DoGetProducer(ctx context.Context, cfg *config.Config) (kafk
 
 func (c *Component) DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient {
 	return c.zebedeeClient
+}
+
+func (c *Component) DoGetDatasetClient(cfg *config.Config) clients.DatasetClient {
+	return c.datasetClient
 }
 
 func funcCheck(ctx context.Context, state *healthcheck.CheckState) error {
