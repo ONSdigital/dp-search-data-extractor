@@ -30,10 +30,16 @@ var (
 		CollectionID: "testZebdeeCollectionID",
 	}
 
-	testDatasetApiEvent = models.ContentPublished{
+	testDatasetEvent = models.ContentPublished{
 		URI:          "/datasets/cphi01/editions/timeseries/versions/version/metadata",
 		DataType:     "Dataset-uris",
 		CollectionID: "testDatasetApiCollectionID",
+	}
+
+	testInvalidEvent = models.ContentPublished{
+		URI:          "/datasets/invalidEvent/metadata",
+		DataType:     "Unknown-uris",
+		CollectionID: "invalidDatasetApiCollectionID",
 	}
 
 	errZebedee                = errors.New("zebedee test error")
@@ -253,17 +259,18 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 
-	expectedVersionMetadataEvent := models.SearchDataVersionMetadataImport{
-		ReleaseDate:       "2020-11-07T00:00:00.000Z",
-		LatestChanges:     []string{"someLatestChanges0", "someLatestChanges1"},
-		Title:             "someTitle",
-		Description:       "someDescription",
-		Keywords:          []string{"somekeyword0", "somekeyword1"},
-		ReleaseFrequency:  "someReleaseFrequency",
-		NextRelease:       "someNextRelease",
-		UnitOfMeasure:     "someUnitOfMeasure",
-		License:           "someLicense",
-		NationalStatistic: "true",
+	expectedVersionMetadataEvent := models.SearchDataImport{
+		Uid:             "cphi01-timeseries",
+		DataType:        "",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"somekeyword0", "somekeyword1"},
+		MetaDescription: "someDescription",
+		Summary:         "",
+		ReleaseDate:     "2020-11-07T00:00:00.000Z",
+		Title:           "someTitle",
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -271,7 +278,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 	}
 
 	//for mock marshaller
-	expectedVersionMetadataSearchDataImport := marshalVersionMetadataSearchDataImport(t, expectedVersionMetadataEvent)
+	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedVersionMetadataEvent)
 	marshallerMock := &mock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {
 			return expectedVersionMetadataSearchDataImport, nil
@@ -283,14 +290,14 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		Marshaller: marshallerMock,
 	}
 
-	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
+	Convey("Given an event handler working successfully, and an event containing a valid dataType", t, func() {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
 		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
 
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
-		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testDatasetApiEvent, -1, *cfg)
+		Convey("When given a valid event for cmd dataset", func() {
+			err := eventHandler.Handle(ctx, &testDatasetEvent, -1, *cfg)
 
 			var avroBytes []byte
 			select {
@@ -308,35 +315,27 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 1)
 			})
 			Convey("And then the expected bytes are sent to producer.output", func() {
-				var actual models.SearchDataVersionMetadataImport
-				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
+				var actual models.SearchDataImport
+				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(actual.DataId, ShouldEqual, expectedVersionMetadataEvent.DataId)
+				So(actual.Uid, ShouldEqual, expectedVersionMetadataEvent.Uid)
 				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEvent.ReleaseDate)
-				So(actual.LatestChanges, ShouldHaveLength, 2)
-				So(actual.LatestChanges[0], ShouldEqual, "someLatestChanges0")
-				So(actual.LatestChanges[1], ShouldEqual, "someLatestChanges1")
-
 				So(actual.Title, ShouldEqual, expectedVersionMetadataEvent.Title)
-				So(actual.Description, ShouldEqual, expectedVersionMetadataEvent.Description)
+				So(actual.MetaDescription, ShouldEqual, expectedVersionMetadataEvent.MetaDescription)
 				So(actual.Keywords, ShouldHaveLength, 2)
 				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
 				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
-				So(actual.ReleaseFrequency, ShouldEqual, expectedVersionMetadataEvent.ReleaseFrequency)
-				So(actual.NextRelease, ShouldEqual, expectedVersionMetadataEvent.NextRelease)
-				So(actual.UnitOfMeasure, ShouldEqual, expectedVersionMetadataEvent.UnitOfMeasure)
-				So(actual.License, ShouldEqual, expectedVersionMetadataEvent.License)
-				So(actual.NationalStatistic, ShouldEqual, expectedVersionMetadataEvent.NationalStatistic)
+
 			})
 		})
 	})
-	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
+	Convey("Given an event handler not working successfully, and an event containing a valid dataType", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
-		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testDatasetApiEvent, 1, *cfg)
+		Convey("When given a valid event for a valid dataset", func() {
+			err := eventHandler.Handle(ctx, &testDatasetEvent, 1, *cfg)
 
 			Convey("Then Zebedee is called 0 time and Dataset called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
@@ -351,6 +350,49 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 	})
 }
 
+func TestHandlerForInvalidDataType(t *testing.T) {
+
+	expectedInvalidSearchDataImportEvent := models.SearchDataImport{}
+
+	kafkaProducerMock := &kafkatest.IProducerMock{
+		ChannelsFunc: getChannelFunc,
+	}
+
+	//for mock marshaller
+	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedInvalidSearchDataImportEvent)
+	marshallerMock := &mock.MarshallerMock{
+		MarshalFunc: func(s interface{}) ([]byte, error) {
+			return expectedVersionMetadataSearchDataImport, nil
+		},
+	}
+
+	producerMock := &event.SearchDataImportProducer{
+		Producer:   kafkaProducerMock,
+		Marshaller: marshallerMock,
+	}
+
+	Convey("Given an event handler working successfully, and an event containing a invalid dataType", t, func() {
+
+		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
+		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
+
+		Convey("When given a invalid event", func() {
+			err := eventHandler.Handle(ctx, &testInvalidEvent, 1, *cfg)
+
+			Convey("Then both Zebedee and Dataset is called 0 time with no expected error ", func() {
+				So(err, ShouldBeNil)
+
+				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
+				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldBeEmpty)
+
+				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 0)
+				So(datasetMockInError.GetVersionMetadataCalls(), ShouldBeEmpty)
+			})
+		})
+	})
+}
+
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
 	bytes, err := schema.SearchDataImportEvent.Marshal(event)
@@ -360,35 +402,23 @@ func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte
 	return bytes
 }
 
-func marshalVersionMetadataSearchDataImport(t *testing.T, event models.SearchDataVersionMetadataImport) []byte {
-	bytes, err := schema.SearchDatasetVersionMetadataEvent.Marshal(event)
-	if err != nil {
-		t.Fatalf("avro mashalling failed with error : %v", err)
-	}
-	return bytes
-}
+// func marshalVersionMetadataSearchDataImport(t *testing.T, event models.SearchDataVersionMetadataImport) []byte {
+// 	bytes, err := schema.SearchDatasetVersionMetadataEvent.Marshal(event)
+// 	if err != nil {
+// 		t.Fatalf("avro mashalling failed with error : %v", err)
+// 	}
+// 	return bytes
+// }
 
 func setupMetadata() dataset.Metadata {
 	m := dataset.Metadata{
 		Version: dataset.Version{
 			ReleaseDate: "release date",
-			LatestChanges: []dataset.Change{
-				{
-					Description: "change description",
-					Name:        "change name",
-					Type:        "change type",
-				},
-			},
 		},
 		DatasetDetails: dataset.DatasetDetails{
-			Title:             "title",
-			Description:       "description",
-			Keywords:          &[]string{"keyword_1", "keyword_2"},
-			NextRelease:       "next release",
-			ReleaseFrequency:  "release frequency",
-			UnitOfMeasure:     "unit of measure",
-			License:           "license",
-			NationalStatistic: true,
+			Title:       "title",
+			Description: "description",
+			Keywords:    &[]string{"keyword_1", "keyword_2"},
 		},
 	}
 	return m

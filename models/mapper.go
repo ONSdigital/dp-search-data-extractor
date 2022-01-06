@@ -1,7 +1,6 @@
 package models
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -10,6 +9,7 @@ import (
 // truncation.
 func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int) SearchDataImport {
 	searchData := SearchDataImport{
+		Uid:             zebedeeData.Description.Title,
 		DataType:        zebedeeData.DataType,
 		CDID:            zebedeeData.Description.CDID,
 		DatasetID:       zebedeeData.Description.DatasetID,
@@ -51,20 +51,14 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 }
 
 // MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version metadata struct.
-func MapDatasetVersionToSearchDataImport(cmdData CMDData) SearchDataVersionMetadataImport {
+func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
 
-	versionMetaData := SearchDataVersionMetadataImport{
-		DataId:            cmdData.DataId,
-		ReleaseDate:       cmdData.VersionDetails.ReleaseDate,
-		LatestChanges:     cmdData.VersionDetails.LatestChanges,
-		Title:             cmdData.DatasetDetails.Title,
-		Description:       cmdData.DatasetDetails.Description,
-		Keywords:          cmdData.DatasetDetails.Keywords,
-		ReleaseFrequency:  cmdData.DatasetDetails.ReleaseFrequency,
-		NextRelease:       cmdData.DatasetDetails.NextRelease,
-		UnitOfMeasure:     cmdData.DatasetDetails.UnitOfMeasure,
-		License:           cmdData.DatasetDetails.License,
-		NationalStatistic: strconv.FormatBool(cmdData.DatasetDetails.NationalStatistic),
+	versionMetaData := SearchDataImport{
+		Uid:             cmdData.Uid,
+		ReleaseDate:     cmdData.VersionDetails.ReleaseDate,
+		Keywords:        cmdData.DatasetDetails.Keywords,
+		MetaDescription: cmdData.DatasetDetails.Description,
+		Title:           cmdData.DatasetDetails.Title,
 	}
 
 	return versionMetaData

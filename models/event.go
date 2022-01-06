@@ -9,6 +9,7 @@ type ContentPublished struct {
 
 // SearchDataImport provides event data for a search data import
 type SearchDataImport struct {
+	Uid             string   `avro:"uid"`
 	DataType        string   `avro:"data_type"`
 	JobID           string   `avro:"job_id"`
 	SearchIndex     string   `avro:"search_index"`
@@ -20,18 +21,4 @@ type SearchDataImport struct {
 	Summary         string   `avro:"summary"`
 	Title           string   `avro:"title"`
 	TraceID         string   `avro:"trace_id"`
-}
-
-type SearchDataVersionMetadataImport struct {
-	DataId            string   `avro:"data_id"`
-	ReleaseDate       string   `avro:"release_date"`
-	LatestChanges     []string `avro:"latest_changes"`
-	Title             string   `avro:"title"`
-	Description       string   `avro:"description"`
-	Keywords          []string `avro:"keywords"`
-	ReleaseFrequency  string   `avro:"release_frequency"`
-	NextRelease       string   `avro:"next_release"`
-	UnitOfMeasure     string   `avro:"unit_of_measure"`
-	License           string   `avro:"license"`
-	NationalStatistic string   `avro:"national_statistic"`
 }

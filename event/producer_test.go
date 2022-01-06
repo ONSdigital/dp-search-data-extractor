@@ -26,17 +26,6 @@ const (
 	someReleaseDate     = "2021-12-13"
 	someSummary         = "Some-Amazing-Summary"
 	someTitle           = "Some-Incredible-Title"
-
-	someLatestChanges0 = "latestchanges0"
-	someLatestChanges1 = "latestchanges1"
-	someLatestChanges2 = "latestchanges2"
-	someLatestChanges3 = "latestchanges3"
-
-	someReleaseFrequency   = "releasefrequency"
-	someNextRelease        = "nextRelease"
-	someUnitOfMeasure      = "unitOfMesure"
-	someLicense            = "licence"
-	someNationalStatistics = "nationalstatistics"
 )
 
 var (
@@ -55,17 +44,17 @@ var (
 		Title:           "",
 	}
 
-	expectedVersionMetadataEvent = models.SearchDataVersionMetadataImport{
-		ReleaseDate:       someReleaseDate,
-		LatestChanges:     []string{someLatestChanges0, someLatestChanges1},
-		Title:             someTitle,
-		Description:       someMetaDescription,
-		Keywords:          []string{somekeyword0, somekeyword1},
-		ReleaseFrequency:  someReleaseFrequency,
-		NextRelease:       someNextRelease,
-		UnitOfMeasure:     someUnitOfMeasure,
-		License:           someLicense,
-		NationalStatistic: someNationalStatistics,
+	expectedVersionMetadataEvent = models.SearchDataImport{
+		DataType:        "testDataType",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{somekeyword0, somekeyword1},
+		MetaDescription: someMetaDescription,
+		Summary:         "",
+		ReleaseDate:     someReleaseDate,
+		Title:           someTitle,
 	}
 )
 
@@ -174,7 +163,7 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 
 		marshallerMock := &mock.MarshallerMock{
 			MarshalFunc: func(s interface{}) ([]byte, error) {
-				return schema.SearchDatasetVersionMetadataEvent.Marshal(s)
+				return schema.SearchDataImportEvent.Marshal(s)
 			},
 		}
 
@@ -185,7 +174,7 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 		}
 		Convey("When SearchDatasetVersionMetadataImport is called on the event producer", func() {
 
-			err := searchDataVersionImportProducer.SearchDatasetVersionMetadataImport(ctx, expectedVersionMetadataEvent)
+			err := searchDataVersionImportProducer.SearchDataImport(ctx, expectedVersionMetadataEvent)
 			So(err, ShouldBeNil)
 
 			var avroBytes []byte
@@ -199,8 +188,8 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 			}
 
 			Convey("Then the expected bytes are sent to producer.output", func() {
-				var actual models.SearchDataVersionMetadataImport
-				err = schema.SearchDatasetVersionMetadataEvent.Unmarshal(avroBytes, &actual)
+				var actual models.SearchDataImport
+				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
 				So(expectedVersionMetadataEvent, ShouldResemble, actual)
 			})

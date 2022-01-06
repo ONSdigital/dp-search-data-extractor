@@ -1,7 +1,6 @@
 package models_test
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
@@ -23,22 +22,12 @@ const (
 	someReleaseDate     = "2021-12-13"
 	someSummary         = "Some Amazing Summary"
 	someTitle           = "Some Incredible Title"
-
-	someLatestChanges0 = "latestchanges0"
-	someLatestChanges1 = "latestchanges1"
-	someLatestChanges2 = "latestchanges2"
-	someLatestChanges3 = "latestchanges3"
-
-	someReleaseFrequency   = "releasefrequency"
-	someNextRelease        = "nextRelease"
-	someUnitOfMeasure      = "unitOfMesure"
-	someLicense            = "licence"
-	someNationalStatistics = true
 )
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 	Convey("Given some valid zebedee data with  ", t, func() {
 		zebendeeData := models.ZebedeeData{
+			Uid:      someTitle,
 			DataType: someDataType,
 			Description: models.Description{
 				CDID:            someCDID,
@@ -56,6 +45,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 			result := models.MapZebedeeDataToSearchDataImport(zebendeeData, -1)
 
 			Convey("Then the result should be validly mapped with 4 keywords", func() {
+				So(result.Uid, ShouldResemble, someTitle)
 				So(result.DataType, ShouldResemble, someDataType)
 				So(result.CDID, ShouldResemble, someCDID)
 				So(result.DatasetID, ShouldResemble, someDatasetID)
@@ -205,46 +195,29 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 	})
 }
 
-func TestMapDatasetApiToSearchDataImport(t *testing.T) {
+func TestMapDatasetVersionMetadataToSearchDataImport(t *testing.T) {
 
 	Convey("Given some valid DatasetAPI data with", t, func() {
 
 		CMDTestData := models.CMDData{
+			Uid: "uid",
 			VersionDetails: models.VersionDetails{
-				ReleaseDate:   someReleaseDate,
-				LatestChanges: []string{someLatestChanges0, someLatestChanges1, someLatestChanges2, someLatestChanges3},
+				ReleaseDate: someReleaseDate,
 			},
 			DatasetDetails: models.DatasetDetails{
-				Title:             someTitle,
-				Description:       someMetaDescription,
-				Keywords:          []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
-				ReleaseFrequency:  someReleaseFrequency,
-				NextRelease:       someNextRelease,
-				UnitOfMeasure:     someUnitOfMeasure,
-				License:           someLicense,
-				NationalStatistic: someNationalStatistics,
+				Title:       someTitle,
+				Description: someMetaDescription,
+				Keywords:    []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
 			},
 		}
 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
-			actual := models.MapDatasetVersionToSearchDataImport(CMDTestData)
+			actual := models.MapVersionMetadataToSearchDataImport(CMDTestData)
 
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
 
+				So(actual.Uid, ShouldResemble, "uid")
 				So(actual.ReleaseDate, ShouldResemble, someReleaseDate)
-				So(actual.LatestChanges, ShouldNotBeEmpty)
-				So(actual.LatestChanges, ShouldHaveLength, 4)
-				So(actual.LatestChanges[0], ShouldResemble, someLatestChanges0)
-				So(actual.LatestChanges[1], ShouldResemble, someLatestChanges1)
-				So(actual.LatestChanges[2], ShouldResemble, someLatestChanges2)
-				So(actual.LatestChanges[3], ShouldResemble, someLatestChanges3)
-
 				So(actual.Title, ShouldResemble, someTitle)
-				So(actual.Description, ShouldResemble, someMetaDescription)
-				So(actual.ReleaseFrequency, ShouldResemble, someReleaseFrequency)
-				So(actual.NextRelease, ShouldResemble, someNextRelease)
-				So(actual.UnitOfMeasure, ShouldResemble, someUnitOfMeasure)
-				So(actual.License, ShouldResemble, someLicense)
-				So(actual.NationalStatistic, ShouldResemble, strconv.FormatBool(someNationalStatistics))
 				So(actual.Keywords, ShouldNotBeEmpty)
 				So(actual.Keywords, ShouldHaveLength, 4)
 				So(actual.Keywords[0], ShouldResemble, somekeyword0)

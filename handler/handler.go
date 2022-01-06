@@ -37,9 +37,9 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 	}
 	log.Info(ctx, "event handler called with datatype", logData)
 
-	if event.DataType == ZEBEDEE_DATATYPE {
+	traceID := request.NewRequestID(16)
 
-		traceID := request.NewRequestID(16)
+	if event.DataType == ZEBEDEE_DATATYPE {
 
 		// Make a call to Zebedee
 		zebedeeContentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, event.URI)
@@ -62,6 +62,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 
 		//keywords validation
 		logData = log.Data{
+			"uid": zebedeeData.Description.Title,
 			"keywords":      zebedeeData.Description.Keywords,
 			"keywordsLimit": keywordsLimit,
 		}
@@ -76,7 +77,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 			return err
 		}
-
 	} else if event.DataType == DATASETAPI_DATATYPE {
 
 		datasetId, edition, version, err := getIDsFromUri(event.URI)
@@ -89,15 +89,15 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		generatedID := fmt.Sprintf("%s-%s", datasetId, edition)
 
 		// Make a call to DatasetAPI
-		datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, cfg.UserAuthToken, cfg.ServiceAuthToken, event.CollectionID, datasetId, edition, version)
+		datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, event.CollectionID, datasetId, edition, version)
 		if err != nil {
 			log.Error(ctx, "cannot get dataset published contents version %s from api", err)
 			return err
 		}
 
 		logData = log.Data{
-			"ID generated":            generatedID,
-			"datasetContentPublished": datasetMetadataPublished,
+			"uid generated":   generatedID,
+			"contentPublished": datasetMetadataPublished,
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
 
@@ -107,30 +107,28 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, event *models.Cont
 		}
 
 		datasetDetailsData := models.DatasetDetails{
-			Title:             datasetMetadataPublished.Title,
-			Description:       datasetMetadataPublished.Description,
-			Keywords:          *datasetMetadataPublished.Keywords,
-			ReleaseFrequency:  datasetMetadataPublished.ReleaseFrequency,
-			NextRelease:       datasetMetadataPublished.NextRelease,
-			UnitOfMeasure:     datasetMetadataPublished.UnitOfMeasure,
-			License:           datasetMetadataPublished.License,
-			NationalStatistic: datasetMetadataPublished.NationalStatistic,
+			Title:       datasetMetadataPublished.Title,
+			Description: datasetMetadataPublished.Description,
+			Keywords:    *datasetMetadataPublished.Keywords,
 		}
 
 		versionMetadata := models.CMDData{
-			DataId:         generatedID,
+			Uid:            generatedID,
 			VersionDetails: versionDetails,
 			DatasetDetails: datasetDetailsData,
 		}
 
-		datasetVersionMetadata := models.MapDatasetVersionToSearchDataImport(versionMetadata)
+		datasetVersionMetadata := models.MapVersionMetadataToSearchDataImport(versionMetadata)
 		logData = log.Data{
 			"datasetVersionData": datasetVersionMetadata,
 		}
 		log.Info(ctx, "datasetVersionMetadata ", logData)
+		datasetVersionMetadata.TraceID = traceID
+		datasetVersionMetadata.JobID = ""
+		datasetVersionMetadata.SearchIndex = "ONS"
 
 		// Marshall Avro and sending message
-		if err := h.Producer.SearchDatasetVersionMetadataImport(ctx, datasetVersionMetadata); err != nil {
+		if err := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); err != nil {
 			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", err)
 			return err
 		}
