@@ -53,15 +53,15 @@ var (
 		return data, nil
 	}
 
-	mockDatasetApiJsonResponse = setupMetadata()
+	mockDatasetAPIJSONResponse = setupMetadata()
 	getVersionMetadataFunc     = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
-		data := mockDatasetApiJsonResponse
+		data := mockDatasetAPIJSONResponse
 		return data, nil
 	}
 
-	errDatasetApi                 = errors.New("dataset api version metadata test error")
+	errDatasetAPI                 = errors.New("dataset api version metadata test error")
 	getVersionMetadataFuncInError = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
-		return dataset.Metadata{}, errDatasetApi
+		return dataset.Metadata{}, errDatasetAPI
 	}
 
 	pChannels = &dpkafka.ProducerChannels{
@@ -210,7 +210,6 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event with default keywords limit", func() {
-
 			err := eventHandler.Handle(ctx, &testZebedeeEvent, -1, *cfg)
 
 			var avroBytes []byte
@@ -252,9 +251,8 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 }
 
 func TestHandlerForDatasetVersionMetadata(t *testing.T) {
-
 	expectedVersionMetadataEvent := models.SearchDataImport{
-		Uid:             "cphi01-timeseries",
+		UID:             "cphi01-timeseries",
 		DataType:        "",
 		JobID:           "",
 		SearchIndex:     "ONS",
@@ -271,7 +269,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		ChannelsFunc: getChannelFunc,
 	}
 
-	//for mock marshaller
+	// for mock marshaller
 	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedVersionMetadataEvent)
 	marshallerMock := &mock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {
@@ -312,14 +310,13 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(actual.Uid, ShouldEqual, expectedVersionMetadataEvent.Uid)
+				So(actual.UID, ShouldEqual, expectedVersionMetadataEvent.UID)
 				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEvent.ReleaseDate)
 				So(actual.Title, ShouldEqual, expectedVersionMetadataEvent.Title)
 				So(actual.MetaDescription, ShouldEqual, expectedVersionMetadataEvent.MetaDescription)
 				So(actual.Keywords, ShouldHaveLength, 2)
 				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
 				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
-
 			})
 		})
 	})
@@ -333,7 +330,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 
 			Convey("Then Zebedee is called 0 time and Dataset called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, errDatasetApi.Error())
+				So(err.Error(), ShouldEqual, errDatasetAPI.Error())
 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
 
 				So(len(datasetMockInError.GetVersionMetadataCalls()), ShouldEqual, 1)
@@ -345,14 +342,13 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 }
 
 func TestHandlerForInvalidDataType(t *testing.T) {
-
 	expectedInvalidSearchDataImportEvent := models.SearchDataImport{}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
 		ChannelsFunc: getChannelFunc,
 	}
 
-	//for mock marshaller
+	// for mock marshaller
 	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedInvalidSearchDataImportEvent)
 	marshallerMock := &mock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {
@@ -366,7 +362,6 @@ func TestHandlerForInvalidDataType(t *testing.T) {
 	}
 
 	Convey("Given an event handler working successfully, and an event containing a invalid dataType", t, func() {
-
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}

@@ -13,5 +13,5 @@ import (
 type DatasetClient interface {
 	Checker(context.Context, *healthcheck.CheckState) error
 	// GetVersion(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceAuthToken, collectionID, datasetID, edition, version string) (m datasetclient.Version, err error)
-	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (m datasetclient.Metadata, err error)
+	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m datasetclient.Metadata, err error)
 }

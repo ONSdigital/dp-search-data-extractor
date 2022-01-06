@@ -2,7 +2,7 @@ package models
 
 // CMDData provides model for datasetAPI metadata response
 type CMDData struct {
-	Uid            string         `json:"uid"`
+	UID            string         `json:"uid"`
 	VersionDetails VersionDetails `json:"version"`
 	DatasetDetails DatasetDetails `json:"datasetdetails"`
 }

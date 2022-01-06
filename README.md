@@ -60,7 +60,6 @@ An example event can be created using the helper script, `make produce`.
 | ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
 | KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
 | DATASET_API_URL                | `http://localhost:22000` | The URL for the DatasetAPI
-| USER_AUTH_TOKEN                | ""                       | The user auth token for the DatasetAPI
 | SERVICE_AUTH_TOKEN             | ""                       | The user auth token for the DatasetAPI
 
 

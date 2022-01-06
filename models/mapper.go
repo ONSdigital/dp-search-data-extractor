@@ -9,7 +9,7 @@ import (
 // truncation.
 func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int) SearchDataImport {
 	searchData := SearchDataImport{
-		Uid:             zebedeeData.Description.Title,
+		UID:             zebedeeData.Description.Title,
 		DataType:        zebedeeData.DataType,
 		CDID:            zebedeeData.Description.CDID,
 		DatasetID:       zebedeeData.Description.DatasetID,
@@ -51,9 +51,8 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 
 // MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version metadata struct.
 func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
-
 	versionMetaData := SearchDataImport{
-		Uid:             cmdData.Uid,
+		UID:             cmdData.UID,
 		ReleaseDate:     cmdData.VersionDetails.ReleaseDate,
 		Keywords:        cmdData.DatasetDetails.Keywords,
 		MetaDescription: cmdData.DatasetDetails.Description,

@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	ZEBEDEE_DATATYPE    = "Reviewed-uris"
-	DATASETAPI_DATATYPE = "Dataset-uris"
+	OnsSearchIndex  = "ONS"
+	ZebedeeDataType = "Reviewed-uris"
+	DatasetDataType = "Dataset-uris"
 )
 
 // ContentPublishedHandler struct to hold handle for config with zebedee, datasetAPI client and the producer
@@ -30,7 +31,6 @@ type ContentPublishedHandler struct {
 
 // Handle takes a single event.
 func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, keywordsLimit int, cfg config.Config) (err error) {
-
 	logData := log.Data{
 		"event":    cpEvent,
 		"datatype": cpEvent.DataType,
@@ -39,8 +39,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 	traceID := request.NewRequestID(16)
 
-	if cpEvent.DataType == ZEBEDEE_DATATYPE {
-
+	if cpEvent.DataType == ZebedeeDataType {
 		// Make a call to Zebedee
 		zebedeeContentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, cpEvent.URI)
 		if err != nil {
@@ -52,7 +51,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		}
 		log.Info(ctx, "zebedee response ", logData)
 
-		//byte slice to Json & unMarshall Json
+		// byte slice to Json & unMarshall Json
 		var zebedeeData models.ZebedeeData
 		err = json.Unmarshal(zebedeeContentPublished, &zebedeeData)
 		if err != nil {
@@ -60,36 +59,35 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			return err
 		}
 
-		//keywords validation
+		// keywords validation
 		logData = log.Data{
 			"uid":           zebedeeData.Description.Title,
 			"keywords":      zebedeeData.Description.Keywords,
 			"keywordsLimit": keywordsLimit,
 		}
-		//Mapping Json to Avro
+		// Mapping Json to Avro
 		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, keywordsLimit)
 		searchData.TraceID = traceID
 		searchData.JobID = ""
-		searchData.SearchIndex = "ONS"
+		searchData.SearchIndex = OnsSearchIndex
 
-		//Marshall Avro and sending message
+		// Marshall Avro and sending message
 		if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
 			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 			return err
 		}
-	} else if cpEvent.DataType == DATASETAPI_DATATYPE {
-
-		datasetId, edition, version, err := getIDsFromUri(cpEvent.URI)
+	} else if cpEvent.DataType == DatasetDataType {
+		datasetID, edition, version, err := getIDsFromURI(cpEvent.URI)
 		if err != nil {
 			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", err)
 			return err
 		}
 
-		//ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition>
-		generatedID := fmt.Sprintf("%s-%s", datasetId, edition)
+		// ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition>
+		generatedID := fmt.Sprintf("%s-%s", datasetID, edition)
 
 		// Make a call to DatasetAPI
-		datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetId, edition, version)
+		datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
 		if err != nil {
 			log.Error(ctx, "cannot get dataset published contents version %s from api", err)
 			return err
@@ -113,7 +111,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		}
 
 		versionMetadata := models.CMDData{
-			Uid:            generatedID,
+			UID:            generatedID,
 			VersionDetails: versionDetails,
 			DatasetDetails: datasetDetailsData,
 		}
@@ -125,7 +123,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		log.Info(ctx, "datasetVersionMetadata ", logData)
 		datasetVersionMetadata.TraceID = traceID
 		datasetVersionMetadata.JobID = ""
-		datasetVersionMetadata.SearchIndex = "ONS"
+		datasetVersionMetadata.SearchIndex = OnsSearchIndex
 
 		// Marshall Avro and sending message
 		if err := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); err != nil {
@@ -140,7 +138,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 	return nil
 }
 
-func getIDsFromUri(uri string) (datasetID, editionID, versionID string, err error) {
+func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err error) {
 	parsedURL, err := url.Parse(uri)
 	if err != nil {
 		return "", "", "", err

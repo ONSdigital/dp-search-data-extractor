@@ -27,7 +27,7 @@ const (
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 	Convey("Given some valid zebedee data with  ", t, func() {
 		zebendeeData := models.ZebedeeData{
-			Uid:      someTitle,
+			UID:      someTitle,
 			DataType: someDataType,
 			Description: models.Description{
 				CDID:            someCDID,
@@ -43,7 +43,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 		Convey("When mapped with a default keywords limit", func() {
 			result := models.MapZebedeeDataToSearchDataImport(zebendeeData, -1)
 			Convey("Then the result should be validly mapped with 4 keywords", func() {
-				So(result.Uid, ShouldResemble, someTitle)
+				So(result.UID, ShouldResemble, someTitle)
 				So(result.DataType, ShouldResemble, someDataType)
 				So(result.CDID, ShouldResemble, someCDID)
 				So(result.DatasetID, ShouldResemble, someDatasetID)
@@ -171,11 +171,9 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 }
 
 func TestMapDatasetVersionMetadataToSearchDataImport(t *testing.T) {
-
 	Convey("Given some valid DatasetAPI data with", t, func() {
-
 		CMDTestData := models.CMDData{
-			Uid: "uid",
+			UID: "someuid",
 			VersionDetails: models.VersionDetails{
 				ReleaseDate: someReleaseDate,
 			},
@@ -189,8 +187,7 @@ func TestMapDatasetVersionMetadataToSearchDataImport(t *testing.T) {
 			actual := models.MapVersionMetadataToSearchDataImport(CMDTestData)
 
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
-
-				So(actual.Uid, ShouldResemble, "uid")
+				So(actual.UID, ShouldResemble, "someuid")
 				So(actual.ReleaseDate, ShouldResemble, someReleaseDate)
 				So(actual.Title, ShouldResemble, someTitle)
 				So(actual.Keywords, ShouldNotBeEmpty)

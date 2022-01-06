@@ -19,12 +19,9 @@ import (
 const (
 	somekeyword0 = "keyword0"
 	somekeyword1 = "keyword1"
-	somekeyword2 = "keyword2"
-	somekeyword3 = "keyword3"
 
 	someMetaDescription = "meta desc"
 	someReleaseDate     = "2021-12-13"
-	someSummary         = "Some-Amazing-Summary"
 	someTitle           = "Some-Incredible-Title"
 )
 
@@ -60,7 +57,6 @@ var (
 
 func TestProducer_SearchDataImport(t *testing.T) {
 	Convey("Given SearchDataImportProducer has been configured correctly", t, func() {
-
 		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
@@ -108,7 +104,6 @@ func TestProducer_SearchDataImport(t *testing.T) {
 
 func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 	Convey("Given InstanceCompletedProducer has been configured correctly", t, func() {
-
 		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
@@ -147,9 +142,7 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 }
 
 func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
-
 	Convey("Given SearchDatasetVersionMetadataImport has been configured correctly", t, func() {
-
 		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
 		}
@@ -166,13 +159,12 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 			},
 		}
 
-		//event is message
+		// event is message
 		searchDataVersionImportProducer := event.SearchDataImportProducer{
 			Producer:   kafkaProducerMock,
 			Marshaller: marshallerMock,
 		}
 		Convey("When SearchDatasetVersionMetadataImport is called on the event producer", func() {
-
 			err := searchDataVersionImportProducer.SearchDataImport(ctx, expectedVersionMetadataEvent)
 			So(err, ShouldBeNil)
 

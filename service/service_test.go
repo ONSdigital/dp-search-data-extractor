@@ -210,7 +210,6 @@ func TestRun(t *testing.T) {
 				So(hcMockAddFail.AddCheckCalls()[1].Name, ShouldResemble, "Kafka consumer")
 				So(hcMockAddFail.AddCheckCalls()[2].Name, ShouldResemble, "Kafka producer")
 				So(hcMockAddFail.AddCheckCalls()[3].Name, ShouldResemble, "DatasetAPI client")
-
 			})
 		})
 	})

@@ -71,12 +71,12 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	producer.Channels().LogErrors(ctx, "kafka producer channels error")
 
 	// Event Handler for Kafka Consumer
-	handler := &handler.ContentPublishedHandler{
+	eventHandler := &handler.ContentPublishedHandler{
 		ZebedeeCli: zebedeeClient,
 		DatasetCli: datasetapiClient,
 		Producer:   searchDataImportProducer,
 	}
-	event.Consume(ctx, consumer, handler, cfg)
+	event.Consume(ctx, consumer, eventHandler, cfg)
 
 	// Get HealthCheck
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -176,7 +176,6 @@ func (svc *Service) Close(ctx context.Context) error {
 }
 
 func registerCheckers(ctx context.Context, hc HealthChecker, zebedeeClient clients.ZebedeeClient, consumer kafka.IConsumerGroup, producer kafka.IProducer, datasetClient clients.DatasetClient) (err error) {
-
 	hasErrors := false
 
 	if err := hc.AddCheck("Zebedee client", zebedeeClient.Checker); err != nil {
