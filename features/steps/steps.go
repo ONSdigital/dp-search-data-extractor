@@ -26,7 +26,6 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (c *Component) sendKafkafkaEvent(table *godog.Table) error {
-
 	observationEvents, err := c.convertToKafkaEvents(table)
 	if err != nil {
 		return err
@@ -79,7 +78,7 @@ func (c *Component) iShouldReceivePublishedData() error {
 
 	var data = &models.SearchDataImport{}
 
-	schema.SearchDataImportEvent.Unmarshal(outputData, data)
+	_ = schema.SearchDataImportEvent.Unmarshal(outputData, data)
 
 	assert.Equal(&c.ErrorFeature, c.inputData.Description.CDID, data.CDID)
 	assert.Equal(&c.ErrorFeature, c.inputData.Description.DatasetID, data.DatasetID)
@@ -103,7 +102,6 @@ func (c *Component) sendToConsumer(e *models.ContentPublished) error {
 
 	c.KafkaConsumer.Channels().Upstream <- kafkatest.NewMessage(bytes, 0)
 	return nil
-
 }
 
 func registerInterrupt() chan os.Signal {

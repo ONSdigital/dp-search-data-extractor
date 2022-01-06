@@ -2,9 +2,6 @@ package steps
 
 import (
 	"context"
-	"net/http"
-	"os"
-
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
@@ -15,10 +12,8 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/ONSdigital/dp-search-data-extractor/service/mock"
+	"net/http"
 )
-
-// outputFilePath is used for event received by the service.
-const outputFilePath = "/tmp/dpSearchDataExtractor.txt"
 
 type Component struct {
 	ErrorFeature  componenttest.ErrorFeature
@@ -27,15 +22,12 @@ type Component struct {
 	KafkaConsumer kafka.IConsumerGroup
 	KafkaProducer kafka.IProducer
 	zebedeeClient clients.ZebedeeClient
-	killChannel   chan os.Signal
-	apiFeature    *componenttest.APIFeature
 	errorChan     chan error
 	svc           *service.Service
 	cfg           *config.Config
 }
 
 func NewComponent() *Component {
-
 	c := &Component{errorChan: make(chan error)}
 
 	consumer := kafkatest.NewMessageConsumer(false)
@@ -66,15 +58,7 @@ func NewComponent() *Component {
 	return c
 }
 
-func (c *Component) Close() {
-	os.Remove(outputFilePath)
-}
-
-func (c *Component) Reset() {
-	os.Remove(outputFilePath)
-}
-
-func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (service.HealthChecker, error) {
 	return &mock.HealthCheckerMock{
 		AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
 		StartFunc:    func(ctx context.Context) {},

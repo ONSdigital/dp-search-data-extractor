@@ -201,7 +201,6 @@ func TestRun(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	Convey("Having a correctly initialised service", t, func() {
-
 		hcStopped := false
 
 		zebedeeMock := &clientMock.ZebedeeClientMock{
