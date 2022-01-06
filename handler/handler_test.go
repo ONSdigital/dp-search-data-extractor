@@ -75,7 +75,6 @@ var (
 )
 
 func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
-
 	expectedSearchDataImportEvent := models.SearchDataImport{
 		DataType:        "testDataType",
 		JobID:           "",
@@ -93,7 +92,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		ChannelsFunc: getChannelFunc,
 	}
 
-	//for mock marshaller
+	// for mock marshaller
 	expectedSearchDataImport := marshalSearchDataImport(t, expectedSearchDataImportEvent)
 	marshallerMock := &mock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {
@@ -105,7 +104,6 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		Producer:   kafkaProducerMock,
 		Marshaller: marshallerMock,
 	}
-
 	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
 		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
@@ -172,7 +170,6 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 }
 
 func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
-
 	expectedFullSearchDataImportEvent := models.SearchDataImport{
 		DataType:        "testDataType",
 		JobID:           "",
@@ -200,10 +197,8 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 		Producer:   kafkaProducerMock,
 		Marshaller: marshallerMock,
 	}
-
 	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
-
-		//used by zebedee mock
+		// used by zebedee mock
 		fullContentPublishedTestData := `{"description":{"cdid": "testCDID","datasetId": "testDaetasetId","edition": "testedition","keywords": ["testkeyword"],"metaDescription": "testMetaDescription","releaseDate": "testReleaseDate","summary": "testSummary","title": "testTitle"},"type": "testDataType"}`
 		getFullPublishDataFunc := func(ctx context.Context, uriString string) ([]byte, error) {
 			data := []byte(fullContentPublishedTestData)
@@ -225,7 +220,6 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 			case <-time.After(testTimeout):
 				t.FailNow()
 			}
-
 			Convey("Then no error is reported", func() {
 				So(err, ShouldBeNil)
 			})
@@ -394,21 +388,13 @@ func TestHandlerForInvalidDataType(t *testing.T) {
 }
 
 // marshalSearchDataImport helper method to marshal a event into a []byte
-func marshalSearchDataImport(t *testing.T, event models.SearchDataImport) []byte {
-	bytes, err := schema.SearchDataImportEvent.Marshal(event)
+func marshalSearchDataImport(t *testing.T, sdEvent models.SearchDataImport) []byte {
+	bytes, err := schema.SearchDataImportEvent.Marshal(sdEvent)
 	if err != nil {
 		t.Fatalf("avro mashalling failed with error : %v", err)
 	}
 	return bytes
 }
-
-// func marshalVersionMetadataSearchDataImport(t *testing.T, event models.SearchDataVersionMetadataImport) []byte {
-// 	bytes, err := schema.SearchDatasetVersionMetadataEvent.Marshal(event)
-// 	if err != nil {
-// 		t.Fatalf("avro mashalling failed with error : %v", err)
-// 	}
-// 	return bytes
-// }
 
 func setupMetadata() dataset.Metadata {
 	m := dataset.Metadata{

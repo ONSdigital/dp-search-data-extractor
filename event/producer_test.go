@@ -77,13 +77,12 @@ func TestProducer_SearchDataImport(t *testing.T) {
 			},
 		}
 
-		//event is message
+		// event is message
 		searchDataImportProducer := event.SearchDataImportProducer{
 			Producer:   kafkaProducerMock,
 			Marshaller: marshallerMock,
 		}
 		Convey("When SearchDataImport is called on the event producer", func() {
-
 			err := searchDataImportProducer.SearchDataImport(ctx, expectedSearchDataImportEvent)
 			So(err, ShouldBeNil)
 
@@ -126,7 +125,7 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 			},
 		}
 
-		//event is message
+		// event is message
 		searchDataImportProducer := event.SearchDataImportProducer{
 			Producer:   kafkaProducerMock,
 			Marshaller: marshallerMock,
