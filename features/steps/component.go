@@ -2,6 +2,8 @@ package steps
 
 import (
 	"context"
+	"net/http"
+
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
@@ -12,7 +14,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/ONSdigital/dp-search-data-extractor/service/mock"
-	"net/http"
 )
 
 type Component struct {
