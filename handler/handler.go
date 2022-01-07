@@ -151,5 +151,5 @@ func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err erro
 	datasetID = s[2]
 	editionID = s[4]
 	versionID = s[6]
-	return datasetID, editionID, versionID, nil
+	return
 }

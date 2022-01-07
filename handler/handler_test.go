@@ -251,6 +251,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 }
 
 func TestHandlerForDatasetVersionMetadata(t *testing.T) {
+	t.Parallel()
 	expectedVersionMetadataEvent := models.SearchDataImport{
 		UID:             "cphi01-timeseries",
 		DataType:        "",
@@ -342,6 +343,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 }
 
 func TestHandlerForInvalidDataType(t *testing.T) {
+	t.Parallel()
 	expectedInvalidSearchDataImportEvent := models.SearchDataImport{}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{

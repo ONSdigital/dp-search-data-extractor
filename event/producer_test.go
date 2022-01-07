@@ -142,6 +142,7 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 }
 
 func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
+	t.Parallel()
 	Convey("Given SearchDatasetVersionMetadataImport has been configured correctly", t, func() {
 		pChannels := &dpkafka.ProducerChannels{
 			Output: make(chan []byte, 1),
