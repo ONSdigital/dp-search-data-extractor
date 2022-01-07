@@ -30,7 +30,7 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, keywordsLimit int, cfg config.Config) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) (err error) {
 	logData := log.Data{
 		"event":    cpEvent,
 		"datatype": cpEvent.DataType,
@@ -63,10 +63,10 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		logData = log.Data{
 			"uid":           zebedeeData.Description.Title,
 			"keywords":      zebedeeData.Description.Keywords,
-			"keywordsLimit": keywordsLimit,
+			"keywordsLimit": cfg.KeywordsLimit,
 		}
 		// Mapping Json to Avro
-		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, keywordsLimit)
+		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
 		searchData.TraceID = traceID
 		searchData.JobID = ""
 		searchData.SearchIndex = OnsSearchIndex

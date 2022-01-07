@@ -111,7 +111,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, -1, *cfg)
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
 			Convey("Then no error is reported", func() {
 				So(err, ShouldBeNil)
 			})
@@ -154,7 +154,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, 1, *cfg)
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
 
 			Convey("Then Zebedee is called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
@@ -210,7 +210,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event with default keywords limit", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, -1, *cfg)
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
 
 			var avroBytes []byte
 			select {
@@ -290,7 +290,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event for cmd dataset", func() {
-			err := eventHandler.Handle(ctx, &testDatasetEvent, -1, *cfg)
+			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
 
 			var avroBytes []byte
 			select {
@@ -327,7 +327,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event for a valid dataset", func() {
-			err := eventHandler.Handle(ctx, &testDatasetEvent, 1, *cfg)
+			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
 
 			Convey("Then Zebedee is called 0 time and Dataset called 1 time with the expected error ", func() {
 				So(err, ShouldNotBeNil)
@@ -369,7 +369,7 @@ func TestHandlerForInvalidDataType(t *testing.T) {
 		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a invalid event", func() {
-			err := eventHandler.Handle(ctx, &testInvalidEvent, 1, *cfg)
+			err := eventHandler.Handle(ctx, &testInvalidEvent, *cfg)
 
 			Convey("Then both Zebedee and Dataset is called 0 time with no expected error ", func() {
 				So(err, ShouldBeNil)

@@ -25,7 +25,7 @@ var _ event.Handler = &HandlerMock{}
 //
 //         // make and configure a mocked event.Handler
 //         mockedHandler := &HandlerMock{
-//             HandleFunc: func(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int, cfg config.Config) error {
+//             HandleFunc: func(ctx context.Context, contentPublished *models.ContentPublished, cfg config.Config) error {
 // 	               panic("mock out the Handle method")
 //             },
 //         }
@@ -36,7 +36,7 @@ var _ event.Handler = &HandlerMock{}
 //     }
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int, cfg config.Config) error
+	HandleFunc func(ctx context.Context, contentPublished *models.ContentPublished, cfg config.Config) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -46,8 +46,6 @@ type HandlerMock struct {
 			Ctx context.Context
 			// ContentPublished is the contentPublished argument value.
 			ContentPublished *models.ContentPublished
-			// KeywordsLimit is the keywordsLimit argument value.
-			KeywordsLimit int
 			// Cfg is the cfg argument value.
 			Cfg config.Config
 		}
@@ -55,25 +53,23 @@ type HandlerMock struct {
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.ContentPublished, keywordsLimit int, cfg config.Config) error {
+func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.ContentPublished, cfg config.Config) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
 		Ctx              context.Context
 		ContentPublished *models.ContentPublished
-		KeywordsLimit    int
 		Cfg              config.Config
 	}{
 		Ctx:              ctx,
 		ContentPublished: contentPublished,
-		KeywordsLimit:    keywordsLimit,
 		Cfg:              cfg,
 	}
 	lockHandlerMockHandle.Lock()
 	mock.calls.Handle = append(mock.calls.Handle, callInfo)
 	lockHandlerMockHandle.Unlock()
-	return mock.HandleFunc(ctx, contentPublished, keywordsLimit, cfg)
+	return mock.HandleFunc(ctx, contentPublished, cfg)
 }
 
 // HandleCalls gets all the calls that were made to Handle.
@@ -82,13 +78,11 @@ func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.Co
 func (mock *HandlerMock) HandleCalls() []struct {
 	Ctx              context.Context
 	ContentPublished *models.ContentPublished
-	KeywordsLimit    int
 	Cfg              config.Config
 } {
 	var calls []struct {
 		Ctx              context.Context
 		ContentPublished *models.ContentPublished
-		KeywordsLimit    int
 		Cfg              config.Config
 	}
 	lockHandlerMockHandle.RLock()
