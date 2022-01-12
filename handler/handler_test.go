@@ -254,7 +254,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 	t.Parallel()
 	expectedVersionMetadataEvent := models.SearchDataImport{
 		UID:             "cphi01-timeseries",
-		DataType:        "",
+		DataType:        "dataset_landing_page",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
@@ -318,6 +318,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				So(actual.Keywords, ShouldHaveLength, 2)
 				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
 				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
+				So(actual.DataType, ShouldResemble, expectedVersionMetadataEvent.DataType)
 			})
 		})
 	})

@@ -124,6 +124,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		datasetVersionMetadata.TraceID = traceID
 		datasetVersionMetadata.JobID = ""
 		datasetVersionMetadata.SearchIndex = OnsSearchIndex
+		datasetVersionMetadata.DataType = "dataset_landing_page"
 
 		// Marshall Avro and sending message
 		if err := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); err != nil {
