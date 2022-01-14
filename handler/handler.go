@@ -107,7 +107,10 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		datasetDetailsData := models.DatasetDetails{
 			Title:       datasetMetadataPublished.Title,
 			Description: datasetMetadataPublished.Description,
-			Keywords:    *datasetMetadataPublished.Keywords,
+		}
+
+		if datasetMetadataPublished.Keywords != nil {
+			datasetDetailsData.Keywords = *datasetMetadataPublished.Keywords
 		}
 
 		versionMetadata := models.CMDData{
