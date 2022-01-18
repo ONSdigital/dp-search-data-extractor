@@ -24,6 +24,7 @@ var testEvent = models.ContentPublished{
 	URI:          "testUri",
 	DataType:     "Thing",
 	CollectionID: "Col123",
+	TraceID:      "10110011100010000",
 }
 
 func TestConsume(t *testing.T) {

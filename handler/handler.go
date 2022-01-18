@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
@@ -32,12 +31,9 @@ type ContentPublishedHandler struct {
 // Handle takes a single event.
 func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) (err error) {
 	logData := log.Data{
-		"event":    cpEvent,
-		"datatype": cpEvent.DataType,
+		"event": cpEvent,
 	}
-	log.Info(ctx, "event handler called with datatype", logData)
-
-	traceID := request.NewRequestID(16)
+	log.Info(ctx, "event handler called with event", logData)
 
 	if cpEvent.DataType == ZebedeeDataType {
 		// Make a call to Zebedee
@@ -47,6 +43,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		}
 
 		logData = log.Data{
+			"traceId":          cpEvent.TraceID,
 			"contentPublished": string(zebedeeContentPublished),
 		}
 		log.Info(ctx, "zebedee response ", logData)
@@ -61,13 +58,13 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		// keywords validation
 		logData = log.Data{
-			"uid":           zebedeeData.Description.Title,
+			"uid":           zebedeeData.UID,
 			"keywords":      zebedeeData.Description.Keywords,
 			"keywordsLimit": cfg.KeywordsLimit,
 		}
 		// Mapping Json to Avro
 		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
-		searchData.TraceID = traceID
+		searchData.TraceID = cpEvent.TraceID
 		searchData.JobID = ""
 		searchData.SearchIndex = OnsSearchIndex
 
@@ -95,6 +92,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		logData = log.Data{
 			"uid generated":    generatedID,
+			"traceId":          cpEvent.TraceID,
 			"contentPublished": datasetMetadataPublished,
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
@@ -124,7 +122,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			"datasetVersionData": datasetVersionMetadata,
 		}
 		log.Info(ctx, "datasetVersionMetadata ", logData)
-		datasetVersionMetadata.TraceID = traceID
+		datasetVersionMetadata.TraceID = cpEvent.TraceID
 		datasetVersionMetadata.JobID = ""
 		datasetVersionMetadata.SearchIndex = OnsSearchIndex
 		datasetVersionMetadata.DataType = "dataset_landing_page"

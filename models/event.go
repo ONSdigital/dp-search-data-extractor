@@ -5,6 +5,7 @@ type ContentPublished struct {
 	URI          string `avro:"uri"`
 	DataType     string `avro:"data_type"`
 	CollectionID string `avro:"collection_id"`
+	TraceID      string `avro:"trace_id"`
 }
 
 // SearchDataImport provides event data for a search data import

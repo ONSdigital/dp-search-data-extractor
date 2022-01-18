@@ -10,7 +10,8 @@ var contentPublished = `{
   "fields": [
     {"name": "uri", "type": "string", "default": ""},
     {"name": "data_type", "type": "string", "default": ""},
-    {"name": "collection_id", "type": "string", "default": ""}
+    {"name": "collection_id", "type": "string", "default": ""},
+    {"name": "trace_id", "type": "string", "default": ""}
   ]
 }`
 
