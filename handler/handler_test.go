@@ -53,9 +53,21 @@ var (
 		return data, nil
 	}
 
+	mockZebedeePublishedResponseWithMissingKeyword = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
+	getPublishDataFuncWithMissingKeyword           = func(ctx context.Context, uriString string) ([]byte, error) {
+		data := []byte(mockZebedeePublishedResponseWithMissingKeyword)
+		return data, nil
+	}
+
 	mockDatasetAPIJSONResponse = setupMetadata()
 	getVersionMetadataFunc     = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
 		data := mockDatasetAPIJSONResponse
+		return data, nil
+	}
+
+	mockDatasetAPIJSONResponseWithMissingKeyword = setupMetadataWithNullKeywords()
+	getVersionMetadataFuncWithNullKeyword        = func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
+		data := mockDatasetAPIJSONResponseWithMissingKeyword
 		return data, nil
 	}
 
@@ -385,6 +397,151 @@ func TestHandlerForInvalidDataType(t *testing.T) {
 	})
 }
 
+func TestHandlerForDatasetVersionMetadataWithMissingKeywords(t *testing.T) {
+	t.Parallel()
+	expectedVersionMetadataEventForNullKeyword := models.SearchDataImport{
+		UID:             "cphi01-timeseries",
+		DataType:        "dataset_landing_page",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"keyword is missing"},
+		MetaDescription: "someDescription",
+		Summary:         "",
+		ReleaseDate:     "2020-11-07T00:00:00.000Z",
+		Title:           "someTitle",
+	}
+
+	kafkaProducerMock := &kafkatest.IProducerMock{
+		ChannelsFunc: getChannelFunc,
+	}
+	// for mock marshaller*
+	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedVersionMetadataEventForNullKeyword)
+	marshallerMock := &mock.MarshallerMock{
+		MarshalFunc: func(s interface{}) ([]byte, error) {
+			return expectedVersionMetadataSearchDataImport, nil
+		},
+	}
+
+	producerMock := &event.SearchDataImportProducer{
+		Producer:   kafkaProducerMock,
+		Marshaller: marshallerMock,
+	}
+
+	Convey("Given an event handler working successfully, and an event containing a missing keywords", t, func() {
+		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
+		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncWithNullKeyword}
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+		Convey("When given a valid event for cmd dataset", func() {
+			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
+			var avroBytes []byte
+			select {
+			case avroBytes = <-pChannels.Output:
+				t.Log("avro byte sent to producer output")
+
+			case <-time.After(testTimeout):
+				t.FailNow()
+			}
+
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("And then get content published from datasetAPI but no action for zebedee", func() {
+				So(len(zebedeeMock.GetPublishedDataCalls()), ShouldEqual, 0)
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 1)
+			})
+			Convey("And then the expected bytes are sent to producer.output", func() {
+				var actual models.SearchDataImport
+				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
+				So(err, ShouldBeNil)
+				So(actual.UID, ShouldEqual, expectedVersionMetadataEventForNullKeyword.UID)
+				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEventForNullKeyword.ReleaseDate)
+				So(actual.Title, ShouldEqual, expectedVersionMetadataEventForNullKeyword.Title)
+				So(actual.MetaDescription, ShouldEqual, expectedVersionMetadataEventForNullKeyword.MetaDescription)
+				So(actual.Keywords, ShouldHaveLength, 1)
+				So(actual.Keywords[0], ShouldEqual, expectedVersionMetadataEventForNullKeyword.Keywords[0])
+			})
+		})
+	})
+}
+
+func TestHandlerForZebedeeReturningMandatoryFieldsWithMissingKeywords(t *testing.T) {
+	expectedSearchDataImportEventWithMissingKeyword := models.SearchDataImport{
+		DataType:        "testDataType",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"keyword is missing"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTitle",
+	}
+
+	kafkaProducerMock := &kafkatest.IProducerMock{
+		ChannelsFunc: getChannelFunc,
+	}
+
+	// for mock marshaller
+	expectedSearchDataImport := marshalSearchDataImport(t, expectedSearchDataImportEventWithMissingKeyword)
+	marshallerMock := &mock.MarshallerMock{
+		MarshalFunc: func(s interface{}) ([]byte, error) {
+			return expectedSearchDataImport, nil
+		},
+	}
+
+	producerMock := &event.SearchDataImportProducer{
+		Producer:   kafkaProducerMock,
+		Marshaller: marshallerMock,
+	}
+	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
+		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncWithMissingKeyword}
+		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
+
+		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+
+		Convey("When given a valid event", func() {
+			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("And then get content published from zebedee with missing keywords", func() {
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
+				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
+
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
+			})
+
+			var avroBytes []byte
+			select {
+			case avroBytes = <-pChannels.Output:
+				t.Log("avro byte sent to producer output")
+			case <-time.After(testTimeout):
+				t.FailNow()
+			}
+			Convey("And then the expected bytes are sent to producer.output", func() {
+				var actual models.SearchDataImport
+				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
+				So(err, ShouldBeNil)
+				So(actual.DataType, ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.DataType)
+				So(actual.JobID, ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.JobID)
+				So(actual.Keywords, ShouldHaveLength, 1)
+				So(actual.Keywords[0], ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.Keywords[0])
+				So(actual.MetaDescription, ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.MetaDescription)
+				So(actual.Summary, ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.Summary)
+				So(actual.ReleaseDate, ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.ReleaseDate)
+				So(actual.Title, ShouldEqual, expectedSearchDataImportEventWithMissingKeyword.Title)
+				So(actual.TraceID, ShouldNotBeNil)
+			})
+		})
+	})
+}
+
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, sdEvent models.SearchDataImport) []byte {
 	bytes, err := schema.SearchDataImportEvent.Marshal(sdEvent)
@@ -403,6 +560,19 @@ func setupMetadata() dataset.Metadata {
 			Title:       "title",
 			Description: "description",
 			Keywords:    &[]string{"keyword_1", "keyword_2"},
+		},
+	}
+	return m
+}
+
+func setupMetadataWithNullKeywords() dataset.Metadata {
+	m := dataset.Metadata{
+		Version: dataset.Version{
+			ReleaseDate: "2020-11-07T00:00:00.000Z",
+		},
+		DatasetDetails: dataset.DatasetDetails{
+			Title:       "someTitle",
+			Description: "someDescription",
 		},
 	}
 	return m

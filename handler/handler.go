@@ -62,7 +62,13 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			"keywords":      zebedeeData.Description.Keywords,
 			"keywordsLimit": cfg.KeywordsLimit,
 		}
+		log.Info(ctx, "zebedee response ", logData)
+
 		// Mapping Json to Avro
+		if zebedeeData.Description.Keywords == nil {
+			log.Warn(ctx, "warning : keywords not present, i.e. null")
+			zebedeeData.Description.Keywords = []string{"keyword is missing"}
+		}
 		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
 		searchData.TraceID = cpEvent.TraceID
 		searchData.JobID = ""
@@ -109,6 +115,9 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		if datasetMetadataPublished.Keywords != nil {
 			datasetDetailsData.Keywords = *datasetMetadataPublished.Keywords
+		} else {
+			log.Warn(ctx, "warning : keywords array missing")
+			datasetDetailsData.Keywords = []string{"keyword is missing"}
 		}
 
 		versionMetadata := models.CMDData{

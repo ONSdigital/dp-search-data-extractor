@@ -54,7 +54,7 @@ func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
 	versionMetaData := SearchDataImport{
 		UID:             cmdData.UID,
 		ReleaseDate:     cmdData.VersionDetails.ReleaseDate,
-		Keywords:        cmdData.DatasetDetails.Keywords,
+		Keywords:        RectifyKeywords(cmdData.DatasetDetails.Keywords, -1),
 		MetaDescription: cmdData.DatasetDetails.Description,
 		Title:           cmdData.DatasetDetails.Title,
 	}
