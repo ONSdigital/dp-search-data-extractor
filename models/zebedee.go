@@ -16,4 +16,5 @@ type Description struct {
 	ReleaseDate     string   `json:"releaseDate"`
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
+	Topics          []string `json:"topics,omitempty"`
 }

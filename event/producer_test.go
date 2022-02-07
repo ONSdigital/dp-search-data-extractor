@@ -39,6 +39,7 @@ var (
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "",
+		Topics:          []string{""},
 	}
 
 	expectedVersionMetadataEvent = models.SearchDataImport{
@@ -52,6 +53,7 @@ var (
 		Summary:         "",
 		ReleaseDate:     someReleaseDate,
 		Title:           someTitle,
+		Topics:          []string{"testtopic1", "testtopic2"},
 	}
 )
 

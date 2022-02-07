@@ -22,6 +22,9 @@ const (
 	someReleaseDate     = "2021-12-13"
 	someSummary         = "Some Amazing Summary"
 	someTitle           = "Some Incredible Title"
+
+	sometopic0 = "topic0"
+	sometopic1 = "topic1"
 )
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
@@ -38,6 +41,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				ReleaseDate:     someReleaseDate,
 				Summary:         someSummary,
 				Title:           someTitle,
+				Topics:          []string{sometopic0, sometopic1},
 			},
 		}
 		Convey("When mapped with a default keywords limit", func() {
@@ -58,6 +62,11 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				So(result.Keywords[1], ShouldResemble, somekeyword1)
 				So(result.Keywords[2], ShouldResemble, somekeyword2)
 				So(result.Keywords[3], ShouldResemble, somekeyword3)
+
+				So(result.Topics, ShouldNotBeEmpty)
+				So(result.Topics, ShouldHaveLength, 2)
+				So(result.Topics[0], ShouldResemble, sometopic0)
+				So(result.Topics[1], ShouldResemble, sometopic1)
 			})
 		})
 		Convey("When mapped with a keywords limit of 2", func() {
@@ -165,6 +174,18 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
 				expectedKeywords := []string{"testkeyword1", "testkeyword2", "testkeyword3", "testKeywords4", "testkeyword5", "testKeywords6", "testkeyword7", "testKeywords8"}
 				So(actual, ShouldResemble, expectedKeywords)
+			})
+		})
+	})
+}
+
+func TestValidate_WithNiltopics(t *testing.T) {
+	Convey("Given an empty keywords as received from zebedee  with default keywords limit", t, func() {
+		testKeywords := []string{""}
+		Convey("When passed to rectify the keywords with default keywords limit", func() {
+			actual := models.ValidateTopics(nil)
+			Convey("Then keywords should be rectified as expected empty keywords", func() {
+				So(actual, ShouldResemble, testKeywords)
 			})
 		})
 	})

@@ -86,6 +86,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "testTitle",
+		Topics:          []string{"testtopic1", "testtopic2"},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -181,6 +182,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 		Summary:         "testSummary",
 		ReleaseDate:     "testReleaseDate",
 		Title:           "testTitle",
+		Topics:          []string{"testtopic"},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -264,6 +266,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		Summary:         "",
 		ReleaseDate:     "2020-11-07T00:00:00.000Z",
 		Title:           "someTitle",
+		Topics:          []string{"testtopic1", "testtopic2"},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{

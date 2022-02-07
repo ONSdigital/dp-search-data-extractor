@@ -1,7 +1,10 @@
 package models
 
 import (
+	"context"
 	"strings"
+
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
@@ -18,6 +21,7 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		Summary:         zebedeeData.Description.Summary,
 		ReleaseDate:     zebedeeData.Description.ReleaseDate,
 		Title:           zebedeeData.Description.Title,
+		Topics:          ValidateTopics(zebedeeData.Description.Topics),
 	}
 	return searchData
 }
@@ -47,6 +51,14 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 	}
 
 	return rectifiedKeywords[:keywordsLimit]
+}
+
+func ValidateTopics(topics []string) []string {
+	if topics == nil {
+		log.Warn(context.Background(), "warning : topics not present, i.e. null")
+		topics = []string{""}
+	}
+	return topics
 }
 
 // MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version metadata struct.
