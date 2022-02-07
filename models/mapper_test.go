@@ -180,12 +180,11 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 }
 
 func TestValidate_WithNiltopics(t *testing.T) {
-	Convey("Given an empty keywords as received from zebedee  with default keywords limit", t, func() {
-		testKeywords := []string{""}
-		Convey("When passed to rectify the keywords with default keywords limit", func() {
+	Convey("Given a nil topics array as received from zebedee", t, func() {
+		Convey("When passed to validate the topics", func() {
 			actual := models.ValidateTopics(nil)
-			Convey("Then keywords should be rectified as expected empty keywords", func() {
-				So(actual, ShouldResemble, testKeywords)
+			Convey("Then topics should be populated with an empty string array", func() {
+				So(actual, ShouldResemble, []string{""})
 			})
 		})
 	})
