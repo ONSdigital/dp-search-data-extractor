@@ -1,10 +1,7 @@
 package models
 
 import (
-	"context"
 	"strings"
-
-	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
@@ -55,7 +52,6 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 
 func ValidateTopics(topics []string) []string {
 	if topics == nil {
-		log.Warn(context.Background(), "warning : topics not present, i.e. null")
 		topics = []string{""}
 	}
 	return topics

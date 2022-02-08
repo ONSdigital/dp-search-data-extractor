@@ -180,11 +180,33 @@ func TestRectifyKeywords_EightKeywordsAndTenAsLimit(t *testing.T) {
 }
 
 func TestValidate_WithNiltopics(t *testing.T) {
-	Convey("Given a nil topics array as received from zebedee", t, func() {
+	Convey("Given a topics array is missing in zebedee response", t, func() {
 		Convey("When passed to validate the topics", func() {
 			actual := models.ValidateTopics(nil)
 			Convey("Then topics should be populated with an empty string array", func() {
 				So(actual, ShouldResemble, []string{""})
+			})
+		})
+	})
+}
+
+func TestValidate_WithEmptytopics(t *testing.T) {
+	Convey("Given a empty topics array as received from zebedee", t, func() {
+		Convey("When passed to validate the topics", func() {
+			actual := models.ValidateTopics([]string{""})
+			Convey("Then topics should be populated with an empty string array", func() {
+				So(actual, ShouldResemble, []string{""})
+			})
+		})
+	})
+}
+
+func TestValidate_WithEmptytopicsSize0(t *testing.T) {
+	Convey("Given a topics array of size 0 received from zebedee", t, func() {
+		Convey("When passed to validate the topics", func() {
+			actual := models.ValidateTopics([]string{})
+			Convey("Then topics should be populated with an string array of size 0", func() {
+				So(actual, ShouldResemble, []string{})
 			})
 		})
 	})
