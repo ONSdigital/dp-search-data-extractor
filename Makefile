@@ -17,12 +17,12 @@ fmt:
 audit:
 	go list -m all | nancy sleuth
 .PHONY: lint
-lint:
+lint: fmt
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
 	golangci-lint run ./...
 
 .PHONY: build
-build: fmt
+build:
 	go build -tags 'production' $(LDFLAGS) -o $(BINPATH)/dp-search-data-extractor
 
 .PHONY: debug
