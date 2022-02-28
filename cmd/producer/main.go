@@ -68,9 +68,11 @@ func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
 	fmt.Println("Please type the URI")
 	fmt.Printf("$ ")
 	scanner.Scan()
-	name := scanner.Text()
+	uri := scanner.Text()
 
 	return &models.ContentPublished{
-		URI: name,
+		URI:      uri,
+		DataType: "Reviewed-uris",
+		TraceID:  "054435ded",
 	}
 }
