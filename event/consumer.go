@@ -55,6 +55,10 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler,
 		return
 	}
 
+	//nolint: revive, staticcheck, gocritic
+	//TODO: This needs to be looked into log library for customised context details
+	ctx = context.WithValue(ctx, "request-id", event.TraceID)
+
 	log.Info(ctx, "event received", log.Data{"event": event})
 
 	// handle - commit on failure (implement error handling to not commit if message needs to be consumed again)
