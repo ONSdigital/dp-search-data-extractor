@@ -43,7 +43,7 @@ func (c *Component) sendKafkafkaEvent(table *godog.Table) error {
 
 func (c *Component) processKafkaEvent() error {
 	c.inputData = models.ZebedeeData{
-		DataType: "Reviewed-uris",
+		DataType: "legacy",
 		Description: models.Description{
 			CDID:      "123",
 			DatasetID: "456",
