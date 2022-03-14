@@ -32,7 +32,7 @@ var searchDataImport = `{
     {"name": "search_index", "type": "string", "default": ""},
     {"name": "cdid", "type": "string", "default": ""},
     {"name": "dataset_id", "type": "string", "default": ""},
-    {"name": "keywords","type":["null",{"type":"array","items":"string"}]},
+    {"name": "keywords", "type": {"type":"array","items":"string"}},
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
