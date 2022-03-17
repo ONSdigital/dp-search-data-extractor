@@ -18,6 +18,7 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		Summary:         zebedeeData.Description.Summary,
 		ReleaseDate:     zebedeeData.Description.ReleaseDate,
 		Title:           zebedeeData.Description.Title,
+		Topics:          ValidateTopics(zebedeeData.Description.Topics),
 	}
 	return searchData
 }
@@ -47,6 +48,13 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 	}
 
 	return rectifiedKeywords[:keywordsLimit]
+}
+
+func ValidateTopics(topics []string) []string {
+	if topics == nil {
+		topics = []string{""}
+	}
+	return topics
 }
 
 // MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version metadata struct.
