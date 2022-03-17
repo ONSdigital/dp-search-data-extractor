@@ -17,8 +17,8 @@ import (
 
 const (
 	OnsSearchIndex  = "ONS"
-	ZebedeeDataType = "Reviewed-uris"
-	DatasetDataType = "Dataset-uris"
+	ZebedeeDataType = "legacy"
+	DatasetDataType = "datasets"
 )
 
 // ContentPublishedHandler struct to hold handle for config with zebedee, datasetAPI client and the producer

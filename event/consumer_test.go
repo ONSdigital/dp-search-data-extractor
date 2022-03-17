@@ -24,6 +24,8 @@ var testEvent = models.ContentPublished{
 	URI:          "testUri",
 	DataType:     "Thing",
 	CollectionID: "Col123",
+	JobID:        "",
+	SearchIndex:  "ONS",
 	TraceID:      "10110011100010000",
 }
 

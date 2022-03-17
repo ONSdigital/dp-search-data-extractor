@@ -26,13 +26,13 @@ var (
 
 	testZebedeeEvent = models.ContentPublished{
 		URI:          "testZebdeeUri",
-		DataType:     "Reviewed-uris",
+		DataType:     "legacy",
 		CollectionID: "testZebdeeCollectionID",
 	}
 
 	testDatasetEvent = models.ContentPublished{
 		URI:          "/datasets/cphi01/editions/timeseries/versions/version/metadata",
-		DataType:     "Dataset-uris",
+		DataType:     "datasets",
 		CollectionID: "testDatasetApiCollectionID",
 	}
 
