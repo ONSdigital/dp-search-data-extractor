@@ -43,7 +43,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		}
 
 		logData = log.Data{
-			"traceId":          cpEvent.TraceID,
 			"contentPublished": string(zebedeeContentPublished),
 		}
 		log.Info(ctx, "zebedee response ", logData)
@@ -92,7 +91,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		logData = log.Data{
 			"uid generated":    generatedID,
-			"traceId":          cpEvent.TraceID,
 			"contentPublished": datasetMetadataPublished,
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
