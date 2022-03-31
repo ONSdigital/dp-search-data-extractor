@@ -11,7 +11,7 @@ const (
 	someDataType  = "datatype"
 	someCDID      = "CDID"
 	someDatasetID = "datasetID"
-	someEdition   = "edition"
+	someEdition   = "timeseries"
 
 	somekeyword0 = "keyword0"
 	somekeyword1 = "keyword1"
@@ -47,7 +47,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 		Convey("When mapped with a default keywords limit", func() {
 			result := models.MapZebedeeDataToSearchDataImport(zebendeeData, -1)
 			Convey("Then the result should be validly mapped with 4 keywords", func() {
-				So(result.UID, ShouldResemble, someTitle)
+				So(result.UID, ShouldResemble, someTitle+"-"+someEdition)
 				So(result.DataType, ShouldResemble, someDataType)
 				So(result.CDID, ShouldResemble, someCDID)
 				So(result.DatasetID, ShouldResemble, someDatasetID)

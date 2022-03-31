@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -8,8 +9,12 @@ import (
 // It also optionally takes a limit which truncates the keywords to the desired amount. This value can be -1 for no
 // truncation.
 func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int) SearchDataImport {
+	uid := zebedeeData.Description.Title
+	if zebedeeData.Description.Edition != "" {
+		uid = fmt.Sprintf("%s-%s", uid, zebedeeData.Description.Edition)
+	}
 	searchData := SearchDataImport{
-		UID:             zebedeeData.Description.Title,
+		UID:             uid,
 		DataType:        zebedeeData.DataType,
 		CDID:            zebedeeData.Description.CDID,
 		DatasetID:       zebedeeData.Description.DatasetID,
