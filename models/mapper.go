@@ -10,6 +10,7 @@ import (
 func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int) SearchDataImport {
 	searchData := SearchDataImport{
 		UID:             zebedeeData.Description.Title,
+		URI:             zebedeeData.URI,
 		DataType:        zebedeeData.DataType,
 		CDID:            zebedeeData.Description.CDID,
 		DatasetID:       zebedeeData.Description.DatasetID,

@@ -3,6 +3,7 @@ package models
 // ZebedeeData provides model for zebedee publisheddata response
 type ZebedeeData struct {
 	UID         string      `json:"uid"`
+	URI         string      `json:"uri"`
 	DataType    string      `json:"type"`
 	Description Description `json:"description"`
 }
