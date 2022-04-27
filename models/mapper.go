@@ -19,7 +19,7 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		Summary:         zebedeeData.Description.Summary,
 		ReleaseDate:     zebedeeData.Description.ReleaseDate,
 		Title:           zebedeeData.Description.Title,
-		Topics:          ValidateTopics(zebedeeData.Description.Topics),
+		Topics:          zebedeeData.Description.Topics,
 	}
 	return searchData
 }
@@ -62,6 +62,7 @@ func ValidateTopics(topics []string) []string {
 func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
 	versionMetaData := SearchDataImport{
 		UID:             cmdData.UID,
+		URI:             cmdData.URI,
 		ReleaseDate:     cmdData.VersionDetails.ReleaseDate,
 		Keywords:        cmdData.DatasetDetails.Keywords,
 		MetaDescription: cmdData.DatasetDetails.Description,
