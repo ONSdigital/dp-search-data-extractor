@@ -29,17 +29,29 @@ type ContentPublishedHandler struct {
 }
 
 // Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) (err error) {
+func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) error {
 	logData := log.Data{
 		"event": cpEvent,
 	}
 	log.Info(ctx, "event handler called with event", logData)
-
+	var zebedeeContentPublished []byte
+	var err error
 	if cpEvent.DataType == ZebedeeDataType {
-		// Make a call to Zebedee
-		zebedeeContentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, cpEvent.URI)
-		if err != nil {
-			return err
+		if strings.Contains(cpEvent.URI, DatasetDataType) {
+			datasetURI, datasetErr := extractDatasetURI(cpEvent.URI)
+			if datasetErr != nil {
+				return datasetErr
+			}
+			zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, datasetURI)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Make a call to Zebedee
+			zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, cpEvent.URI)
+			if err != nil {
+				return err
+			}
 		}
 
 		logData = log.Data{
@@ -68,25 +80,25 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		searchData.SearchIndex = OnsSearchIndex
 
 		// Marshall Avro and sending message
-		if err := h.Producer.SearchDataImport(ctx, searchData); err != nil {
-			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
-			return err
+		if sdImportErr := h.Producer.SearchDataImport(ctx, searchData); sdImportErr != nil {
+			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", sdImportErr)
+			return sdImportErr
 		}
 	} else if cpEvent.DataType == DatasetDataType {
-		datasetID, edition, version, err := getIDsFromURI(cpEvent.URI)
-		if err != nil {
-			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", err)
-			return err
+		datasetID, edition, version, getIDErr := getIDsFromURI(cpEvent.URI)
+		if getIDErr != nil {
+			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", getIDErr)
+			return getIDErr
 		}
 
 		// ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition>
 		generatedID := fmt.Sprintf("%s-%s", datasetID, edition)
 
 		// Make a call to DatasetAPI
-		datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
-		if err != nil {
-			log.Error(ctx, "cannot get dataset published contents version %s from api", err)
-			return err
+		datasetMetadataPublished, metadataErr := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
+		if metadataErr != nil {
+			log.Error(ctx, "cannot get dataset published contents version %s from api", metadataErr)
+			return metadataErr
 		}
 
 		logData = log.Data{
@@ -126,13 +138,13 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		datasetVersionMetadata.DataType = "dataset_landing_page"
 
 		// Marshall Avro and sending message
-		if err := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); err != nil {
-			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", err)
-			return err
+		if sdImportErr := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); sdImportErr != nil {
+			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr)
+			return sdImportErr
 		}
 	} else {
 		log.Info(ctx, "Invalid content data type received, no action")
-		return
+		return err
 	}
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
@@ -152,4 +164,15 @@ func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err erro
 	editionID = s[4]
 	versionID = s[6]
 	return
+}
+
+func extractDatasetURI(editionURI string) (string, error) {
+	parsedURI, err := url.Parse(editionURI)
+	if err != nil {
+		return "", err
+	}
+	slicedURI := strings.Split(parsedURI.Path, "/")
+	slicedURI = slicedURI[:len(slicedURI)-1]
+	datasetURI := strings.Join(slicedURI, "/")
+	return datasetURI, nil
 }

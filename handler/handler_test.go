@@ -3,6 +3,7 @@ package handler_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,6 +27,12 @@ var (
 
 	testZebedeeEvent = models.ContentPublished{
 		URI:          "testZebdeeUri",
+		DataType:     "legacy",
+		CollectionID: "testZebdeeCollectionID",
+	}
+
+	testZebedeeEventWithDatasetURI = models.ContentPublished{
+		URI:          "/datasets/cphi01/testedition2018",
 		DataType:     "legacy",
 		CollectionID: "testZebdeeCollectionID",
 	}
@@ -75,6 +82,7 @@ var (
 )
 
 func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
+	t.Parallel()
 	expectedSearchDataImportEvent := models.SearchDataImport{
 		DataType:        "testDataType",
 		JobID:           "",
@@ -147,6 +155,29 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 				So(actual.Title, ShouldEqual, expectedSearchDataImportEvent.Title)
 				So(actual.TraceID, ShouldNotBeNil)
 			})
+		})
+
+		Convey("When given a valid event with dataset uri", func() {
+			expectedParsedURI := strings.Split(testZebedeeEventWithDatasetURI.URI, "/")
+			expectedParsedURI = expectedParsedURI[:len(expectedParsedURI)-1]
+			err := eventHandler.Handle(ctx, &testZebedeeEventWithDatasetURI, *cfg)
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("And then get content published from zebedee", func() {
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
+				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, strings.Join(expectedParsedURI, "/"))
+
+				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
+			})
+			select {
+			case <-pChannels.Output:
+				t.Log("avro byte sent to producer output")
+			case <-time.After(testTimeout):
+				t.FailNow()
+			}
 		})
 	})
 	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
