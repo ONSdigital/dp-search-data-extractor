@@ -40,6 +40,11 @@ var (
 		ReleaseDate:     "",
 		Title:           "",
 		Topics:          []string{""},
+		DateChanges:     []models.ReleaseDateDetails{{}},
+		Cancelled:       false,
+		Finalised:       false,
+		ProvisionalDate: "",
+		Published:       false,
 	}
 
 	expectedVersionMetadataEvent = models.SearchDataImport{

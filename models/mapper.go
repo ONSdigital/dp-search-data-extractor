@@ -1,7 +1,14 @@
 package models
 
 import (
+	"context"
 	"strings"
+
+	"github.com/ONSdigital/log.go/v2/log"
+)
+
+const (
+	ReleaseDataType = "release"
 )
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
@@ -20,6 +27,19 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		ReleaseDate:     zebedeeData.Description.ReleaseDate,
 		Title:           zebedeeData.Description.Title,
 		Topics:          zebedeeData.Description.Topics,
+	}
+	if zebedeeData.DataType == ReleaseDataType {
+		logData := log.Data{
+			"zebedeeRCData": zebedeeData,
+		}
+		log.Info(context.Background(), "zebedee release calender data", logData)
+		for _, data := range zebedeeData.DateChanges {
+			searchData.DateChanges = append(searchData.DateChanges, ReleaseDateDetails(data))
+		}
+		searchData.Published = zebedeeData.Published
+		searchData.Cancelled = zebedeeData.Cancelled
+		searchData.Finalised = zebedeeData.Finalised
+		searchData.ProvisionalDate = zebedeeData.ProvisionalDate
 	}
 	return searchData
 }

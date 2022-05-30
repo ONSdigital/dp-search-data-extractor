@@ -100,7 +100,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			log.Error(ctx, "cannot get dataset published contents version %s from api", metadataErr)
 			return metadataErr
 		}
-
 		logData = log.Data{
 			"uid generated":    generatedID,
 			"contentPublished": datasetMetadataPublished,
