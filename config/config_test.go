@@ -30,7 +30,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaSecClientKey, ShouldEqual, "")
 				So(cfg.KafkaSecSkipVerify, ShouldBeFalse)
 				So(cfg.ContentUpdatedGroup, ShouldEqual, "dp-search-data-extractor")
-				So(cfg.ContentUpdatedTopic, ShouldEqual, "content-published")
+				So(cfg.ContentUpdatedTopic, ShouldEqual, "content-updated")
 				So(cfg.KafkaProducerTopic, ShouldEqual, "search-data-import")
 				So(cfg.ZebedeeURL, ShouldEqual, "http://localhost:8082")
 				So(cfg.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
