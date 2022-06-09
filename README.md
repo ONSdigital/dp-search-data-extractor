@@ -55,8 +55,8 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_SEC_CLIENT_CERT          | _unset_                  | PEM [2] for the client certificate (optional, used for client auth) [[1]](#notes_1)
 | KAFKA_SEC_CA_CERTS             | _unset_                  | PEM [2] of CA cert chain if using private CA for the server cert [[1]](#notes_1)
 | KAFKA_SEC_SKIP_VERIFY          | false                    | ignore server certificate issues if set to `true` [[1]](#notes_1)
-| KAFKA_CONTENT_PUBLISHED_GROUP  | dp-search-data-extractor | The consumer group this application to consume ImageUploaded messages
-| KAFKA_CONTENT_PUBLISHED_TOPIC  | content-published        | The name of the topic to consume messages from
+| KAFKA_CONTENT_UPDATED_GROUP    | dp-search-data-extractor | The consumer group this application to consume content-updated messages
+| KAFKA_CONTENT_UPDATED_TOPIC    | content-updated          | The name of the topic to consume messages from
 | ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
 | KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
 | DATASET_API_URL                | `http://localhost:22000` | The URL for the DatasetAPI
@@ -81,7 +81,6 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### License
 
-Copyright © 2021, Office for National Statistics (https://www.ons.gov.uk)
+Copyright © 2022, Office for National Statistics (https://www.ons.gov.uk)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
-
