@@ -4,9 +4,9 @@ import (
 	"github.com/ONSdigital/dp-kafka/v2/avro"
 )
 
-var contentPublished = `{
+var contentUpdated = `{
   "type": "record",
-  "name": "content-published",
+  "name": "content-updated",
   "fields": [
     {"name": "uri", "type": "string", "default": ""},
     {"name": "data_type", "type": "string", "default": ""},
@@ -19,7 +19,7 @@ var contentPublished = `{
 
 // ContentPublishedEvent is the Avro schema for Content Published messages.
 var ContentPublishedEvent = &avro.Schema{
-	Definition: contentPublished,
+	Definition: contentUpdated,
 }
 
 var searchDataImport = `{
