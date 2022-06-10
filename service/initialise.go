@@ -135,8 +135,8 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 	kafkaConsumer, err := dpkafka.NewConsumerGroup(
 		ctx,
 		cfg.KafkaAddr,
-		cfg.ContentPublishedTopic,
-		cfg.ContentPublishedGroup,
+		cfg.ContentUpdatedTopic,
+		cfg.ContentUpdatedGroup,
 		cgChannels,
 		cConfig,
 	)

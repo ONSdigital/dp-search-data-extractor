@@ -83,6 +83,7 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - typecheck
   new: false
 
 # golangci.com configuration
