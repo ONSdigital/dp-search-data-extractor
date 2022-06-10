@@ -21,8 +21,8 @@ type Config struct {
 	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
 	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
-	ContentUpdatedGroup        string        `envconfig:"KAFKA_CONTENT_PUBLISHED_GROUP"`
-	ContentUpdatedTopic        string        `envconfig:"KAFKA_CONTENT_PUBLISHED_TOPIC"`
+	ContentUpdatedGroup        string        `envconfig:"KAFKA_CONTENT_UPDATED_GROUP"`
+	ContentUpdatedTopic        string        `envconfig:"KAFKA_CONTENT_UPDATED_TOPIC"`
 	KafkaProducerTopic         string        `envconfig:"KAFKA_PRODUCER_TOPIC"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
