@@ -36,10 +36,10 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		for _, data := range zebedeeData.DateChanges {
 			searchData.DateChanges = append(searchData.DateChanges, ReleaseDateDetails(data))
 		}
-		searchData.Published = zebedeeData.Published
-		searchData.Cancelled = zebedeeData.Cancelled
-		searchData.Finalised = zebedeeData.Finalised
-		searchData.ProvisionalDate = zebedeeData.ProvisionalDate
+		searchData.Published = zebedeeData.Description.Published
+		searchData.Cancelled = zebedeeData.Description.Cancelled
+		searchData.Finalised = zebedeeData.Description.Finalised
+		searchData.ProvisionalDate = zebedeeData.Description.ProvisionalDate
 	}
 	return searchData
 }
