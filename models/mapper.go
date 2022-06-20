@@ -40,6 +40,8 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		searchData.Cancelled = zebedeeData.Description.Cancelled
 		searchData.Finalised = zebedeeData.Description.Finalised
 		searchData.ProvisionalDate = zebedeeData.Description.ProvisionalDate
+		searchData.Survey = zebedeeData.Description.Survey
+		searchData.Language = zebedeeData.Description.Language
 	}
 	return searchData
 }

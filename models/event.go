@@ -31,6 +31,8 @@ type SearchDataImport struct {
 	Finalised       bool                 `avro:"finalised"`
 	ProvisionalDate string               `avro:"provisional_date"`
 	Published       bool                 `avro:"published"`
+	Language        string               `avro:"language"`
+	Survey          string               `avro:"survey"`
 }
 
 // ReleaseDateChange represent a date change of a release

@@ -43,6 +43,8 @@ var searchDataImport = `{
     {"name": "cancelled", "type": "boolean", "default": false},
     {"name": "finalised", "type": "boolean", "default": false},
     {"name": "published", "type": "boolean", "default": false},
+    {"name": "language", "type": "string", "default": ""},
+    {"name": "survey",   "type": "string", "default": ""},
     {"name": "date_changes", "type": {"type":"array","items":{
      "name": "ReleaseDateDetails",
      "type" : "record",

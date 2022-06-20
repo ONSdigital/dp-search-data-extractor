@@ -23,6 +23,8 @@ type Description struct {
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
 	Topics          []string `json:"topics,omitempty"`
+	Language        string   `json:"language,omitempty"`
+	Survey          string   `json:"survey,omitempty"`
 }
 
 // ReleaseDateChange represent a date change of a release

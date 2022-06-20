@@ -45,6 +45,8 @@ var (
 		Finalised:       false,
 		ProvisionalDate: "",
 		Published:       false,
+		Survey:          "",
+		Language:        "",
 	}
 
 	expectedVersionMetadataEvent = models.SearchDataImport{
