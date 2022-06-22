@@ -6,7 +6,7 @@ type ZebedeeData struct {
 	URI         string              `json:"uri"`
 	DataType    string              `json:"type"`
 	Description Description         `json:"description"`
-	DateChanges []ReleaseDateChange `json:"date_changes,omitempty"`
+	DateChanges []ReleaseDateChange `json:"dateChanges,omitempty"`
 }
 
 type Description struct {
@@ -17,7 +17,7 @@ type Description struct {
 	Finalised       bool     `json:"finalised,omitempty"`
 	Keywords        []string `json:"keywords,omitempty"`
 	MetaDescription string   `json:"metaDescription"`
-	ProvisionalDate string   `json:"provisional_date,omitempty"`
+	ProvisionalDate string   `json:"provisionalDate,omitempty"`
 	Published       bool     `json:"published,omitempty"`
 	ReleaseDate     string   `json:"releaseDate"`
 	Summary         string   `json:"summary"`
@@ -29,6 +29,6 @@ type Description struct {
 
 // ReleaseDateChange represent a date change of a release
 type ReleaseDateChange struct {
-	ChangeNotice string `json:"change_notice"`
-	Date         string `json:"previous_date"`
+	ChangeNotice string `json:"changeNotice"`
+	Date         string `json:"previousDate"`
 }
