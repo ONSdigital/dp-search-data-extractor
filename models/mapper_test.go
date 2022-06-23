@@ -27,6 +27,7 @@ const (
 	someTitle           = "Some Incredible Title"
 	someSurvey          = "Some survey"
 	someLanguage        = "some language"
+	canonicalTopic      = "some topic"
 
 	sometopic0 = "topic0"
 	sometopic1 = "topic1"
@@ -59,6 +60,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				Topics:          []string{sometopic0, sometopic1},
 				Survey:          someSurvey,
 				Language:        someLanguage,
+				CanonicalTopic:  canonicalTopic,
 			},
 		}
 		Convey("When mapped with a default keywords limit", func() {
@@ -74,6 +76,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				So(result.Title, ShouldResemble, someTitle)
 				So(result.Survey, ShouldResemble, someSurvey)
 				So(result.Language, ShouldResemble, someLanguage)
+				So(result.CanonicalTopic, ShouldResemble, canonicalTopic)
 
 				So(result.DateChanges, ShouldHaveLength, 1)
 				So(result.DateChanges[0].ChangeNotice, ShouldEqual, someChangeNotice)

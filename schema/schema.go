@@ -45,6 +45,7 @@ var searchDataImport = `{
     {"name": "published", "type": "boolean", "default": false},
     {"name": "language", "type": "string", "default": ""},
     {"name": "survey",   "type": "string", "default": ""},
+    {"name": "canonical_topic",   "type": "string", "default": ""},
     {"name": "date_changes", "type": {"type":"array","items":{
      "name": "ReleaseDateDetails",
      "type" : "record",

@@ -30,6 +30,7 @@ type SearchDataImport struct {
 	Cancelled       bool                 `avro:"cancelled"`
 	Finalised       bool                 `avro:"finalised"`
 	ProvisionalDate string               `avro:"provisional_date"`
+	CanonicalTopic  string               `avro:"canonical_topic"`
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`

@@ -18,11 +18,12 @@ type Description struct {
 	Keywords        []string `json:"keywords,omitempty"`
 	MetaDescription string   `json:"metaDescription"`
 	ProvisionalDate string   `json:"provisionalDate,omitempty"`
+	CanonicalTopic  string   `json:"canonicalTopic,omitempty"`
 	Published       bool     `json:"published,omitempty"`
 	ReleaseDate     string   `json:"releaseDate"`
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
-	Topics          []string `json:"topics,omitempty"`
+	Topics          []string `json:"secondaryTopics,omitempty"`
 	Language        string   `json:"language,omitempty"`
 	Survey          string   `json:"survey,omitempty"`
 }
