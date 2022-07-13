@@ -134,10 +134,16 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 			})
 
 			var avroBytes []byte
+			delay := time.NewTimer(testTimeout)
 			select {
 			case avroBytes = <-pChannels.Output:
+				// Ensure timer is stopped and its resources are freed
+				if !delay.Stop() {
+					// if the timer has been stopped then read from the channel
+					<-delay.C
+				}
 				t.Log("avro byte sent to producer output")
-			case <-time.After(testTimeout):
+			case <-delay.C:
 				t.FailNow()
 			}
 			Convey("And then the expected bytes are sent to producer.output", func() {
@@ -172,10 +178,16 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 
 				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
 			})
+			delay := time.NewTimer(testTimeout)
 			select {
 			case <-pChannels.Output:
+				// Ensure timer is stopped and its resources are freed
+				if !delay.Stop() {
+					// if the timer has been stopped then read from the channel
+					<-delay.C
+				}
 				t.Log("avro byte sent to producer output")
-			case <-time.After(testTimeout):
+			case <-delay.C:
 				t.FailNow()
 			}
 		})
@@ -246,10 +258,16 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
 
 			var avroBytes []byte
+			delay := time.NewTimer(testTimeout)
 			select {
 			case avroBytes = <-pChannels.Output:
+				// Ensure timer is stopped and its resources are freed
+				if !delay.Stop() {
+					// if the timer has been stopped then read from the channel
+					<-delay.C
+				}
 				t.Log("avro byte sent to producer output")
-			case <-time.After(testTimeout):
+			case <-delay.C:
 				t.FailNow()
 			}
 			Convey("Then no error is reported", func() {
@@ -327,10 +345,16 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
 
 			var avroBytes []byte
+			delay := time.NewTimer(testTimeout)
 			select {
 			case avroBytes = <-pChannels.Output:
+				// Ensure timer is stopped and its resources are freed
+				if !delay.Stop() {
+					// if the timer has been stopped then read from the channel
+					<-delay.C
+				}
 				t.Log("avro byte sent to producer output")
-			case <-time.After(testTimeout):
+			case <-delay.C:
 				t.FailNow()
 			}
 
