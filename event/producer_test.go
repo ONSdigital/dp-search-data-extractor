@@ -93,10 +93,11 @@ func TestProducer_SearchDataImport(t *testing.T) {
 
 			var avroBytes []byte
 			var testTimeout = time.Second * 5
+			delay := time.NewTimer(testTimeout)
 			select {
 			case avroBytes = <-pChannels.Output:
 				t.Log("avro byte sent to producer output")
-			case <-time.After(testTimeout):
+			case <-delay.C:
 				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
 			}
@@ -180,10 +181,11 @@ func TestProducer_SearchDatasetVersionMetadataImport(t *testing.T) {
 
 			var avroBytes []byte
 			var testTimeout = time.Second * 5
+			delay := time.NewTimer(testTimeout)
 			select {
 			case avroBytes = <-pChannels.Output:
 				t.Log("avro byte sent to producer output")
-			case <-time.After(testTimeout):
+			case <-delay.C:
 				t.Fatalf("failing test due to timing out after %v seconds", testTimeout)
 				t.FailNow()
 			}
