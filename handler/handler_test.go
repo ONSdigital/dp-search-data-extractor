@@ -492,6 +492,36 @@ func TestRetrieveCorrectURI(t *testing.T) {
 	})
 }
 
+func TestGetIndexName(t *testing.T) {
+	t.Parallel()
+
+	Convey("Given index name is not empty", t, func() {
+		index := "ons123456789"
+		expectedIndex := index
+
+		Convey("When calling getIndexName function", func() {
+			indexName := getIndexName(index)
+
+			Convey("Then successfully return the original index name", func() {
+				So(indexName, ShouldEqual, expectedIndex)
+			})
+		})
+	})
+
+	Convey("Given index name is empty", t, func() {
+		index := ""
+		expectedIndex := OnsSearchIndex
+
+		Convey("When calling getIndexName function", func() {
+			indexName := getIndexName(index)
+
+			Convey("Then successfully return the default index name", func() {
+				So(indexName, ShouldEqual, expectedIndex)
+			})
+		})
+	})
+}
+
 // marshalSearchDataImport helper method to marshal a event into a []byte
 func marshalSearchDataImport(t *testing.T, sdEvent models.SearchDataImport) []byte {
 	bytes, err := schema.SearchDataImportEvent.Marshal(sdEvent)

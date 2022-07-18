@@ -70,8 +70,8 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		// Mapping Json to Avro
 		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
 		searchData.TraceID = cpEvent.TraceID
-		searchData.JobID = ""
-		searchData.SearchIndex = OnsSearchIndex
+		searchData.JobID = cpEvent.SearchIndex
+		searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
 
 		// Marshall Avro and sending message
 		if sdImportErr := h.Producer.SearchDataImport(ctx, searchData); sdImportErr != nil {
@@ -125,9 +125,10 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			"datasetVersionData": datasetVersionMetadata,
 		}
 		log.Info(ctx, "datasetVersionMetadata ", logData)
+
 		datasetVersionMetadata.TraceID = cpEvent.TraceID
-		datasetVersionMetadata.JobID = ""
-		datasetVersionMetadata.SearchIndex = OnsSearchIndex
+		datasetVersionMetadata.JobID = cpEvent.JobID
+		datasetVersionMetadata.SearchIndex = getIndexName(cpEvent.SearchIndex)
 		datasetVersionMetadata.DataType = "dataset_landing_page"
 
 		// Marshall Avro and sending message
@@ -185,4 +186,12 @@ func extractDatasetURI(editionURI string) (string, error) {
 	datasetURI := strings.Join(slicedURI, "/")
 
 	return datasetURI, nil
+}
+
+func getIndexName(indexName string) string {
+	if indexName != "" {
+		return indexName
+	}
+
+	return OnsSearchIndex
 }
