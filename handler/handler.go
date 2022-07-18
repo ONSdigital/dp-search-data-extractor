@@ -70,7 +70,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		// Mapping Json to Avro
 		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
 		searchData.TraceID = cpEvent.TraceID
-		searchData.JobID = cpEvent.SearchIndex
+		searchData.JobID = cpEvent.JobID
 		searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
 
 		// Marshall Avro and sending message
