@@ -1,4 +1,4 @@
-package handler_test
+package handler
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
-	"github.com/ONSdigital/dp-search-data-extractor/handler"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 
@@ -117,7 +116,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
 		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
 
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+		eventHandler := &ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event", func() {
 			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
@@ -195,7 +194,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
+		eventHandler := &ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event", func() {
 			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
@@ -252,7 +251,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getFullPublishDataFunc}
 		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+		eventHandler := &ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event with default keywords limit", func() {
 			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
@@ -339,7 +338,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
 		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
 
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+		eventHandler := &ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
 
 		Convey("When given a valid event for cmd dataset", func() {
 			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
@@ -383,7 +382,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 	Convey("Given an event handler not working successfully, and an event containing a valid dataType", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
+		eventHandler := &ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a valid event for a valid dataset", func() {
 			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
@@ -425,7 +424,7 @@ func TestHandlerForInvalidDataType(t *testing.T) {
 	Convey("Given an event handler working successfully, and an event containing a invalid dataType", t, func() {
 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
-		eventHandler := &handler.ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
+		eventHandler := &ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
 		Convey("When given a invalid event", func() {
 			err := eventHandler.Handle(ctx, &testInvalidEvent, *cfg)
@@ -438,6 +437,86 @@ func TestHandlerForInvalidDataType(t *testing.T) {
 
 				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 0)
 				So(datasetMockInError.GetVersionMetadataCalls(), ShouldBeEmpty)
+			})
+		})
+	})
+}
+
+func TestExtractDatasetURIFromEditionURI(t *testing.T) {
+	t.Parallel()
+
+	Convey("Given a valid edition uri", t, func() {
+		editionURI := "/datasets/uk-economy/2016"
+		expectedURI := "/datasets/uk-economy"
+
+		Convey("When calling extractDatasetURI function", func() {
+			datasetURI, err := extractDatasetURI(editionURI)
+
+			Convey("Then successfully return a dataset uri and no errors", func() {
+				So(err, ShouldBeNil)
+				So(datasetURI, ShouldEqual, expectedURI)
+			})
+		})
+	})
+}
+
+func TestRetrieveCorrectURI(t *testing.T) {
+	t.Parallel()
+
+	Convey("Given a valid edition uri", t, func() {
+		editionURI := "/datasets/uk-economy/2016"
+		expectedURI := "/datasets/uk-economy"
+
+		Convey("When calling retrieveCorrectURI function", func() {
+			datasetURI, err := retrieveCorrectURI(editionURI)
+
+			Convey("Then successfully return a dataset uri and no errors", func() {
+				So(err, ShouldBeNil)
+				So(datasetURI, ShouldEqual, expectedURI)
+			})
+		})
+	})
+
+	Convey("Given a valid uri which does not contain \"datasets\"", t, func() {
+		bulletinURI := "/bulletins/uk-economy/2016"
+		expectedURI := "/bulletins/uk-economy/2016"
+
+		Convey("When calling retrieveCorrectURI function", func() {
+			datasetURI, err := retrieveCorrectURI(bulletinURI)
+
+			Convey("Then successfully return the original uri and no errors", func() {
+				So(err, ShouldBeNil)
+				So(datasetURI, ShouldEqual, expectedURI)
+			})
+		})
+	})
+}
+
+func TestGetIndexName(t *testing.T) {
+	t.Parallel()
+
+	Convey("Given index name is not empty", t, func() {
+		index := "ons123456789"
+		expectedIndex := index
+
+		Convey("When calling getIndexName function", func() {
+			indexName := getIndexName(index)
+
+			Convey("Then successfully return the original index name", func() {
+				So(indexName, ShouldEqual, expectedIndex)
+			})
+		})
+	})
+
+	Convey("Given index name is empty", t, func() {
+		index := ""
+		expectedIndex := OnsSearchIndex
+
+		Convey("When calling getIndexName function", func() {
+			indexName := getIndexName(index)
+
+			Convey("Then successfully return the default index name", func() {
+				So(indexName, ShouldEqual, expectedIndex)
 			})
 		})
 	})
