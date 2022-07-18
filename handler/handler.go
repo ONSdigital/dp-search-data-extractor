@@ -38,9 +38,9 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 	var err error
 	if cpEvent.DataType == ZebedeeDataType {
 		// obtain correct uri to callback to Zebedee to retrieve content metadata
-		uri, err := retrieveCorrectURI(cpEvent.URI)
-		if err != nil {
-			return err
+		uri, InvalidURIErr := retrieveCorrectURI(cpEvent.URI)
+		if InvalidURIErr != nil {
+			return InvalidURIErr
 		}
 
 		zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, uri)

@@ -14,6 +14,7 @@ type ContentPublished struct {
 type SearchDataImport struct {
 	UID             string               `avro:"uid"`
 	URI             string               `avro:"uri"`
+	Edition         string               `avro:"edition"`
 	DataType        string               `avro:"data_type"`
 	JobID           string               `avro:"job_id"`
 	SearchIndex     string               `avro:"search_index"`

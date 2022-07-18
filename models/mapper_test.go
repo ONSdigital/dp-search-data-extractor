@@ -35,7 +35,34 @@ const (
 
 func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 	Convey("Given some valid zebedee data", t, func() {
-		zebendeeData := models.ZebedeeData{
+		zebedeeData := models.ZebedeeData{
+			UID:      someTitle,
+			DataType: someRelease,
+			DateChanges: []models.ReleaseDateChange{
+				{
+					ChangeNotice: someChangeNotice,
+					Date:         someChangeNoticeDate,
+				},
+			},
+			Description: models.Description{
+				Cancelled:       false,
+				CDID:            someCDID,
+				DatasetID:       someDatasetID,
+				Finalised:       true,
+				Keywords:        []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
+				MetaDescription: someMetaDescription,
+				ProvisionalDate: someProvisionalDate,
+				Published:       true,
+				ReleaseDate:     someReleaseDate,
+				Summary:         someSummary,
+				Title:           someTitle,
+				Topics:          []string{sometopic0, sometopic1},
+				Survey:          someSurvey,
+				Language:        someLanguage,
+				CanonicalTopic:  canonicalTopic,
+			},
+		}
+		zebedeeDataWithEdition := models.ZebedeeData{
 			UID:      someTitle,
 			DataType: someRelease,
 			DateChanges: []models.ReleaseDateChange{
@@ -63,8 +90,44 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				CanonicalTopic:  canonicalTopic,
 			},
 		}
+		Convey("When mapped with a default keywords limit when edition is present", func() {
+			result := models.MapZebedeeDataToSearchDataImport(zebedeeDataWithEdition, -1)
+			Convey("Then the result should be validly mapped with 4 keywords when edition is present", func() {
+				So(result.UID, ShouldResemble, someTitle+someEdition)
+				So(result.DataType, ShouldResemble, someRelease)
+				So(result.CDID, ShouldResemble, someCDID)
+				So(result.DatasetID, ShouldResemble, someDatasetID)
+				So(result.MetaDescription, ShouldResemble, someMetaDescription)
+				So(result.ReleaseDate, ShouldResemble, someReleaseDate)
+				So(result.Summary, ShouldResemble, someSummary)
+				So(result.Title, ShouldResemble, someTitle)
+				So(result.Survey, ShouldResemble, someSurvey)
+				So(result.Language, ShouldResemble, someLanguage)
+				So(result.CanonicalTopic, ShouldResemble, canonicalTopic)
+
+				So(result.DateChanges, ShouldHaveLength, 1)
+				So(result.DateChanges[0].ChangeNotice, ShouldEqual, someChangeNotice)
+				So(result.DateChanges[0].Date, ShouldEqual, someChangeNoticeDate)
+
+				So(result.Cancelled, ShouldBeFalse)
+				So(result.Finalised, ShouldBeTrue)
+				So(result.Published, ShouldBeTrue)
+
+				So(result.Keywords, ShouldNotBeEmpty)
+				So(result.Keywords, ShouldHaveLength, 4)
+				So(result.Keywords[0], ShouldResemble, somekeyword0)
+				So(result.Keywords[1], ShouldResemble, somekeyword1)
+				So(result.Keywords[2], ShouldResemble, somekeyword2)
+				So(result.Keywords[3], ShouldResemble, somekeyword3)
+
+				So(result.Topics, ShouldNotBeEmpty)
+				So(result.Topics, ShouldHaveLength, 2)
+				So(result.Topics[0], ShouldResemble, sometopic0)
+				So(result.Topics[1], ShouldResemble, sometopic1)
+			})
+		})
 		Convey("When mapped with a default keywords limit", func() {
-			result := models.MapZebedeeDataToSearchDataImport(zebendeeData, -1)
+			result := models.MapZebedeeDataToSearchDataImport(zebedeeData, -1)
 			Convey("Then the result should be validly mapped with 4 keywords", func() {
 				So(result.UID, ShouldResemble, someTitle)
 				So(result.DataType, ShouldResemble, someRelease)
@@ -100,7 +163,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 			})
 		})
 		Convey("When mapped with a keywords limit of 2", func() {
-			result := models.MapZebedeeDataToSearchDataImport(zebendeeData, 2)
+			result := models.MapZebedeeDataToSearchDataImport(zebedeeData, 2)
 			Convey("Then the result should be validly mapped with 2 keywords", func() {
 				So(result.DataType, ShouldResemble, someRelease)
 				So(result.CDID, ShouldResemble, someCDID)

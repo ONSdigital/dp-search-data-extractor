@@ -448,9 +448,16 @@ func TestExtractDatasetURIFromEditionURI(t *testing.T) {
 	Convey("Given a valid edition uri", t, func() {
 		editionURI := "/datasets/uk-economy/2016"
 		expectedURI := "/datasets/uk-economy"
-
 		Convey("When calling extractDatasetURI function", func() {
 			datasetURI, err := extractDatasetURI(editionURI)
+
+			Convey("Then successfully return a dataset uri and no errors", func() {
+				So(err, ShouldBeNil)
+				So(datasetURI, ShouldEqual, expectedURI)
+			})
+		})
+		Convey("When calling retrieveCorrectURI function", func() {
+			datasetURI, err := retrieveCorrectURI(editionURI)
 
 			Convey("Then successfully return a dataset uri and no errors", func() {
 				So(err, ShouldBeNil)
@@ -463,26 +470,11 @@ func TestExtractDatasetURIFromEditionURI(t *testing.T) {
 func TestRetrieveCorrectURI(t *testing.T) {
 	t.Parallel()
 
-	Convey("Given a valid edition uri", t, func() {
-		editionURI := "/datasets/uk-economy/2016"
-		expectedURI := "/datasets/uk-economy"
-
-		Convey("When calling retrieveCorrectURI function", func() {
-			datasetURI, err := retrieveCorrectURI(editionURI)
-
-			Convey("Then successfully return a dataset uri and no errors", func() {
-				So(err, ShouldBeNil)
-				So(datasetURI, ShouldEqual, expectedURI)
-			})
-		})
-	})
-
 	Convey("Given a valid uri which does not contain \"datasets\"", t, func() {
-		bulletinURI := "/bulletins/uk-economy/2016"
 		expectedURI := "/bulletins/uk-economy/2016"
 
 		Convey("When calling retrieveCorrectURI function", func() {
-			datasetURI, err := retrieveCorrectURI(bulletinURI)
+			datasetURI, err := retrieveCorrectURI(expectedURI)
 
 			Convey("Then successfully return the original uri and no errors", func() {
 				So(err, ShouldBeNil)
