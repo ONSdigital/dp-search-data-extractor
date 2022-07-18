@@ -94,6 +94,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 			result := models.MapZebedeeDataToSearchDataImport(zebedeeDataWithEdition, -1)
 			Convey("Then the result should be validly mapped with 4 keywords when edition is present", func() {
 				So(result.UID, ShouldResemble, someTitle+someEdition)
+				So(result.Edition, ShouldResemble, someEdition)
 				So(result.DataType, ShouldResemble, someRelease)
 				So(result.CDID, ShouldResemble, someCDID)
 				So(result.DatasetID, ShouldResemble, someDatasetID)
