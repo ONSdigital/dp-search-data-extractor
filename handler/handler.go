@@ -37,21 +37,15 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 	var zebedeeContentPublished []byte
 	var err error
 	if cpEvent.DataType == ZebedeeDataType {
-		if strings.Contains(cpEvent.URI, DatasetDataType) {
-			datasetURI, datasetErr := extractDatasetURI(cpEvent.URI)
-			if datasetErr != nil {
-				return datasetErr
-			}
-			zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, datasetURI)
-			if err != nil {
-				return err
-			}
-		} else {
-			// Make a call to Zebedee
-			zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, cpEvent.URI)
-			if err != nil {
-				return err
-			}
+		// obtain correct uri to callback to Zebedee to retrieve content metadata
+		uri, err := retrieveCorrectURI(cpEvent.URI)
+		if err != nil {
+			return err
+		}
+
+		zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, uri)
+		if err != nil {
+			return err
 		}
 
 		logData = log.Data{
@@ -165,13 +159,30 @@ func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err erro
 	return
 }
 
+func retrieveCorrectURI(uri string) (correctURI string, err error) {
+	correctURI = uri
+
+	// Remove edition segment of path from Zebedee dataset uri to
+	// enable retrieval of the dataset resource for edition
+	if strings.Contains(uri, DatasetDataType) {
+		correctURI, err = extractDatasetURI(uri)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return correctURI, nil
+}
+
 func extractDatasetURI(editionURI string) (string, error) {
 	parsedURI, err := url.Parse(editionURI)
 	if err != nil {
 		return "", err
 	}
+
 	slicedURI := strings.Split(parsedURI.Path, "/")
 	slicedURI = slicedURI[:len(slicedURI)-1]
 	datasetURI := strings.Join(slicedURI, "/")
+
 	return datasetURI, nil
 }
