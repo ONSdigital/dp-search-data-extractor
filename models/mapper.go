@@ -28,6 +28,10 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		Title:           zebedeeData.Description.Title,
 		Topics:          zebedeeData.Description.Topics,
 	}
+	if zebedeeData.Description.Edition != "" {
+		searchData.UID += zebedeeData.Description.Edition
+		searchData.Edition = zebedeeData.Description.Edition
+	}
 	if zebedeeData.DataType == ReleaseDataType {
 		logData := log.Data{
 			"zebedeeRCData": zebedeeData,
