@@ -45,6 +45,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, uri)
 		if err != nil {
+			log.Error(ctx, "failed to retrieve published data from zebedee", err)
 			return err
 		}
 
