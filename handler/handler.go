@@ -49,11 +49,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			return err
 		}
 
-		logData = log.Data{
-			"contentPublished": string(zebedeeContentPublished),
-		}
-		log.Info(ctx, "zebedee response ", logData)
-
 		// byte slice to Json & unMarshall Json
 		var zebedeeData models.ZebedeeData
 		err = json.Unmarshal(zebedeeContentPublished, &zebedeeData)
@@ -68,6 +63,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			"keywords":      zebedeeData.Description.Keywords,
 			"keywordsLimit": cfg.KeywordsLimit,
 		}
+		log.Info(ctx, "zebedee data ", logData)
 		// Mapping Json to Avro
 		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
 		searchData.TraceID = cpEvent.TraceID
