@@ -17,8 +17,8 @@ type Config struct {
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
 	KafkaSecProtocol           string        `envconfig:"KAFKA_SEC_PROTO"`
-	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"`
-	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
+	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"            json:"-"`
+	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"         json:"-"`
 	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	ContentUpdatedGroup        string        `envconfig:"KAFKA_CONTENT_UPDATED_GROUP"`
@@ -27,7 +27,7 @@ type Config struct {
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
-	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"`
+	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
 }
 
 var cfg *Config
