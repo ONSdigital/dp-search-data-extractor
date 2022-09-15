@@ -158,7 +158,6 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 				So(actual.Summary, ShouldEqual, expectedSearchDataImportEvent.Summary)
 				So(actual.ReleaseDate, ShouldEqual, expectedSearchDataImportEvent.ReleaseDate)
 				So(actual.Title, ShouldEqual, expectedSearchDataImportEvent.Title)
-				So(actual.TraceID, ShouldNotBeNil)
 			})
 		})
 
@@ -294,7 +293,6 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 				So(actual.Summary, ShouldEqual, expectedFullSearchDataImportEvent.Summary)
 				So(actual.ReleaseDate, ShouldEqual, expectedFullSearchDataImportEvent.ReleaseDate)
 				So(actual.Title, ShouldEqual, expectedFullSearchDataImportEvent.Title)
-				So(actual.TraceID, ShouldNotBeNil)
 			})
 		})
 	})

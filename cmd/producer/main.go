@@ -73,6 +73,5 @@ func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
 	return &models.ContentPublished{
 		URI:      uri,
 		DataType: "legacy",
-		TraceID:  "054435ded",
 	}
 }

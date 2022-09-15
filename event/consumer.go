@@ -28,7 +28,7 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 					log.Info(ctx, "closing event consumer loop because upstream channel is closed", log.Data{"worker_id": workerID})
 					return
 				}
-				messageCtx := context.Background()
+				messageCtx := message.Context()
 				processMessage(messageCtx, message, handler, cfg)
 				message.Release()
 			case <-messageConsumer.Channels().Closer:
@@ -47,31 +47,40 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 // processMessage unmarshals the provided kafka message into an event and calls the handler.
 // After the message is handled, it is committed.
 func processMessage(ctx context.Context, message kafka.Message, handler Handler, cfg *config.Config) {
+	traceID := ctx.Value(kafka.TraceIDHeaderKey)
 	// unmarshal - commit on failure (consuming the message again would result in the same error)
 	event, err := unmarshal(message)
 	if err != nil {
-		log.Error(ctx, "failed to unmarshal event", err)
+		log.Error(ctx, "failed to unmarshal event", err, log.Data{
+			"request-id": traceID,
+		})
 		message.Commit()
 		return
 	}
 
-	//nolint: revive, staticcheck, gocritic
-	//TODO: This needs to be looked into log library for customised context details
-	ctx = context.WithValue(ctx, "request-id", event.TraceID)
-
-	log.Info(ctx, "event received", log.Data{"event": event})
+	log.Info(ctx, "event received", log.Data{
+		"event":      event,
+		"request-id": traceID,
+	})
 
 	// handle - commit on failure (implement error handling to not commit if message needs to be consumed again)
 	err = handler.Handle(ctx, &event, *cfg)
 	if err != nil {
-		log.Error(ctx, "failed to handle event", err)
+		log.Error(ctx, "failed to handle event", err, log.Data{
+			"request-id": traceID,
+		})
 		message.Commit()
 		return
 	}
 
-	log.Info(ctx, "event processed - committing message", log.Data{"event": event})
+	log.Info(ctx, "event processed - committing message", log.Data{
+		"event":      event,
+		"request-id": traceID,
+	})
 	message.Commit()
-	log.Info(ctx, "consumed message committed", log.Data{"event": event})
+	log.Info(ctx, "consumed message committed", log.Data{
+		"event":      event,
+		"request-id": traceID})
 }
 
 // unmarshal converts a event instance to []byte.

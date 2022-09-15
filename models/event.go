@@ -7,7 +7,6 @@ type ContentPublished struct {
 	CollectionID string `avro:"collection_id"`
 	JobID        string `avro:"job_id"`
 	SearchIndex  string `avro:"search_index"`
-	TraceID      string `avro:"trace_id"`
 }
 
 // SearchDataImport provides event data for a search data import
@@ -26,7 +25,6 @@ type SearchDataImport struct {
 	Summary         string               `avro:"summary"`
 	Title           string               `avro:"title"`
 	Topics          []string             `avro:"topics"`
-	TraceID         string               `avro:"trace_id"`
 	DateChanges     []ReleaseDateDetails `avro:"date_changes"`
 	Cancelled       bool                 `avro:"cancelled"`
 	Finalised       bool                 `avro:"finalised"`

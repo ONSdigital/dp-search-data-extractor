@@ -24,13 +24,20 @@ type SearchDataImportProducer struct {
 
 // SearchDataImport produce a kafka message for an instance which has been successfully processed.
 func (p SearchDataImportProducer) SearchDataImport(ctx context.Context, event models.SearchDataImport) error {
+	traceID := ctx.Value(kafka.TraceIDHeaderKey)
 	bytes, err := p.Marshaller.Marshal(event)
 	if err != nil {
 		log.Fatal(ctx, "Marshaller.Marshal", err)
-		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", event), err)
+		return fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", event), err, log.Data{
+			"request-id": traceID,
+		})
 	}
 
 	p.Producer.Channels().Output <- bytes
-	log.Info(ctx, "completed successfully", log.Data{"event": event, "package": "event.SearchDataImport"})
+	log.Info(ctx, "completed successfully", log.Data{
+		"event":      event,
+		"package":    "event.SearchDataImport",
+		"request-id": traceID,
+	})
 	return nil
 }
