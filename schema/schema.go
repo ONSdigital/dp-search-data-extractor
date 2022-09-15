@@ -12,8 +12,7 @@ var contentUpdated = `{
     {"name": "data_type", "type": "string", "default": ""},
     {"name": "collection_id", "type": "string", "default": ""},
     {"name": "job_id", "type": "string", "default": ""},
-    {"name": "search_index", "type": "string", "default": ""},
-    {"name": "trace_id", "type": "string", "default": ""}
+    {"name": "search_index", "type": "string", "default": ""}
   ]
 }`
 
@@ -39,8 +38,7 @@ var searchDataImport = `{
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},
-    {"name": "topics", "type": {"type":"array","items":"string"}},
-    {"name": "trace_id", "type": "string", "default": ""},
+    {"name": "topics", "type": {"type":"array","items":"string"}}
     {"name": "cancelled", "type": "boolean", "default": false},
     {"name": "finalised", "type": "boolean", "default": false},
     {"name": "published", "type": "boolean", "default": false},
