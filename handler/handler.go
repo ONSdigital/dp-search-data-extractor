@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
@@ -32,10 +30,8 @@ type ContentPublishedHandler struct {
 
 // Handle takes a single event.
 func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) error {
-	traceID := ctx.Value(kafka.TraceIDHeaderKey)
 	logData := log.Data{
 		"event":      cpEvent,
-		"request-id": traceID,
 	}
 	log.Info(ctx, "event handler called with event", logData)
 	var zebedeeContentPublished []byte
@@ -49,9 +45,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, uri)
 		if err != nil {
-			log.Error(ctx, "failed to retrieve published data from zebedee", err, log.Data{
-				"request-id": traceID,
-			})
+			log.Error(ctx, "failed to retrieve published data from zebedee", err)
 			return err
 		}
 
@@ -59,9 +53,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		var zebedeeData models.ZebedeeData
 		err = json.Unmarshal(zebedeeContentPublished, &zebedeeData)
 		if err != nil {
-			log.Fatal(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err, log.Data{
-				"request-id": traceID,
-			})
+			log.Fatal(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err)
 			return err
 		}
 
@@ -70,7 +62,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			"uid":           zebedeeData.UID,
 			"keywords":      zebedeeData.Description.Keywords,
 			"keywordsLimit": cfg.KeywordsLimit,
-			"request-id":    traceID,
 		}
 		log.Info(ctx, "zebedee data ", logData)
 		// Mapping Json to Avro
@@ -80,17 +71,13 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		// Marshall Avro and sending message
 		if sdImportErr := h.Producer.SearchDataImport(ctx, searchData); sdImportErr != nil {
-			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", sdImportErr, log.Data{
-				"request-id": traceID,
-			})
+			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", sdImportErr)
 			return sdImportErr
 		}
 	} else if cpEvent.DataType == DatasetDataType {
 		datasetID, edition, version, getIDErr := getIDsFromURI(cpEvent.URI)
 		if getIDErr != nil {
-			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", getIDErr, log.Data{
-				"request-id": traceID,
-			})
+			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", getIDErr)
 			return getIDErr
 		}
 
@@ -100,15 +87,12 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		// Make a call to DatasetAPI
 		datasetMetadataPublished, metadataErr := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
 		if metadataErr != nil {
-			log.Error(ctx, "cannot get dataset published contents version %s from api", metadataErr, log.Data{
-				"request-id": traceID,
-			})
+			log.Error(ctx, "cannot get dataset published contents version %s from api", metadataErr)
 			return metadataErr
 		}
 		logData = log.Data{
 			"uid generated":    generatedID,
 			"contentPublished": datasetMetadataPublished,
-			"request-id":       traceID,
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
 
@@ -156,7 +140,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		datasetVersionMetadata := models.MapVersionMetadataToSearchDataImport(versionMetadata)
 		logData = log.Data{
 			"datasetVersionData": datasetVersionMetadata,
-			"request-id":         traceID,
 		}
 		log.Info(ctx, "datasetVersionMetadata ", logData)
 
@@ -166,15 +149,11 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		// Marshall Avro and sending message
 		if sdImportErr := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); sdImportErr != nil {
-			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr, log.Data{
-				"request-id": traceID,
-			})
+			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr)
 			return sdImportErr
 		}
 	} else {
-		log.Info(ctx, "Invalid content data type received, no action", log.Data{
-			"request-id": traceID,
-		})
+		log.Info(ctx, "Invalid content data type received, no action")
 		return err
 	}
 	log.Info(ctx, "event successfully handled", logData)

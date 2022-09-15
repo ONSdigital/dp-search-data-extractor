@@ -47,40 +47,33 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 // processMessage unmarshals the provided kafka message into an event and calls the handler.
 // After the message is handled, it is committed.
 func processMessage(ctx context.Context, message kafka.Message, handler Handler, cfg *config.Config) {
-	traceID := ctx.Value(kafka.TraceIDHeaderKey)
 	// unmarshal - commit on failure (consuming the message again would result in the same error)
 	event, err := unmarshal(message)
 	if err != nil {
-		log.Error(ctx, "failed to unmarshal event", err, log.Data{
-			"request-id": traceID,
-		})
+		log.Error(ctx, "failed to unmarshal event", err)
 		message.Commit()
 		return
 	}
 
 	log.Info(ctx, "event received", log.Data{
-		"event":      event,
-		"request-id": traceID,
+		"event": event,
 	})
 
 	// handle - commit on failure (implement error handling to not commit if message needs to be consumed again)
 	err = handler.Handle(ctx, &event, *cfg)
 	if err != nil {
-		log.Error(ctx, "failed to handle event", err, log.Data{
-			"request-id": traceID,
-		})
+		log.Error(ctx, "failed to handle event", err)
 		message.Commit()
 		return
 	}
 
 	log.Info(ctx, "event processed - committing message", log.Data{
-		"event":      event,
-		"request-id": traceID,
+		"event": event,
 	})
 	message.Commit()
 	log.Info(ctx, "consumed message committed", log.Data{
-		"event":      event,
-		"request-id": traceID})
+		"event": event,
+	})
 }
 
 // unmarshal converts a event instance to []byte.

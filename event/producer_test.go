@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
-	"github.com/ONSdigital/log.go/v2/log"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -146,9 +145,7 @@ func TestProducer_SearchDataImport_MarshalErr(t *testing.T) {
 			err := searchDataImportProducer.SearchDataImport(ctx, expectedSearchDataImportEvent)
 
 			Convey("Then the expected error is returned", func() {
-				expectedError := fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", expectedSearchDataImportEvent), errors.New("mock error"), log.Data{
-					"request-id": "test",
-				})
+				expectedError := fmt.Errorf(fmt.Sprintf("Marshaller.Marshal returned an error: event=%v: %%w", expectedSearchDataImportEvent), errors.New("mock error"))
 				So(err.Error(), ShouldEqual, expectedError.Error())
 			})
 
