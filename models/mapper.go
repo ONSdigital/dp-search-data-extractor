@@ -94,6 +94,10 @@ func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
 		Keywords:        cmdData.DatasetDetails.Keywords,
 		MetaDescription: cmdData.DatasetDetails.Description,
 		Title:           cmdData.DatasetDetails.Title,
+		CanonicalTopic:  cmdData.DatasetDetails.CanonicalTopic,
+		Topics:          cmdData.DatasetDetails.Subtopics,
+		DatasetID:       cmdData.DatasetDetails.DatasetID,
+		Edition:         cmdData.DatasetDetails.Edition,
 	}
 
 	return versionMetaData
