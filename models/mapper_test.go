@@ -314,9 +314,9 @@ func TestMapDatasetVersionMetadataToSearchDataImport(t *testing.T) {
 				ReleaseDate: someReleaseDate,
 			},
 			DatasetDetails: models.DatasetDetails{
-				Title:       someTitle,
-				Description: someMetaDescription,
-				Keywords:    []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
+				Title:    someTitle,
+				Summary:  someMetaDescription,
+				Keywords: []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
 			},
 		}
 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
