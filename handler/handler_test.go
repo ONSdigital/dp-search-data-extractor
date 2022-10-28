@@ -315,6 +315,7 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		ReleaseDate:     "2020-11-07T00:00:00.000Z",
 		Title:           "someTitle",
 		Topics:          []string{"testtopic1", "testtopic2"},
+		CanonicalTopic:  "something",
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -376,6 +377,12 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
 				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
 				So(actual.DataType, ShouldResemble, expectedVersionMetadataEvent.DataType)
+				So(actual.CanonicalTopic, ShouldEqual, expectedVersionMetadataEvent.CanonicalTopic)
+				So(actual.Topics[0], ShouldEqual, expectedVersionMetadataEvent.Topics[0])
+				So(actual.Topics[1], ShouldEqual, expectedVersionMetadataEvent.Topics[1])
+				So(actual.URI, ShouldEqual, expectedVersionMetadataEvent.URI)
+				So(actual.Edition, ShouldEqual, expectedVersionMetadataEvent.Edition)
+				So(actual.DatasetID, ShouldEqual, expectedVersionMetadataEvent.DatasetID)
 			})
 		})
 	})
@@ -529,9 +536,11 @@ func setupMetadata() dataset.Metadata {
 			ReleaseDate: "release date",
 		},
 		DatasetDetails: dataset.DatasetDetails{
-			Title:       "title",
-			Description: "description",
-			Keywords:    &[]string{"keyword_1", "keyword_2"},
+			Title:          "title",
+			Description:    "description",
+			Keywords:       &[]string{"keyword_1", "keyword_2"},
+			CanonicalTopic: "testTopic",
+			Subtopics:      []string{"subTopic1"},
 		},
 	}
 	return m

@@ -103,8 +103,13 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		}
 
 		datasetDetailsData := models.DatasetDetails{
-			Title:       datasetMetadataPublished.Title,
-			Description: datasetMetadataPublished.Description,
+			Title:          datasetMetadataPublished.Title,
+			Description:    datasetMetadataPublished.Description,
+			CanonicalTopic: datasetMetadataPublished.CanonicalTopic,
+			Subtopics:      datasetMetadataPublished.Subtopics,
+			Edition:        edition,
+			DatasetID:      datasetID,
+			URI:            cpEvent.URI,
 		}
 
 		if datasetMetadataPublished.Keywords != nil {

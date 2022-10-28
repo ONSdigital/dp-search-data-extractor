@@ -15,7 +15,12 @@ type VersionDetails struct {
 
 // DatasetDetails represents a DatasetDetails for an edition within a dataset
 type DatasetDetails struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Keywords    []string `json:"keywords,omitempty"`
+	CanonicalTopic string   `json:"canonical_topic,omitempty"`
+	DatasetID      string   `json:"dataset_id,omitempty"`
+	Description    string   `json:"description"`
+	Edition        string   `json:"edition,omitempty"`
+	Keywords       []string `json:"keywords,omitempty"`
+	Subtopics      []string `json:"subtopics,omitempty"`
+	Title          string   `json:"title"`
+	URI            string   `json:"uri,omitempty"`
 }
