@@ -92,7 +92,7 @@ func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
 		URI:             cmdData.URI,
 		ReleaseDate:     cmdData.VersionDetails.ReleaseDate,
 		Keywords:        cmdData.DatasetDetails.Keywords,
-		MetaDescription: cmdData.DatasetDetails.Description,
+		MetaDescription: cmdData.DatasetDetails.Summary,
 		Title:           cmdData.DatasetDetails.Title,
 		CanonicalTopic:  cmdData.DatasetDetails.CanonicalTopic,
 		Topics:          cmdData.DatasetDetails.Subtopics,
