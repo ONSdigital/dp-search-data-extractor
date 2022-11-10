@@ -88,18 +88,17 @@ func ValidateTopics(topics []string) []string {
 // MapDatasetVersionToSearchDataImport performs default mapping of datasetAPI data to a version metadata struct.
 func MapVersionMetadataToSearchDataImport(cmdData CMDData) SearchDataImport {
 	versionMetaData := SearchDataImport{
-		UID:             cmdData.UID,
-		URI:             cmdData.URI,
-		ReleaseDate:     cmdData.VersionDetails.ReleaseDate,
-		Keywords:        cmdData.DatasetDetails.Keywords,
-		MetaDescription: cmdData.DatasetDetails.Summary,
-		Title:           cmdData.DatasetDetails.Title,
-		CanonicalTopic:  cmdData.DatasetDetails.CanonicalTopic,
-		Topics:          cmdData.DatasetDetails.Subtopics,
-		DatasetID:       cmdData.DatasetDetails.DatasetID,
-		Edition:         cmdData.DatasetDetails.Edition,
-		DataType:        cmdData.DatasetDetails.Type,
-		Summary:         cmdData.DatasetDetails.Summary,
+		UID:            cmdData.UID,
+		URI:            cmdData.URI,
+		ReleaseDate:    cmdData.VersionDetails.ReleaseDate,
+		Keywords:       cmdData.DatasetDetails.Keywords,
+		Title:          cmdData.DatasetDetails.Title,
+		CanonicalTopic: cmdData.DatasetDetails.CanonicalTopic,
+		Topics:         cmdData.DatasetDetails.Subtopics,
+		DatasetID:      cmdData.DatasetDetails.DatasetID,
+		Edition:        cmdData.DatasetDetails.Edition,
+		DataType:       cmdData.DatasetDetails.Type,
+		Summary:        cmdData.DatasetDetails.Summary,
 	}
 
 	return versionMetaData
