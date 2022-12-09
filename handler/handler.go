@@ -97,6 +97,21 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		}
 		log.Info(ctx, "datasetAPI response ", logData)
 
+		var uri string
+		if len(datasetMetadataPublished.DatasetLinks.LatestVersion.URL) > 0 {
+			uri = datasetMetadataPublished.DatasetLinks.LatestVersion.URL
+		} else if len(datasetMetadataPublished.DatasetDetails.Links.Version.URL) > 0 {
+			uri = datasetMetadataPublished.DatasetDetails.Links.Version.URL
+		} else {
+			uri = datasetMetadataPublished.Version.Links.Version.URL
+		}
+
+		parsedURI, parseErr := url.Parse(uri)
+		if err != nil {
+			log.Error(ctx, "error parsing the metadata uri", parseErr)
+			return parseErr
+		}
+
 		// Mapping Json to Avro
 		versionDetails := models.VersionDetails{
 			ReleaseDate: datasetMetadataPublished.ReleaseDate,
@@ -119,6 +134,7 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 
 		versionMetadata := models.CMDData{
 			UID:            generatedID,
+			URI:            parsedURI.Path,
 			VersionDetails: versionDetails,
 			DatasetDetails: datasetDetailsData,
 		}
