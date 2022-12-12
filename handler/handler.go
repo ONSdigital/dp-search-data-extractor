@@ -124,7 +124,6 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			Subtopics:      datasetMetadataPublished.Subtopics,
 			Edition:        edition,
 			DatasetID:      datasetID,
-			URI:            cpEvent.URI,
 			Type:           "dataset_landing_page",
 		}
 
