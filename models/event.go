@@ -40,6 +40,41 @@ type SearchDataImport struct {
 	Dimensions      []dataset.VersionDimension `avro:"dimensions"`
 }
 
+/*
+type VersionDimension struct {
+	ID              string `avro:"id"`
+	Name            string `avro:"name"`
+	Links           Links  `avro:"links"`
+	Description     string `avro:"description"`
+	Label           string `avro:"label"`
+	URL             string `avro:"href,omitempty"`
+	Variable        string `avro:"variable,omitempty"`
+	NumberOfOptions int    `avro:"number_of_options,omitempty"`
+	IsAreaType      *bool  `avro:"is_area_type,omitempty"`
+}
+
+type Links struct {
+	AccessRights  Link `avro:"access_rights"`
+	Dataset       Link `avro:"dataset"`
+	Dimensions    Link `avro:"dimensions"`
+	Edition       Link `avro:"edition"`
+	Editions      Link `avro:"editions"`
+	LatestVersion Link `avro:"latest_version"`
+	Versions      Link `avro:"versions"`
+	Self          Link `avro:"self"`
+	CodeList      Link `avro:"code_list"`
+	Options       Link `avro:"options"`
+	Version       Link `avro:"version"`
+	Code          Link `avro:"code"`
+	Taxonomy      Link `avro:"taxonomy"`
+	Job           Link `avro:"job"`
+}
+
+type Link struct {
+	URL string `avro:"href"`
+	ID  string `avro:"id"`
+}
+*/
 // ReleaseDateChange represent a date change of a release
 type ReleaseDateDetails struct {
 	ChangeNotice string `avro:"change_notice"`
