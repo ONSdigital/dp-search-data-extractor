@@ -1,5 +1,7 @@
 package models
 
+import "github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+
 // CMDData provides model for datasetAPI metadata response
 type CMDData struct {
 	UID            string
@@ -11,6 +13,8 @@ type CMDData struct {
 // Version represents a version for an edition within a dataset
 type VersionDetails struct {
 	ReleaseDate string
+	IsBasedOn   *dataset.IsBasedOn
+	Dimensions  []dataset.VersionDimension
 }
 
 // DatasetDetails represents a DatasetDetails for an edition within a dataset

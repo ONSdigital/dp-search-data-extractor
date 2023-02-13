@@ -117,6 +117,16 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			ReleaseDate: datasetMetadataPublished.ReleaseDate,
 		}
 
+		// Storing Dimensions if cantabular && is not area type.
+		if datasetMetadataPublished.Version.IsBasedOn.Type == "cantabular_multivariate_table" ||
+			datasetMetadataPublished.Version.IsBasedOn.Type == "cantabular_flexible_table" {
+			for _, value := range datasetMetadataPublished.Dimensions {
+				if !*value.IsAreaType {
+					versionDetails.Dimensions = append(versionDetails.Dimensions, value)
+				}
+			}
+		}
+
 		datasetDetailsData := models.DatasetDetails{
 			Title:          datasetMetadataPublished.Title,
 			Summary:        datasetMetadataPublished.Description,

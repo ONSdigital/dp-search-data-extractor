@@ -22,22 +22,22 @@ var _ clients.DatasetClient = &DatasetClientMock{}
 
 // DatasetClientMock is a mock implementation of clients.DatasetClient.
 //
-//     func TestSomethingThatUsesDatasetClient(t *testing.T) {
+//	    func TestSomethingThatUsesDatasetClient(t *testing.T) {
 //
-//         // make and configure a mocked clients.DatasetClient
-//         mockedDatasetClient := &DatasetClientMock{
-//             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
-// 	               panic("mock out the Checker method")
-//             },
-//             GetVersionMetadataFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, id string, edition string, version string) (dataset.Metadata, error) {
-// 	               panic("mock out the GetVersionMetadata method")
-//             },
-//         }
+//	        // make and configure a mocked clients.DatasetClient
+//	        mockedDatasetClient := &DatasetClientMock{
+//	            CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
+//		               panic("mock out the Checker method")
+//	            },
+//	            GetVersionMetadataFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, id string, edition string, version string) (dataset.Metadata, error) {
+//		               panic("mock out the GetVersionMetadata method")
+//	            },
+//	        }
 //
-//         // use mockedDatasetClient in code that requires clients.DatasetClient
-//         // and then make assertions.
+//	        // use mockedDatasetClient in code that requires clients.DatasetClient
+//	        // and then make assertions.
 //
-//     }
+//	    }
 type DatasetClientMock struct {
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
@@ -94,7 +94,8 @@ func (mock *DatasetClientMock) Checker(in1 context.Context, in2 *healthcheck.Che
 
 // CheckerCalls gets all the calls that were made to Checker.
 // Check the length with:
-//     len(mockedDatasetClient.CheckerCalls())
+//
+//	len(mockedDatasetClient.CheckerCalls())
 func (mock *DatasetClientMock) CheckerCalls() []struct {
 	In1 context.Context
 	In2 *healthcheck.CheckState
@@ -139,7 +140,8 @@ func (mock *DatasetClientMock) GetVersionMetadata(ctx context.Context, userAuthT
 
 // GetVersionMetadataCalls gets all the calls that were made to GetVersionMetadata.
 // Check the length with:
-//     len(mockedDatasetClient.GetVersionMetadataCalls())
+//
+//	len(mockedDatasetClient.GetVersionMetadataCalls())
 func (mock *DatasetClientMock) GetVersionMetadataCalls() []struct {
 	Ctx              context.Context
 	UserAuthToken    string

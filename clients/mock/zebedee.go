@@ -21,22 +21,22 @@ var _ clients.ZebedeeClient = &ZebedeeClientMock{}
 
 // ZebedeeClientMock is a mock implementation of clients.ZebedeeClient.
 //
-//     func TestSomethingThatUsesZebedeeClient(t *testing.T) {
+//	    func TestSomethingThatUsesZebedeeClient(t *testing.T) {
 //
-//         // make and configure a mocked clients.ZebedeeClient
-//         mockedZebedeeClient := &ZebedeeClientMock{
-//             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
-// 	               panic("mock out the Checker method")
-//             },
-//             GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
-// 	               panic("mock out the GetPublishedData method")
-//             },
-//         }
+//	        // make and configure a mocked clients.ZebedeeClient
+//	        mockedZebedeeClient := &ZebedeeClientMock{
+//	            CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
+//		               panic("mock out the Checker method")
+//	            },
+//	            GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
+//		               panic("mock out the GetPublishedData method")
+//	            },
+//	        }
 //
-//         // use mockedZebedeeClient in code that requires clients.ZebedeeClient
-//         // and then make assertions.
+//	        // use mockedZebedeeClient in code that requires clients.ZebedeeClient
+//	        // and then make assertions.
 //
-//     }
+//	    }
 type ZebedeeClientMock struct {
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
@@ -83,7 +83,8 @@ func (mock *ZebedeeClientMock) Checker(in1 context.Context, in2 *healthcheck.Che
 
 // CheckerCalls gets all the calls that were made to Checker.
 // Check the length with:
-//     len(mockedZebedeeClient.CheckerCalls())
+//
+//	len(mockedZebedeeClient.CheckerCalls())
 func (mock *ZebedeeClientMock) CheckerCalls() []struct {
 	In1 context.Context
 	In2 *healthcheck.CheckState
@@ -118,7 +119,8 @@ func (mock *ZebedeeClientMock) GetPublishedData(ctx context.Context, uriString s
 
 // GetPublishedDataCalls gets all the calls that were made to GetPublishedData.
 // Check the length with:
-//     len(mockedZebedeeClient.GetPublishedDataCalls())
+//
+//	len(mockedZebedeeClient.GetPublishedDataCalls())
 func (mock *ZebedeeClientMock) GetPublishedDataCalls() []struct {
 	Ctx       context.Context
 	UriString string

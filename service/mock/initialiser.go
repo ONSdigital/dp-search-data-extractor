@@ -28,34 +28,34 @@ var _ service.Initialiser = &InitialiserMock{}
 
 // InitialiserMock is a mock implementation of service.Initialiser.
 //
-//     func TestSomethingThatUsesInitialiser(t *testing.T) {
+//	    func TestSomethingThatUsesInitialiser(t *testing.T) {
 //
-//         // make and configure a mocked service.Initialiser
-//         mockedInitialiser := &InitialiserMock{
-//             DoGetDatasetClientFunc: func(cfg *config.Config) clients.DatasetClient {
-// 	               panic("mock out the DoGetDatasetClient method")
-//             },
-//             DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
-// 	               panic("mock out the DoGetHTTPServer method")
-//             },
-//             DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-// 	               panic("mock out the DoGetHealthCheck method")
-//             },
-//             DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
-// 	               panic("mock out the DoGetKafkaConsumer method")
-//             },
-//             DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
-// 	               panic("mock out the DoGetKafkaProducer method")
-//             },
-//             DoGetZebedeeClientFunc: func(cfg *config.Config) clients.ZebedeeClient {
-// 	               panic("mock out the DoGetZebedeeClient method")
-//             },
-//         }
+//	        // make and configure a mocked service.Initialiser
+//	        mockedInitialiser := &InitialiserMock{
+//	            DoGetDatasetClientFunc: func(cfg *config.Config) clients.DatasetClient {
+//		               panic("mock out the DoGetDatasetClient method")
+//	            },
+//	            DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
+//		               panic("mock out the DoGetHTTPServer method")
+//	            },
+//	            DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+//		               panic("mock out the DoGetHealthCheck method")
+//	            },
+//	            DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+//		               panic("mock out the DoGetKafkaConsumer method")
+//	            },
+//	            DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
+//		               panic("mock out the DoGetKafkaProducer method")
+//	            },
+//	            DoGetZebedeeClientFunc: func(cfg *config.Config) clients.ZebedeeClient {
+//		               panic("mock out the DoGetZebedeeClient method")
+//	            },
+//	        }
 //
-//         // use mockedInitialiser in code that requires service.Initialiser
-//         // and then make assertions.
+//	        // use mockedInitialiser in code that requires service.Initialiser
+//	        // and then make assertions.
 //
-//     }
+//	    }
 type InitialiserMock struct {
 	// DoGetDatasetClientFunc mocks the DoGetDatasetClient method.
 	DoGetDatasetClientFunc func(cfg *config.Config) clients.DatasetClient
@@ -140,7 +140,8 @@ func (mock *InitialiserMock) DoGetDatasetClient(cfg *config.Config) clients.Data
 
 // DoGetDatasetClientCalls gets all the calls that were made to DoGetDatasetClient.
 // Check the length with:
-//     len(mockedInitialiser.DoGetDatasetClientCalls())
+//
+//	len(mockedInitialiser.DoGetDatasetClientCalls())
 func (mock *InitialiserMock) DoGetDatasetClientCalls() []struct {
 	Cfg *config.Config
 } {
@@ -173,7 +174,8 @@ func (mock *InitialiserMock) DoGetHTTPServer(bindAddr string, router http.Handle
 
 // DoGetHTTPServerCalls gets all the calls that were made to DoGetHTTPServer.
 // Check the length with:
-//     len(mockedInitialiser.DoGetHTTPServerCalls())
+//
+//	len(mockedInitialiser.DoGetHTTPServerCalls())
 func (mock *InitialiserMock) DoGetHTTPServerCalls() []struct {
 	BindAddr string
 	Router   http.Handler
@@ -212,7 +214,8 @@ func (mock *InitialiserMock) DoGetHealthCheck(cfg *config.Config, buildTime stri
 
 // DoGetHealthCheckCalls gets all the calls that were made to DoGetHealthCheck.
 // Check the length with:
-//     len(mockedInitialiser.DoGetHealthCheckCalls())
+//
+//	len(mockedInitialiser.DoGetHealthCheckCalls())
 func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	Cfg       *config.Config
 	BuildTime string
@@ -251,7 +254,8 @@ func (mock *InitialiserMock) DoGetKafkaConsumer(ctx context.Context, cfg *config
 
 // DoGetKafkaConsumerCalls gets all the calls that were made to DoGetKafkaConsumer.
 // Check the length with:
-//     len(mockedInitialiser.DoGetKafkaConsumerCalls())
+//
+//	len(mockedInitialiser.DoGetKafkaConsumerCalls())
 func (mock *InitialiserMock) DoGetKafkaConsumerCalls() []struct {
 	Ctx context.Context
 	Cfg *config.Config
@@ -286,7 +290,8 @@ func (mock *InitialiserMock) DoGetKafkaProducer(ctx context.Context, cfg *config
 
 // DoGetKafkaProducerCalls gets all the calls that were made to DoGetKafkaProducer.
 // Check the length with:
-//     len(mockedInitialiser.DoGetKafkaProducerCalls())
+//
+//	len(mockedInitialiser.DoGetKafkaProducerCalls())
 func (mock *InitialiserMock) DoGetKafkaProducerCalls() []struct {
 	Ctx context.Context
 	Cfg *config.Config
@@ -319,7 +324,8 @@ func (mock *InitialiserMock) DoGetZebedeeClient(cfg *config.Config) clients.Zebe
 
 // DoGetZebedeeClientCalls gets all the calls that were made to DoGetZebedeeClient.
 // Check the length with:
-//     len(mockedInitialiser.DoGetZebedeeClientCalls())
+//
+//	len(mockedInitialiser.DoGetZebedeeClientCalls())
 func (mock *InitialiserMock) DoGetZebedeeClientCalls() []struct {
 	Cfg *config.Config
 } {
