@@ -26,7 +26,7 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		Summary:         zebedeeData.Description.Summary,
 		ReleaseDate:     zebedeeData.Description.ReleaseDate,
 		Title:           zebedeeData.Description.Title,
-		Topics:          zebedeeData.Description.Topics,
+		Topics:          zebedeeData.Description.Topics,        
 	}
 	if zebedeeData.Description.Edition != "" {
 		searchData.UID += zebedeeData.Description.Edition

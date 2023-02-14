@@ -39,9 +39,9 @@ type SearchDataImport struct {
 }
 
 type VersionDimension struct {
-	ID              string `avro:"id"`
-	Name            string `avro:"name"`
-	Links           Links  `avro:"links"`
+	ID   string `avro:"id"`
+	Name string `avro:"name"`
+	//	Links           Links  `avro:"links"`
 	Description     string `avro:"description"`
 	Label           string `avro:"label"`
 	URL             string `avro:"href"`

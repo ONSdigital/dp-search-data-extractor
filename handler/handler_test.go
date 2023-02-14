@@ -317,7 +317,15 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		Title:           "someTitle",
 		Topics:          []string{"testtopic1", "testtopic2"},
 		CanonicalTopic:  "something",
-		Dimensions:      []models.VersionDimension{{Links: models.Links{}}},
+		Dimensions: []models.VersionDimension{{
+			ID:              "someID",
+			Name:            "someName",
+			Description:     "someDescription",
+			Label:           "someLabel",
+			URL:             "someURL",
+			Variable:        "someVariable",
+			NumberOfOptions: 0,
+		}},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
