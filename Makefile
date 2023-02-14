@@ -31,6 +31,10 @@ debug:
 	go build -tags 'debug' $(LDFLAGS) -o $(BINPATH)/dp-search-data-extractor
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-search-data-extractor
 
+.PHONY: debug-run
+debug-run:
+	HUMAN_LOG=1 DEBUG=1 go run -tags 'debug' -race $(LDFLAGS) main.go
+
 .PHONY: test
 test:
 	go test -count=1 -race -cover ./...

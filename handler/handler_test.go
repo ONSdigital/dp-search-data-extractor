@@ -94,6 +94,8 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		ReleaseDate:     "",
 		Title:           "testTitle",
 		Topics:          []string{"testtopic1", "testtopic2"},
+		PopulationType:  "testPopulationType",
+		Dimensions:      []string{"testDim1", "testDim2"},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -149,16 +151,7 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 				var actual models.SearchDataImport
 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
 				So(err, ShouldBeNil)
-				So(actual.DataType, ShouldEqual, expectedSearchDataImportEvent.DataType)
-				So(actual.JobID, ShouldEqual, expectedSearchDataImportEvent.JobID)
-				So(actual.Keywords, ShouldHaveLength, 2)
-				So(actual.Keywords[0], ShouldEqual, expectedSearchDataImportEvent.Keywords[0])
-				So(actual.Keywords[1], ShouldEqual, expectedSearchDataImportEvent.Keywords[1])
-				So(actual.MetaDescription, ShouldEqual, expectedSearchDataImportEvent.MetaDescription)
-				So(actual.Summary, ShouldEqual, expectedSearchDataImportEvent.Summary)
-				So(actual.ReleaseDate, ShouldEqual, expectedSearchDataImportEvent.ReleaseDate)
-				So(actual.Title, ShouldEqual, expectedSearchDataImportEvent.Title)
-				So(actual.TraceID, ShouldNotBeNil)
+				So(actual, ShouldResemble, expectedSearchDataImportEvent)
 			})
 		})
 

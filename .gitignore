@@ -11,3 +11,5 @@ dp-search-data-extractor
 .idea/
 *.iml
 *.iws
+
+.go/

@@ -47,6 +47,8 @@ var (
 		Published:       false,
 		Survey:          "",
 		Language:        "",
+		PopulationType:  "testPopType",
+		Dimensions:      []string{"testDim1", "testDim2"},
 	}
 
 	expectedVersionMetadataEvent = models.SearchDataImport{
@@ -61,6 +63,8 @@ var (
 		ReleaseDate:     someReleaseDate,
 		Title:           someTitle,
 		Topics:          []string{"testtopic1", "testtopic2"},
+		PopulationType:  "testPopType",
+		Dimensions:      []string{"testDim1", "testDim2"},
 	}
 )
 

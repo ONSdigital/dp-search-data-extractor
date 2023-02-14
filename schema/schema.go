@@ -54,7 +54,9 @@ var searchDataImport = `{
       {"name": "change_notice", "type": "string", "default": ""},
       {"name": "previous_date", "type": "string", "default": ""}
     ]}}},
-    {"name": "provisional_date", "type": "string", "default": ""}
+    {"name": "provisional_date", "type": "string", "default": ""},
+    {"name": "population_type", "type": "string", "default": ""},
+    {"name": "dimensions", "type": {"type": "array", "items": "string"}}
   ]
 }`
 

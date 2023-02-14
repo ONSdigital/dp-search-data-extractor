@@ -35,6 +35,8 @@ type SearchDataImport struct {
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`
+	PopulationType  string               `avro:"population_type"`
+	Dimensions      []string             `avro:"dimensions"`
 }
 
 // ReleaseDateChange represent a date change of a release

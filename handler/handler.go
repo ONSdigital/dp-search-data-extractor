@@ -2,9 +2,7 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/url"
 	"strings"
 
@@ -34,130 +32,21 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 		"event": cpEvent,
 	}
 	log.Info(ctx, "event handler called with event", logData)
-	var zebedeeContentPublished []byte
-	var err error
-	if cpEvent.DataType == ZebedeeDataType {
-		// obtain correct uri to callback to Zebedee to retrieve content metadata
-		uri, InvalidURIErr := retrieveCorrectURI(cpEvent.URI)
-		if InvalidURIErr != nil {
-			return InvalidURIErr
-		}
 
-		zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, uri)
-		if err != nil {
-			log.Error(ctx, "failed to retrieve published data from zebedee", err)
+	switch cpEvent.DataType {
+	case ZebedeeDataType:
+		if err := h.handleZebedeeType(ctx, cpEvent, cfg); err != nil {
 			return err
 		}
-
-		// byte slice to Json & unMarshall Json
-		var zebedeeData models.ZebedeeData
-		err = json.Unmarshal(zebedeeContentPublished, &zebedeeData)
-		if err != nil {
-			log.Fatal(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err)
+	case DatasetDataType:
+		if err := h.handleDatasetDataType(ctx, cpEvent, cfg); err != nil {
 			return err
 		}
-
-		// keywords validation
-		logData = log.Data{
-			"uid":           zebedeeData.UID,
-			"keywords":      zebedeeData.Description.Keywords,
-			"keywordsLimit": cfg.KeywordsLimit,
-		}
-		log.Info(ctx, "zebedee data ", logData)
-		// Mapping Json to Avro
-		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
-		searchData.TraceID = cpEvent.TraceID
-		searchData.JobID = cpEvent.JobID
-		searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
-
-		// Marshall Avro and sending message
-		if sdImportErr := h.Producer.SearchDataImport(ctx, searchData); sdImportErr != nil {
-			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", sdImportErr)
-			return sdImportErr
-		}
-	} else if cpEvent.DataType == DatasetDataType {
-		datasetID, edition, version, getIDErr := getIDsFromURI(cpEvent.URI)
-		if getIDErr != nil {
-			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", getIDErr)
-			return getIDErr
-		}
-
-		// ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition>
-		generatedID := fmt.Sprintf("%s-%s", datasetID, edition)
-
-		// Make a call to DatasetAPI
-		datasetMetadataPublished, metadataErr := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
-		if metadataErr != nil {
-			log.Error(ctx, "cannot get dataset published contents version %s from api", metadataErr)
-			return metadataErr
-		}
-		logData = log.Data{
-			"uid generated":    generatedID,
-			"contentPublished": datasetMetadataPublished,
-		}
-		log.Info(ctx, "datasetAPI response ", logData)
-
-		var uri string
-		if len(datasetMetadataPublished.DatasetLinks.LatestVersion.URL) > 0 {
-			uri = datasetMetadataPublished.DatasetLinks.LatestVersion.URL
-		} else if len(datasetMetadataPublished.DatasetDetails.Links.Version.URL) > 0 {
-			uri = datasetMetadataPublished.DatasetDetails.Links.Version.URL
-		} else {
-			uri = datasetMetadataPublished.Version.Links.Version.URL
-		}
-
-		parsedURI, parseErr := url.Parse(uri)
-		if err != nil {
-			log.Error(ctx, "error parsing the metadata uri", parseErr)
-			return parseErr
-		}
-
-		// Mapping Json to Avro
-		versionDetails := models.VersionDetails{
-			ReleaseDate: datasetMetadataPublished.ReleaseDate,
-		}
-
-		datasetDetailsData := models.DatasetDetails{
-			Title:          datasetMetadataPublished.Title,
-			Summary:        datasetMetadataPublished.Description,
-			CanonicalTopic: datasetMetadataPublished.CanonicalTopic,
-			Subtopics:      datasetMetadataPublished.Subtopics,
-			Edition:        edition,
-			DatasetID:      datasetID,
-			Type:           "dataset_landing_page",
-		}
-
-		if datasetMetadataPublished.Keywords != nil {
-			datasetDetailsData.Keywords = *datasetMetadataPublished.Keywords
-		}
-
-		versionMetadata := models.CMDData{
-			UID:            generatedID,
-			URI:            parsedURI.Path,
-			VersionDetails: versionDetails,
-			DatasetDetails: datasetDetailsData,
-		}
-
-		datasetVersionMetadata := models.MapVersionMetadataToSearchDataImport(versionMetadata)
-		logData = log.Data{
-			"datasetVersionData": datasetVersionMetadata,
-		}
-		log.Info(ctx, "datasetVersionMetadata ", logData)
-
-		datasetVersionMetadata.TraceID = cpEvent.TraceID
-		datasetVersionMetadata.JobID = cpEvent.JobID
-		datasetVersionMetadata.SearchIndex = getIndexName(cpEvent.SearchIndex)
-		datasetVersionMetadata.DataType = "dataset_landing_page"
-
-		// Marshall Avro and sending message
-		if sdImportErr := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); sdImportErr != nil {
-			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr)
-			return sdImportErr
-		}
-	} else {
+	default:
 		log.Info(ctx, "Invalid content data type received, no action")
-		return err
+		return nil // TODO would this need to be an error?
 	}
+
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
 }
