@@ -302,6 +302,7 @@ func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
 
 func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 	t.Parallel()
+
 	expectedVersionMetadataEvent := models.SearchDataImport{
 		UID:             "cphi01-timeseries",
 		DataType:        "dataset_landing_page",
@@ -311,11 +312,12 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 		DatasetID:       "",
 		Keywords:        []string{"somekeyword0", "somekeyword1"},
 		MetaDescription: "someDescription",
-		Summary:         "",
 		ReleaseDate:     "2020-11-07T00:00:00.000Z",
+		Summary:         "",
 		Title:           "someTitle",
 		Topics:          []string{"testtopic1", "testtopic2"},
 		CanonicalTopic:  "something",
+		Dimensions:      []models.VersionDimension{{Links: models.Links{}}},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{
@@ -383,6 +385,8 @@ func TestHandlerForDatasetVersionMetadata(t *testing.T) {
 				So(actual.URI, ShouldEqual, expectedVersionMetadataEvent.URI)
 				So(actual.Edition, ShouldEqual, expectedVersionMetadataEvent.Edition)
 				So(actual.DatasetID, ShouldEqual, expectedVersionMetadataEvent.DatasetID)
+				//So(actual.Dimensions, ShouldEqual, expectedVersionMetadataEvent.Dimensions)
+
 			})
 		})
 	})

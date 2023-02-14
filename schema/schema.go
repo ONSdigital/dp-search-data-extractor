@@ -22,11 +22,557 @@ var ContentPublishedEvent = &avro.Schema{
 	Definition: contentUpdated,
 }
 
-var searchDataImport = `{
+var searchDataImport = `
+
+	{
+		"type": "record",
+		"name": "search-data-import",
+		"fields": [{
+				"name": "uid",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "uri",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "data_type",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "job_id",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "search_index",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "cdid",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "dataset_id",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "edition",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "keywords",
+				"type": {
+					"type": "array",
+					"items": "string"
+				}
+			},
+			{
+				"name": "meta_description",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "release_date",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "summary",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "title",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "topics",
+				"type": {
+					"type": "array",
+					"items": "string"
+				}
+			},
+			{
+				"name": "trace_id",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "cancelled",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "finalised",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "published",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "language",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "survey",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "canonical_topic",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "date_changes",
+				"type": {
+					"type": "array",
+					"items": {
+						"name": "ReleaseDateDetails",
+						"type": "record",
+						"fields": [{
+								"name": "change_notice",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "previous_date",
+								"type": "string",
+								"default": ""
+							}
+						]
+					}
+				}
+			},
+			{
+				"name": "provisional_date",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "dimensions",
+	      "default": null,
+				"type": {
+					"type": "array",
+					"items": {
+						"name": "VersionDimension",
+						"type": "record",
+						"fields": [{
+								"name": "id",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "name",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "links",
+	              "default": null,
+								"type": {
+									"name": "Links",
+									"type": "record",
+									"fields": [{
+											"name": "access_rights",
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "dataset",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "dimensions",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "edition",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "editions",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "latest_version",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "versions",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "self",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "code_list",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "options",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "version",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "code",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "taxonomy",
+	                    "default": null,
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											}
+										},
+										{
+											"name": "job",
+											"type": {
+												"name": "Link",
+												"type": "record",
+												"fields": [{
+														"name": "id",
+														"type": "string",
+														"default": ""
+													},
+													{
+														"name": "href",
+														"type": "string",
+														"default": ""
+													}
+												]
+											},
+	                    "default": null
+										}
+									]
+								}
+							},
+							{
+								"name": "description",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "label",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "href",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "variable",
+								"type": "string",
+								"default": ""
+							},
+							{
+								"name": "number_of_options",
+								"type": "int",
+								"default": null
+							}
+						]
+					}
+				}
+	    }
+		]
+	}`
+
+/*
+var searchDataImport = `
+[{
+  "type": "record",
+  "name": "Link",
+  "fields": [{
+      "name": "id",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "default": ""
+    }
+  ]
+},
+{
+  "name": "Links",
+  "type": "record",
+  "fields": [{
+      "name": "access_rights",
+      "type": "Link"
+    },
+    {
+      "name": "dataset",
+      "type": "Link"
+    },
+    {
+      "name": "dimensions",
+      "type": "Link"
+    },
+    {
+      "name": "edition",
+      "type": "Link"
+    },
+    {
+      "name": "editions",
+      "type": "Link"
+    },
+    {
+      "name": "latest_version",
+      "type": "Link"
+    },
+    {
+      "name": "versions",
+      "type": "Link"
+    },
+    {
+      "name": "self",
+      "type": "Link"
+    },
+    {
+      "name": "code_list",
+      "type": "Link"
+    },
+    {
+      "name": "options",
+      "type": "Link"
+    },
+    {
+      "name": "version",
+      "type": "Link"
+    },
+    {
+      "name": "taxonomy",
+      "type": "Link"
+    },
+    {
+      "name": "job",
+      "type": "Link"
+    },
+    {
+      "name": "code",
+      "type": "Link"
+    },
+    {
+      "name": "code",
+      "type": "Link"
+    }
+  ]
+
+},
+{
   "type": "record",
   "name": "search-data-import",
-  "fields": [
-    {
+  "fields": [{
       "name": "uid",
       "type": "string",
       "default": ""
@@ -142,8 +688,7 @@ var searchDataImport = `{
         "items": {
           "name": "ReleaseDateDetails",
           "type": "record",
-          "fields": [
-            {
+          "fields": [{
               "name": "change_notice",
               "type": "string",
               "default": ""
@@ -164,13 +709,13 @@ var searchDataImport = `{
     },
     {
       "name": "dimensions",
+      "default": null,
       "type": {
         "type": "array",
         "items": {
           "name": "VersionDimension",
           "type": "record",
-          "fields": [
-            {
+          "fields": [{
               "name": "id",
               "type": "string",
               "default": ""
@@ -182,345 +727,8 @@ var searchDataImport = `{
             },
             {
               "name": "links",
-              "type": {
-                "type": "array",
-                "items": {
-                  "name": "Links",
-                  "type": "record",
-                  "fields": [
-                    {
-                      "name": "access_rights",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "dataset",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "dimensions",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "edition",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "editions",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "latestVersion",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "versions",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "self",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "codeList",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "options",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "version",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "code",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "version",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "taxonomy",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "name": "job",
-                      "type": {
-                        "type": "array",
-                        "items": {
-                          "name": "Link",
-                          "type": "record",
-                          "fields": [
-                            {
-                              "name": "id",
-                              "type": "string",
-                              "default": ""
-                            },
-                            {
-                              "name": "url",
-                              "type": "string",
-                              "default": ""
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
+              "default": null,
+              "type": "Links"
             },
             {
               "name": "description",
@@ -533,7 +741,7 @@ var searchDataImport = `{
               "default": ""
             },
             {
-              "name": "url",
+              "name": "href",
               "type": "string",
               "default": ""
             },
@@ -545,15 +753,17 @@ var searchDataImport = `{
             {
               "name": "number_of_options",
               "type": "int",
-              "default": ""
+              "default": 0
             }
           ]
         }
       }
     }
   ]
-}`
-
+}
+]
+`
+*/
 // SearchDataImportEvent the Avro schema for search-data-import messages.
 var SearchDataImportEvent = &avro.Schema{
 	Definition: searchDataImport,

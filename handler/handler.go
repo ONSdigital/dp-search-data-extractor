@@ -122,7 +122,73 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			datasetMetadataPublished.Version.IsBasedOn.Type == "cantabular_flexible_table" {
 			for _, value := range datasetMetadataPublished.Dimensions {
 				if !*value.IsAreaType {
-					versionDetails.Dimensions = append(versionDetails.Dimensions, value)
+					versionDetails.Dimensions = append(versionDetails.Dimensions, models.VersionDimension{
+						ID:   value.ID,
+						Name: value.Name,
+						Links: models.Links{
+							AccessRights: models.Link{
+								URL: value.Links.AccessRights.URL,
+								ID:  value.Links.AccessRights.ID,
+							},
+							Dataset: models.Link{
+								URL: value.Links.Dataset.URL,
+								ID:  value.Links.Dataset.ID,
+							},
+							Dimensions: models.Link{
+								URL: value.Links.Dimensions.URL,
+								ID:  value.Links.Dimensions.ID,
+							},
+							Edition: models.Link{
+								URL: value.Links.Edition.URL,
+								ID:  value.Links.Edition.ID,
+							},
+							Editions: models.Link{
+								URL: value.Links.Editions.URL,
+								ID:  value.Links.Editions.ID,
+							},
+							LatestVersion: models.Link{
+								URL: value.Links.LatestVersion.URL,
+								ID:  value.Links.LatestVersion.ID,
+							},
+							Versions: models.Link{
+								URL: value.Links.Versions.URL,
+								ID:  value.Links.Versions.ID,
+							},
+							Self: models.Link{
+								URL: value.Links.Self.URL,
+								ID:  value.Links.Self.ID,
+							},
+							CodeList: models.Link{
+								URL: value.Links.CodeList.URL,
+								ID:  value.Links.CodeList.ID,
+							},
+							Options: models.Link{
+								URL: value.Links.Options.URL,
+								ID:  value.Links.Options.ID,
+							},
+							Version: models.Link{
+								URL: value.Links.Version.URL,
+								ID:  value.Links.Version.ID,
+							},
+							Code: models.Link{
+								URL: value.Links.Code.URL,
+								ID:  value.Links.Code.ID,
+							},
+							Taxonomy: models.Link{
+								URL: value.Links.Taxonomy.URL,
+								ID:  value.Links.Taxonomy.ID,
+							},
+							Job: models.Link{
+								URL: value.Links.Job.URL,
+								ID:  value.Links.Job.ID,
+							},
+						},
+						Description:     value.Description,
+						Label:           value.Label,
+						URL:             value.URL,
+						Variable:        value.Variable,
+						NumberOfOptions: value.NumberOfOptions,
+					})
 				}
 			}
 		}
