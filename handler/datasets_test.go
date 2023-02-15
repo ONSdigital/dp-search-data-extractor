@@ -57,7 +57,9 @@ func TestPopulateCantabularFields(t *testing.T) {
 		})
 	})
 
-	Convey("Given a dataset Metadata with is_based_on field with a cantabular type and 3 dimensions", t, func() {
+	Convey("Given a dataset Metadata with is_based_on field with a cantabular type and 4 dimensions, one being area type", t, func() {
+		areaTypeTrue := true
+		areaTypeFalse := false
 		metadata := dataset.Metadata{
 			DatasetDetails: dataset.DatasetDetails{
 				IsBasedOn: &dataset.IsBasedOn{
@@ -67,27 +69,59 @@ func TestPopulateCantabularFields(t *testing.T) {
 			Version: dataset.Version{
 				Dimensions: []dataset.VersionDimension{
 					{ID: "dim1", Label: "label 1 (10 categories)"},
-					{ID: "dim2", Label: "label 2 (12 Categories)"},
-					{ID: "dim3", Label: "label 3 (1 category)"},
+					{ID: "dim2", Label: "label 2 (12 Categories)", IsAreaType: &areaTypeFalse},
+					{ID: "dim3", IsAreaType: &areaTypeTrue},
+					{ID: "dim4", Label: "label 4 (1 category)"},
 				},
 			},
 		}
 
-		Convey("When populateCantabularFields is successfully called with a nil datasetDetails", func() {
+		Convey("When populateCantabularFields is successfully called with a valid datasetDetails", func() {
 			dd := &models.DatasetDetails{
 				Summary: "This is a test",
 			}
 			err := populateCantabularFields(ctx, metadata, dd)
 			So(err, ShouldBeNil)
 
-			Convey("Then it is initialised", func() {
+			Convey("Then the only the non-area-type dimensions are populated in the datasetDetails with the expected values", func() {
 				So(*dd, ShouldResemble, models.DatasetDetails{
 					Summary: "This is a test",
 					Type:    "cantabular_flexible_table",
 					Dimensions: []models.Dimension{
 						{Name: "dim1", RawLabel: "label 1 (10 categories)", Label: "label 1"},
 						{Name: "dim2", RawLabel: "label 2 (12 Categories)", Label: "label 2"},
-						{Name: "dim3", RawLabel: "label 3 (1 category)", Label: "label 3"},
+						{Name: "dim4", RawLabel: "label 4 (1 category)", Label: "label 4"},
+					},
+				})
+			})
+		})
+	})
+
+	Convey("Given a dataset Metadata with is_based_on field with a cantabular type and a valid population type", t, func() {
+		metadata := dataset.Metadata{
+			DatasetDetails: dataset.DatasetDetails{
+				IsBasedOn: &dataset.IsBasedOn{
+					ID:   "UR_HH",
+					Type: "cantabular_flexible_table",
+				},
+			},
+		}
+
+		Convey("When populateCantabularFields is successfully called with a valid datasetDetails", func() {
+			dd := &models.DatasetDetails{
+				Summary: "This is a test",
+			}
+			err := populateCantabularFields(ctx, metadata, dd)
+			So(err, ShouldBeNil)
+
+			Convey("Then the expected population type fields are populated", func() {
+				So(*dd, ShouldResemble, models.DatasetDetails{
+					Summary:    "This is a test",
+					Type:       "cantabular_flexible_table",
+					Dimensions: []models.Dimension{},
+					PopulationType: models.PopulationType{
+						Name:  "UR_HH",
+						Label: "All usual residents in households",
 					},
 				})
 			})

@@ -156,16 +156,19 @@ func populateCantabularFields(ctx context.Context, metadata dataset.Metadata, dd
 		"num_dimensions": len(metadata.Dimensions)},
 	)
 
-	dd.Dimensions = make([]models.Dimension, len(metadata.Dimensions))
+	dd.Dimensions = []models.Dimension{}
 	for i := range metadata.Dimensions {
 		// Using pointers to prevent copying lots of data.
 		// TODO consider changing type to []*VersionDimension in dp-api-clients-go
 		dim := &metadata.Dimensions[i]
-		dd.Dimensions[i] = models.Dimension{
+		if dim.IsAreaType != nil && *dim.IsAreaType {
+			continue
+		}
+		dd.Dimensions = append(dd.Dimensions, models.Dimension{
 			Name:     dim.ID,
 			RawLabel: dim.Label,
 			Label:    cleanDimensionLabel(dim.Label),
-		}
+		})
 	}
 
 	popTypeLabel, ok := PopulationTypes[metadata.DatasetDetails.IsBasedOn.ID]
