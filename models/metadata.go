@@ -24,6 +24,6 @@ type DatasetDetails struct {
 	Title          string
 	URI            string
 	Type           string
-	PopulationType string
-	Dimensions     []string
+	PopulationType PopulationType
+	Dimensions     []Dimension
 }

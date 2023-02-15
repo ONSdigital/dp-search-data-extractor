@@ -47,8 +47,14 @@ var (
 		Published:       false,
 		Survey:          "",
 		Language:        "",
-		PopulationType:  "testPopType",
-		Dimensions:      []string{"testDim1", "testDim2"},
+		PopulationType: models.PopulationType{
+			Name:  "testPopulationType",
+			Label: "This is a population type for testing",
+		},
+		Dimensions: []models.Dimension{
+			{Name: "testDim1", Label: "Test Dimension One"},
+			{Name: "testDim1", Label: "Test Dimension One"},
+		},
 	}
 
 	expectedVersionMetadataEvent = models.SearchDataImport{
@@ -63,8 +69,14 @@ var (
 		ReleaseDate:     someReleaseDate,
 		Title:           someTitle,
 		Topics:          []string{"testtopic1", "testtopic2"},
-		PopulationType:  "testPopType",
-		Dimensions:      []string{"testDim1", "testDim2"},
+		PopulationType: models.PopulationType{
+			Name:  "testPopulationType",
+			Label: "This is a population type for testing",
+		},
+		Dimensions: []models.Dimension{
+			{Name: "testDim1", Label: "Test Dimension One"},
+			{Name: "testDim1", Label: "Test Dimension One"},
+		},
 	}
 )
 

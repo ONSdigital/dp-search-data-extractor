@@ -66,9 +66,9 @@ func TestPopulateCantabularFields(t *testing.T) {
 			},
 			Version: dataset.Version{
 				Dimensions: []dataset.VersionDimension{
-					{ID: "dim1", Label: "label 1"},
-					{ID: "dim2", Label: "label 2"},
-					{ID: "dim3", Label: "label 3"},
+					{ID: "dim1", Label: "label 1 (10 categories)"},
+					{ID: "dim2", Label: "label 2 (12 Categories)"},
+					{ID: "dim3", Label: "label 3 (1 category)"},
 				},
 			},
 		}
@@ -82,9 +82,13 @@ func TestPopulateCantabularFields(t *testing.T) {
 
 			Convey("Then it is initialised", func() {
 				So(*dd, ShouldResemble, models.DatasetDetails{
-					Summary:    "This is a test",
-					Type:       "cantabular_flexible_table",
-					Dimensions: []string{"dim1", "dim2", "dim3"},
+					Summary: "This is a test",
+					Type:    "cantabular_flexible_table",
+					Dimensions: []models.Dimension{
+						{Name: "dim1", RawLabel: "label 1 (10 categories)", Label: "label 1"},
+						{Name: "dim2", RawLabel: "label 2 (12 Categories)", Label: "label 2"},
+						{Name: "dim3", RawLabel: "label 3 (1 category)", Label: "label 3"},
+					},
 				})
 			})
 		})

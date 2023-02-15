@@ -94,8 +94,14 @@ func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
 		ReleaseDate:     "",
 		Title:           "testTitle",
 		Topics:          []string{"testtopic1", "testtopic2"},
-		PopulationType:  "testPopulationType",
-		Dimensions:      []string{"testDim1", "testDim2"},
+		PopulationType: models.PopulationType{
+			Name:  "testPopulationType",
+			Label: "This is a population type for testing",
+		},
+		Dimensions: []models.Dimension{
+			{Name: "testDim1", Label: "Test Dimension One"},
+			{Name: "testDim1", Label: "Test Dimension One"},
+		},
 	}
 
 	kafkaProducerMock := &kafkatest.IProducerMock{

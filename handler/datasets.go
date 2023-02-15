@@ -5,12 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/log.go/v2/log"
 )
+
+const regexCleanDimensionLabel = `(\(\d+ (([Cc])ategories|([Cc])ategory)\))`
 
 // CantabularTypes are dataset types corresponding to Cantabular datasets
 var CantabularTypes = map[string]struct{}{
@@ -92,8 +96,8 @@ func (h *ContentPublishedHandler) handleDatasetDataType(ctx context.Context, cpE
 		Edition:        edition,
 		DatasetID:      datasetID,
 		Type:           "dataset_landing_page",
-		PopulationType: "",
-		Dimensions:     []string{},
+		PopulationType: models.PopulationType{},
+		Dimensions:     []models.Dimension{},
 	}
 
 	if err := populateCantabularFields(ctx, datasetMetadataPublished, &datasetDetailsData); err != nil {
@@ -152,18 +156,35 @@ func populateCantabularFields(ctx context.Context, metadata dataset.Metadata, dd
 		"num_dimensions": len(metadata.Dimensions)},
 	)
 
-	dd.Dimensions = make([]string, len(metadata.Dimensions))
-	for i, dim := range metadata.Dimensions {
-		dd.Dimensions[i] = dim.ID
+	dd.Dimensions = make([]models.Dimension, len(metadata.Dimensions))
+	for i := range metadata.Dimensions {
+		// Using pointers to prevent copying lots of data.
+		// TODO consider changing type to []*VersionDimension in dp-api-clients-go
+		dim := &metadata.Dimensions[i]
+		dd.Dimensions[i] = models.Dimension{
+			Name:     dim.ID,
+			RawLabel: dim.Label,
+			Label:    cleanDimensionLabel(dim.Label),
+		}
 	}
 
-	popType, ok := PopulationTypes[metadata.DatasetDetails.IsBasedOn.ID]
+	popTypeLabel, ok := PopulationTypes[metadata.DatasetDetails.IsBasedOn.ID]
 	if !ok {
 		log.Warn(ctx, "population type not identified", log.Data{
 			"pop_type":    metadata.DatasetDetails.IsBasedOn.ID,
 			"valid_types": PopulationTypes},
 		)
 	}
-	dd.PopulationType = popType
+	dd.PopulationType = models.PopulationType{
+		Name:  metadata.DatasetDetails.IsBasedOn.ID,
+		Label: popTypeLabel,
+	}
 	return nil
+}
+
+// cleanDimensionLabel is a helper function that parses dimension labels from cantabular into display text
+func cleanDimensionLabel(label string) string {
+	matcher := regexp.MustCompile(regexCleanDimensionLabel)
+	result := matcher.ReplaceAllString(label, "")
+	return strings.TrimSpace(result)
 }
