@@ -2,20 +2,17 @@ package service
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpkafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/log.go/v2/log"
 )
-
-// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
-const KafkaTLSProtocolFlag = "TLS"
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
 type ExternalServiceList struct {
@@ -102,8 +99,8 @@ func (e *Init) DoGetDatasetClient(cfg *config.Config) clients.DatasetClient {
 }
 
 // GetKafkaConsumer creates a Kafka consumer and sets the consumer flag to true
-func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
-	consumer, err := e.Init.DoGetKafkaConsumer(ctx, cfg)
+func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+	consumer, err := e.Init.DoGetKafkaConsumer(ctx, cfg.Kafka)
 	if err != nil {
 		return nil, err
 	}
@@ -112,44 +109,36 @@ func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.
 }
 
 // DoGetKafkaConsumer returns a Kafka Consumer group
-func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
-	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
-
-	kafkaOffset := dpkafka.OffsetNewest
-	if cfg.KafkaOffsetOldest {
-		kafkaOffset = dpkafka.OffsetOldest
+func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
+	if cfg == nil {
+		return nil, errors.New("cannot create a kafka consumer without kafka config")
 	}
-	cConfig := &dpkafka.ConsumerGroupConfig{
-		KafkaVersion: &cfg.KafkaVersion,
-		Offset:       &kafkaOffset,
+	kafkaOffset := kafka.OffsetNewest
+	if cfg.OffsetOldest {
+		kafkaOffset = kafka.OffsetOldest
 	}
-	if cfg.KafkaSecProtocol == KafkaTLSProtocolFlag {
-		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
-			cfg.KafkaSecCACerts,
-			cfg.KafkaSecClientCert,
-			cfg.KafkaSecClientKey,
-			cfg.KafkaSecSkipVerify,
+	cgConfig := &kafka.ConsumerGroupConfig{
+		BrokerAddrs:       cfg.Addr,
+		Topic:             cfg.ContentUpdatedTopic,
+		GroupName:         cfg.ContentUpdatedGroup,
+		MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+		KafkaVersion:      &cfg.Version,
+		Offset:            &kafkaOffset,
+	}
+	if cfg.SecProtocol == config.KafkaTLSProtocolFlag {
+		cgConfig.SecurityConfig = kafka.GetSecurityConfig(
+			cfg.SecCACerts,
+			cfg.SecClientCert,
+			cfg.SecClientKey,
+			cfg.SecSkipVerify,
 		)
 	}
-
-	kafkaConsumer, err := dpkafka.NewConsumerGroup(
-		ctx,
-		cfg.KafkaAddr,
-		cfg.ContentUpdatedTopic,
-		cfg.ContentUpdatedGroup,
-		cgChannels,
-		cConfig,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return kafkaConsumer, nil
+	return kafka.NewConsumerGroup(ctx, cgConfig)
 }
 
 // GetKafkaProducer creates a Kafka producer and sets the producder flag to true
-func (e *ExternalServiceList) GetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) {
-	producer, err := e.Init.DoGetKafkaProducer(ctx, cfg)
+func (e *ExternalServiceList) GetKafkaProducer(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
+	producer, err := e.Init.DoGetKafkaProducer(ctx, cfg.Kafka)
 	if err != nil {
 		return nil, err
 	}
@@ -157,25 +146,24 @@ func (e *ExternalServiceList) GetKafkaProducer(ctx context.Context, cfg *config.
 	return producer, nil
 }
 
-func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) {
-	pChannels := dpkafka.CreateProducerChannels()
-	pConfig := &dpkafka.ProducerConfig{
-		KafkaVersion: &cfg.KafkaVersion,
+func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+	if cfg == nil {
+		return nil, errors.New("cannot create a kafka producer without kafka config")
 	}
-
-	if cfg.KafkaSecProtocol == KafkaTLSProtocolFlag {
-		pConfig.SecurityConfig = dpkafka.GetSecurityConfig(
-			cfg.KafkaSecCACerts,
-			cfg.KafkaSecClientCert,
-			cfg.KafkaSecClientKey,
-			cfg.KafkaSecSkipVerify,
+	pConfig := &kafka.ProducerConfig{
+		BrokerAddrs:       cfg.Addr,
+		Topic:             cfg.ProducerTopic,
+		MinBrokersHealthy: &cfg.ProducerMinBrokersHealthy,
+		KafkaVersion:      &cfg.Version,
+		MaxMessageBytes:   &cfg.MaxBytes,
+	}
+	if cfg.SecProtocol == config.KafkaTLSProtocolFlag {
+		pConfig.SecurityConfig = kafka.GetSecurityConfig(
+			cfg.SecCACerts,
+			cfg.SecClientCert,
+			cfg.SecClientKey,
+			cfg.SecSkipVerify,
 		)
 	}
-	producer, err := dpkafka.NewProducer(ctx, cfg.KafkaAddr, cfg.KafkaProducerTopic, pChannels, pConfig)
-	if err != nil {
-		log.Fatal(ctx, "kafka producer returned an error", err, log.Data{"topic": cfg.KafkaProducerTopic})
-		return nil, err
-	}
-
-	return producer, nil
+	return kafka.NewProducer(ctx, pConfig)
 }

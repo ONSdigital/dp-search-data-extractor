@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpkafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
@@ -30,11 +30,11 @@ var (
 	errKafkaProducer = errors.New("Kafka producer error")
 	errHealthcheck   = errors.New("healthCheck error")
 
-	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
 		return nil, errKafkaConsumer
 	}
 
-	funcDoGetKafkaProducerErr = func(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) {
+	funcDoGetKafkaProducerErr = func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
 		return nil, errKafkaProducer
 	}
 
@@ -50,13 +50,14 @@ var (
 func TestRun(t *testing.T) {
 	Convey("Having a set of mocked dependencies", t, func() {
 		consumerMock := &kafkatest.IConsumerGroupMock{
-			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-			ChannelsFunc: func() *dpkafka.ConsumerGroupChannels { return &dpkafka.ConsumerGroupChannels{} },
+			CheckerFunc:   func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
+			ChannelsFunc:  func() *kafka.ConsumerGroupChannels { return &kafka.ConsumerGroupChannels{} },
+			LogErrorsFunc: func(ctx context.Context) {},
 		}
 
 		producerMock := &kafkatest.IProducerMock{
-			ChannelsFunc: func() *dpkafka.ProducerChannels { return &dpkafka.ProducerChannels{} },
-			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
+			CheckerFunc:   func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
+			LogErrorsFunc: func(ctx context.Context) {},
 		}
 
 		hcMock := &serviceMock.HealthCheckerMock{
@@ -79,11 +80,11 @@ func TestRun(t *testing.T) {
 			CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 		}
 
-		funcDoGetKafkaConsumerOk := func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+		funcDoGetKafkaConsumerOk := func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
 			return consumerMock, nil
 		}
 
-		funcDoGetKafkaProducerOk := func(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) {
+		funcDoGetKafkaProducerOk := func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
 			return producerMock, nil
 		}
 
@@ -227,16 +228,18 @@ func TestClose(t *testing.T) {
 		}
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
-			StopListeningToConsumerFunc: func(ctx context.Context) error { return nil },
-			CloseFunc:                   func(ctx context.Context) error { return nil },
-			CheckerFunc:                 func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-			ChannelsFunc:                func() *dpkafka.ConsumerGroupChannels { return &dpkafka.ConsumerGroupChannels{} },
+			LogErrorsFunc:   func(ctx context.Context) {},
+			StopAndWaitFunc: func() error { return nil },
+			CloseFunc:       func(ctx context.Context, optFuncs ...kafka.OptFunc) error { return nil },
+			CheckerFunc:     func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
+			ChannelsFunc:    func() *kafka.ConsumerGroupChannels { return &kafka.ConsumerGroupChannels{} },
 		}
 
 		producerMock := &kafkatest.IProducerMock{
-			CloseFunc:    func(ctx context.Context) error { return nil },
-			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-			ChannelsFunc: func() *dpkafka.ProducerChannels { return &dpkafka.ProducerChannels{} },
+			LogErrorsFunc: func(ctx context.Context) {},
+			CloseFunc:     func(ctx context.Context) error { return nil },
+			CheckerFunc:   func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
+			ChannelsFunc:  func() *kafka.ProducerChannels { return &kafka.ProducerChannels{} },
 		}
 
 		// healthcheck Stop does not depend on any other service being closed/stopped
@@ -261,10 +264,10 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
 					return consumerMock, nil
 				},
-				DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) { return producerMock, nil },
+				DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) { return producerMock, nil },
 				DoGetZebedeeClientFunc: func(cfg *config.Config) clients.ZebedeeClient { return zebedeeMock },
 				DoGetDatasetClientFunc: func(cfg *config.Config) clients.DatasetClient { return datasetMock },
 			}
@@ -275,7 +278,7 @@ func TestClose(t *testing.T) {
 			So(err, ShouldBeNil)
 			err = svc.Close(context.Background())
 			So(err, ShouldBeNil)
-			So(len(consumerMock.StopListeningToConsumerCalls()), ShouldEqual, 1)
+			So(len(consumerMock.StopAndWaitCalls()), ShouldEqual, 1)
 			So(len(hcMock.StopCalls()), ShouldEqual, 1)
 			So(len(consumerMock.CloseCalls()), ShouldEqual, 1)
 			So(len(serverMock.ShutdownCalls()), ShouldEqual, 1)
@@ -292,10 +295,10 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
 					return consumerMock, nil
 				},
-				DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error) { return producerMock, nil },
+				DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) { return producerMock, nil },
 				DoGetZebedeeClientFunc: func(cfg *config.Config) clients.ZebedeeClient { return zebedeeMock },
 				DoGetDatasetClientFunc: func(cfg *config.Config) clients.DatasetClient { return datasetMock },
 			}

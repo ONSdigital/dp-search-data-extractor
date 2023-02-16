@@ -3,7 +3,7 @@ package event
 import (
 	"context"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -39,7 +39,7 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 	}
 
 	// workers to consume messages in parallel
-	for w := 1; w <= cfg.KafkaNumWorkers; w++ {
+	for w := 1; w <= cfg.Kafka.NumWorkers; w++ {
 		go consume(w)
 	}
 }

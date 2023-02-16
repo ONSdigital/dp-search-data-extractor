@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/log.go/v2/log"
 )

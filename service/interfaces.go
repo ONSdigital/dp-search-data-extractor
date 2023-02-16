@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpkafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 )
@@ -18,8 +18,8 @@ import (
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error)
-	DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (dpkafka.IProducer, error)
+	DoGetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error)
+	DoGetKafkaProducer(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error)
 	DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient
 	DoGetDatasetClient(cfg *config.Config) clients.DatasetClient
 }

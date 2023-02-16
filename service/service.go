@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
@@ -65,10 +66,10 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	}
 
 	// Kafka error logging go-routine
-	consumer.Channels().LogErrors(ctx, "kafka consumer")
+	consumer.LogErrors(ctx)
 
 	// Kafka error logging go-routine
-	producer.Channels().LogErrors(ctx, "kafka producer channels error")
+	producer.LogErrors(ctx)
 
 	// Event Handler for Kafka Consumer
 	eventHandler := &handler.ContentPublishedHandler{
@@ -128,12 +129,13 @@ func (svc *Service) Close(ctx context.Context) error {
 		// The kafka consumer will be closed after the service shuts down.
 		if svc.serviceList.KafkaConsumer {
 			log.Info(ctx, "stopping kafka consumer listener")
-			if err := svc.consumer.StopListeningToConsumer(ctx); err != nil {
+			if err := svc.consumer.StopAndWait(); err != nil {
 				log.Error(ctx, "error stopping kafka consumer listener", err)
 				hasShutdownError = true
 			}
 			log.Info(ctx, "stopped kafka consumer listener")
 		}
+
 		// stop any incoming requests before closing any outbound connections
 		if err := svc.server.Shutdown(ctx); err != nil {
 			log.Error(ctx, "failed to shutdown http server", err)
@@ -164,13 +166,22 @@ func (svc *Service) Close(ctx context.Context) error {
 			gracefulShutdown = true
 		}
 	}()
+
 	// wait for shutdown success (via cancel) or failure (timeout)
 	<-ctx.Done()
+
+	// timeout expired
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Errorf("shutdown timed out: %w", ctx.Err())
+	}
+
+	// other error
 	if !gracefulShutdown {
 		err := errors.New("failed to shutdown gracefully")
 		log.Error(ctx, "failed to shutdown gracefully ", err)
 		return err
 	}
+
 	log.Info(ctx, "graceful shutdown was successful")
 	return nil
 }

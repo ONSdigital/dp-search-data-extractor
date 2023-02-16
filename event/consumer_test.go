@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
@@ -29,6 +29,12 @@ var testEvent = models.ContentPublished{
 	TraceID:      "10110011100010000",
 }
 
+var cfg = &config.Config{
+	Kafka: &config.Kafka{
+		NumWorkers: 1,
+	},
+}
+
 func TestConsume(t *testing.T) {
 	Convey("Given kafka consumer and event handler mocks", t, func() {
 		cgChannels := &kafka.ConsumerGroupChannels{Upstream: make(chan kafka.Message, 2)}
@@ -44,11 +50,12 @@ func TestConsume(t *testing.T) {
 			},
 		}
 		Convey("And a kafka message with the valid schema being sent to the Upstream channel", func() {
-			message := kafkatest.NewMessage(marshal(testEvent), 0)
+			message, err := kafkatest.NewMessage(marshal(testEvent), 0)
+			So(err, ShouldBeNil)
 			mockConsumer.Channels().Upstream <- message
 			Convey("When consume message is called", func() {
 				handlerWg.Add(1)
-				event.Consume(testCtx, mockConsumer, mockEventHandler, &config.Config{KafkaNumWorkers: 1})
+				event.Consume(testCtx, mockConsumer, mockEventHandler, cfg)
 				handlerWg.Wait()
 				Convey("An event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
@@ -62,13 +69,15 @@ func TestConsume(t *testing.T) {
 			})
 		})
 		Convey("And two kafka messages, one with a valid schema and one with an invalid schema", func() {
-			validMessage := kafkatest.NewMessage(marshal(testEvent), 1)
-			invalidMessage := kafkatest.NewMessage([]byte("invalid schema"), 0)
+			validMessage, err := kafkatest.NewMessage(marshal(testEvent), 1)
+			So(err, ShouldBeNil)
+			invalidMessage, err := kafkatest.NewMessage([]byte("invalid schema"), 0)
+			So(err, ShouldBeNil)
 			mockConsumer.Channels().Upstream <- invalidMessage
 			mockConsumer.Channels().Upstream <- validMessage
 			Convey("When consume messages is called", func() {
 				handlerWg.Add(1)
-				event.Consume(testCtx, mockConsumer, mockEventHandler, &config.Config{KafkaNumWorkers: 1})
+				event.Consume(testCtx, mockConsumer, mockEventHandler, cfg)
 				handlerWg.Wait()
 				Convey("Only the valid event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
@@ -89,11 +98,12 @@ func TestConsume(t *testing.T) {
 				defer handlerWg.Done()
 				return errHandler
 			}
-			message := kafkatest.NewMessage(marshal(testEvent), 0)
+			message, err := kafkatest.NewMessage(marshal(testEvent), 0)
+			So(err, ShouldBeNil)
 			mockConsumer.Channels().Upstream <- message
 			Convey("When consume message is called", func() {
 				handlerWg.Add(1)
-				event.Consume(testCtx, mockConsumer, mockEventHandler, &config.Config{KafkaNumWorkers: 1})
+				event.Consume(testCtx, mockConsumer, mockEventHandler, cfg)
 				handlerWg.Wait()
 				Convey("An event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)

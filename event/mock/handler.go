@@ -11,29 +11,25 @@ import (
 	"sync"
 )
 
-var (
-	lockHandlerMockHandle sync.RWMutex
-)
-
-// Ensure, that HandlerMock does implement Handler.
+// Ensure, that HandlerMock does implement event.Handler.
 // If this is not the case, regenerate this file with moq.
 var _ event.Handler = &HandlerMock{}
 
 // HandlerMock is a mock implementation of event.Handler.
 //
-//     func TestSomethingThatUsesHandler(t *testing.T) {
+//	func TestSomethingThatUsesHandler(t *testing.T) {
 //
-//         // make and configure a mocked event.Handler
-//         mockedHandler := &HandlerMock{
-//             HandleFunc: func(ctx context.Context, contentPublished *models.ContentPublished, cfg config.Config) error {
-// 	               panic("mock out the Handle method")
-//             },
-//         }
+//		// make and configure a mocked event.Handler
+//		mockedHandler := &HandlerMock{
+//			HandleFunc: func(ctx context.Context, contentPublished *models.ContentPublished, cfg config.Config) error {
+//				panic("mock out the Handle method")
+//			},
+//		}
 //
-//         // use mockedHandler in code that requires event.Handler
-//         // and then make assertions.
+//		// use mockedHandler in code that requires event.Handler
+//		// and then make assertions.
 //
-//     }
+//	}
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
 	HandleFunc func(ctx context.Context, contentPublished *models.ContentPublished, cfg config.Config) error
@@ -50,6 +46,7 @@ type HandlerMock struct {
 			Cfg config.Config
 		}
 	}
+	lockHandle sync.RWMutex
 }
 
 // Handle calls HandleFunc.
@@ -66,15 +63,16 @@ func (mock *HandlerMock) Handle(ctx context.Context, contentPublished *models.Co
 		ContentPublished: contentPublished,
 		Cfg:              cfg,
 	}
-	lockHandlerMockHandle.Lock()
+	mock.lockHandle.Lock()
 	mock.calls.Handle = append(mock.calls.Handle, callInfo)
-	lockHandlerMockHandle.Unlock()
+	mock.lockHandle.Unlock()
 	return mock.HandleFunc(ctx, contentPublished, cfg)
 }
 
 // HandleCalls gets all the calls that were made to Handle.
 // Check the length with:
-//     len(mockedHandler.HandleCalls())
+//
+//	len(mockedHandler.HandleCalls())
 func (mock *HandlerMock) HandleCalls() []struct {
 	Ctx              context.Context
 	ContentPublished *models.ContentPublished
@@ -85,8 +83,8 @@ func (mock *HandlerMock) HandleCalls() []struct {
 		ContentPublished *models.ContentPublished
 		Cfg              config.Config
 	}
-	lockHandlerMockHandle.RLock()
+	mock.lockHandle.RLock()
 	calls = mock.calls.Handle
-	lockHandlerMockHandle.RUnlock()
+	mock.lockHandle.RUnlock()
 	return calls
 }

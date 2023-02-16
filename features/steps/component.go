@@ -3,11 +3,12 @@ package steps
 import (
 	"context"
 	"net/http"
+	"time"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
@@ -16,21 +17,29 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/service/mock"
 )
 
+const (
+	WaitEventTimeout = 15 * time.Second // maximum time that the component test will wait for a kafka event
+)
+
 type Component struct {
-	ErrorFeature  componenttest.ErrorFeature
-	inputData     models.ZebedeeData
-	serviceList   *service.ExternalServiceList
-	KafkaConsumer kafka.IConsumerGroup
-	KafkaProducer kafka.IProducer
-	zebedeeClient clients.ZebedeeClient
-	datasetClient clients.DatasetClient
-	errorChan     chan error
-	svc           *service.Service
-	cfg           *config.Config
+	ErrorFeature     componenttest.ErrorFeature
+	inputData        models.ZebedeeData
+	serviceList      *service.ExternalServiceList
+	KafkaConsumer    kafka.IConsumerGroup
+	KafkaProducer    kafka.IProducer
+	zebedeeClient    clients.ZebedeeClient
+	datasetClient    clients.DatasetClient
+	errorChan        chan error
+	svc              *service.Service
+	cfg              *config.Config
+	waitEventTimeout time.Duration
 }
 
 func NewComponent() *Component {
-	c := &Component{errorChan: make(chan error)}
+	c := &Component{
+		errorChan:        make(chan error),
+		waitEventTimeout: WaitEventTimeout,
+	}
 
 	consumer := kafkatest.NewMessageConsumer(false)
 	consumer.CheckerFunc = funcCheck
@@ -73,11 +82,11 @@ func (c *Component) DoGetHTTPServer(bindAddr string, router http.Handler) servic
 	return dphttp.NewServer(bindAddr, router)
 }
 
-func (c *Component) DoGetConsumer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IConsumerGroup, err error) {
+func (c *Component) DoGetConsumer(ctx context.Context, cfg *config.Kafka) (kafkaConsumer kafka.IConsumerGroup, err error) {
 	return c.KafkaConsumer, nil
 }
 
-func (c *Component) DoGetProducer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IProducer, err error) {
+func (c *Component) DoGetProducer(ctx context.Context, cfg *config.Kafka) (kafkaConsumer kafka.IProducer, err error) {
 	return c.KafkaProducer, nil
 }
 
