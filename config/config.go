@@ -19,6 +19,7 @@ type Config struct {
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
 	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
+	StopConsumingOnUnhealthy   bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
 	Kafka                      *Kafka
 }
 
@@ -59,6 +60,7 @@ func Get() (*Config, error) {
 		KeywordsLimit:              -1,
 		DatasetAPIURL:              "http://localhost:22000",
 		ServiceAuthToken:           "",
+		StopConsumingOnUnhealthy:   true,
 		Kafka: &Kafka{
 			ContentUpdatedGroup:       "dp-search-data-extractor",
 			ContentUpdatedTopic:       "content-updated",

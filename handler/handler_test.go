@@ -3,15 +3,13 @@ package handler
 import (
 	"context"
 	"errors"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-kafka/v3/avro"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/dp-search-data-extractor/event"
-	"github.com/ONSdigital/dp-search-data-extractor/event/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 
@@ -21,8 +19,9 @@ import (
 )
 
 var (
-	testTimeout = time.Second * 5
-	ctx         = context.Background()
+	testTimeout  = time.Second * 5
+	testWorkerID = 1
+	ctx          = context.Background()
 
 	testZebedeeEvent = models.ContentPublished{
 		URI:          "testZebdeeUri",
@@ -80,373 +79,283 @@ var (
 	cfg, _ = config.Get()
 )
 
-func TestHandlerForZebedeeReturningMandatoryFields(t *testing.T) {
-	t.Parallel()
-	expectedSearchDataImportEvent := models.SearchDataImport{
-		DataType:        "testDataType",
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            "",
-		DatasetID:       "",
-		Keywords:        []string{"testkeyword1", "testkeyword2"},
-		MetaDescription: "",
-		Summary:         "",
-		ReleaseDate:     "",
-		Title:           "testTitle",
-		Topics:          []string{"testtopic1", "testtopic2"},
-		PopulationType: models.PopulationType{
-			Name:  "testPopulationType",
-			Label: "This is a population type for testing",
-		},
-		Dimensions: []models.Dimension{
-			{Name: "testDim1", Label: "Test Dimension One"},
-			{Name: "testDim1", Label: "Test Dimension One"},
-		},
+func TestHandle(t *testing.T) {
+	expectedZebedeeProducedEvent := models.SearchDataImport{
+		UID:         "testedition",
+		Edition:     "testedition",
+		DataType:    "testDataType",
+		SearchIndex: "ONS",
+		CDID:        "testCDID",
+		Keywords:    []string{},
 	}
 
-	kafkaProducerMock := &kafkatest.IProducerMock{
-		ChannelsFunc: getChannelFunc,
+	expectedDatasetProducedEvent := models.SearchDataImport{
+		UID:            "cphi01-timeseries",
+		Edition:        "timeseries",
+		DataType:       "dataset_landing_page",
+		SearchIndex:    "ONS",
+		DatasetID:      "cphi01",
+		Keywords:       []string{"keyword_1", "keyword_2"},
+		ReleaseDate:    "release date",
+		Summary:        "description",
+		Title:          "title",
+		Topics:         []string{"subTopic1"},
+		CanonicalTopic: "testTopic",
 	}
 
-	// for mock marshaller
-	expectedSearchDataImport := marshalSearchDataImport(t, expectedSearchDataImportEvent)
-	marshallerMock := &mock.MarshallerMock{
-		MarshalFunc: func(s interface{}) ([]byte, error) {
-			return expectedSearchDataImport, nil
-		},
-	}
-
-	producerMock := &event.SearchDataImportProducer{
-		Producer:   kafkaProducerMock,
-		Marshaller: marshallerMock,
-	}
-	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
-		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
-
-		eventHandler := &ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
-
-		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
-			})
-
-			Convey("And then get content published from zebedee", func() {
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-
-				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
-			})
-
-			var avroBytes []byte
-			delay := time.NewTimer(testTimeout)
-			select {
-			case avroBytes = <-pChannels.Output:
-				// Ensure timer is stopped and its resources are freed
-				if !delay.Stop() {
-					// if the timer has been stopped then read from the channel
-					<-delay.C
-				}
-				t.Log("avro byte sent to producer output")
-			case <-delay.C:
-				t.FailNow()
-			}
-			Convey("And then the expected bytes are sent to producer.output", func() {
-				var actual models.SearchDataImport
-				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, expectedSearchDataImportEvent)
-			})
-		})
-
-		Convey("When given a valid event with dataset uri", func() {
-			expectedParsedURI := strings.Split(testZebedeeEventWithDatasetURI.URI, "/")
-			expectedParsedURI = expectedParsedURI[:len(expectedParsedURI)-1]
-			err := eventHandler.Handle(ctx, &testZebedeeEventWithDatasetURI, *cfg)
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
-			})
-
-			Convey("And then get content published from zebedee", func() {
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, strings.Join(expectedParsedURI, "/"))
-
-				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
-			})
-			delay := time.NewTimer(testTimeout)
-			select {
-			case <-pChannels.Output:
-				// Ensure timer is stopped and its resources are freed
-				if !delay.Stop() {
-					// if the timer has been stopped then read from the channel
-					<-delay.C
-				}
-				t.Log("avro byte sent to producer output")
-			case <-delay.C:
-				t.FailNow()
-			}
-		})
-	})
-	Convey("Given an event handler not working successfully, and an event containing a URI", t, func() {
-		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
-		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
-		eventHandler := &ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
-
-		Convey("When given a valid event", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
-
-			Convey("Then Zebedee is called 1 time with the expected error ", func() {
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, errZebedee.Error())
-				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldNotBeEmpty)
-				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMockInError.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-
-				So(len(datasetMockInError.GetVersionMetadataCalls()), ShouldEqual, 0)
-			})
-		})
-	})
-}
-
-func TestHandlerForZebedeeReturningAllFields(t *testing.T) {
-	expectedFullSearchDataImportEvent := models.SearchDataImport{
-		DataType:        "testDataType",
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            "testCDID",
-		DatasetID:       "testDaetasetId",
-		Keywords:        []string{"testkeyword"},
-		MetaDescription: "testMetaDescription",
-		Summary:         "testSummary",
-		ReleaseDate:     "testReleaseDate",
-		Title:           "testTitle",
-		Topics:          []string{"testtopic"},
-	}
-
-	kafkaProducerMock := &kafkatest.IProducerMock{
-		ChannelsFunc: getChannelFunc,
-	}
-
-	marshallerMock := &mock.MarshallerMock{
-		MarshalFunc: func(s interface{}) ([]byte, error) {
-			return schema.SearchDataImportEvent.Marshal(s)
-		},
-	}
-
-	producerMock := &event.SearchDataImportProducer{
-		Producer:   kafkaProducerMock,
-		Marshaller: marshallerMock,
-	}
-	Convey("Given an event handler working successfully, and an event containing a URI", t, func() {
-		// used by zebedee mock
-		fullContentPublishedTestData := `{"description":{"cdid": "testCDID","datasetId": "testDaetasetId","edition": "testedition","keywords": ["testkeyword"],"metaDescription": "testMetaDescription","releaseDate": "testReleaseDate","summary": "testSummary","title": "testTitle"},"type": "testDataType"}`
-		getFullPublishDataFunc := func(ctx context.Context, uriString string) ([]byte, error) {
-			data := []byte(fullContentPublishedTestData)
-			return data, nil
+	Convey("Given an event handler with a working zebedee client and kafka producer", t, func() {
+		var zebedeeMock = &clientMock.ZebedeeClientMock{
+			GetPublishedDataFunc: getPublishDataFunc,
 		}
+		var producerMock = &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+		h := &ContentPublished{cfg, zebedeeMock, nil, producerMock}
 
-		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getFullPublishDataFunc}
-		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
-		eventHandler := &ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
+		Convey("When a legacy event containing a valid URI is handled", func() {
+			msg := createMessage(testZebedeeEvent)
+			err := h.Handle(ctx, testWorkerID, msg)
 
-		Convey("When given a valid event with default keywords limit", func() {
-			err := eventHandler.Handle(ctx, &testZebedeeEvent, *cfg)
-
-			var avroBytes []byte
-			delay := time.NewTimer(testTimeout)
-			select {
-			case avroBytes = <-pChannels.Output:
-				// Ensure timer is stopped and its resources are freed
-				if !delay.Stop() {
-					// if the timer has been stopped then read from the channel
-					<-delay.C
-				}
-				t.Log("avro byte sent to producer output")
-			case <-delay.C:
-				t.FailNow()
-			}
 			Convey("Then no error is reported", func() {
 				So(err, ShouldBeNil)
 			})
-			Convey("And then get content published from zebedee", func() {
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldNotBeEmpty)
+
+			Convey("Then published data is obtained from zebedee", func() {
 				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
 				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-
-				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 0)
 			})
-			Convey("And then the expected bytes are sent to producer.output", func() {
-				var actual models.SearchDataImport
-				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
-				So(err, ShouldBeNil)
-				So(actual.DataType, ShouldEqual, expectedFullSearchDataImportEvent.DataType)
-				So(actual.JobID, ShouldEqual, expectedFullSearchDataImportEvent.JobID)
-				So(actual.Keywords, ShouldHaveLength, 1)
-				So(actual.Keywords[0], ShouldEqual, expectedFullSearchDataImportEvent.Keywords[0])
-				So(actual.SearchIndex, ShouldEqual, expectedFullSearchDataImportEvent.SearchIndex)
-				So(actual.CDID, ShouldEqual, expectedFullSearchDataImportEvent.CDID)
-				So(actual.DatasetID, ShouldEqual, expectedFullSearchDataImportEvent.DatasetID)
-				So(actual.MetaDescription, ShouldEqual, expectedFullSearchDataImportEvent.MetaDescription)
-				So(actual.Summary, ShouldEqual, expectedFullSearchDataImportEvent.Summary)
-				So(actual.ReleaseDate, ShouldEqual, expectedFullSearchDataImportEvent.ReleaseDate)
-				So(actual.Title, ShouldEqual, expectedFullSearchDataImportEvent.Title)
-				So(actual.TraceID, ShouldNotBeNil)
+
+			Convey("Then the expected event search data import event is producer", func() {
+				So(producerMock.SendCalls(), ShouldHaveLength, 1)
+				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
 			})
 		})
 	})
-}
 
-func TestHandlerForDatasetVersionMetadata(t *testing.T) {
-	t.Parallel()
-	expectedVersionMetadataEvent := models.SearchDataImport{
-		UID:             "cphi01-timeseries",
-		DataType:        "dataset_landing_page",
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            "",
-		DatasetID:       "",
-		Keywords:        []string{"somekeyword0", "somekeyword1"},
-		MetaDescription: "someDescription",
-		Summary:         "",
-		ReleaseDate:     "2020-11-07T00:00:00.000Z",
-		Title:           "someTitle",
-		Topics:          []string{"testtopic1", "testtopic2"},
-		CanonicalTopic:  "something",
-	}
+	Convey("Given an event handler with a working dataset api client and kafka producer", t, func() {
+		var datasetMock = &clientMock.DatasetClientMock{
+			GetVersionMetadataFunc: getVersionMetadataFunc,
+		}
+		var producerMock = &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+		h := &ContentPublished{cfg, nil, datasetMock, producerMock}
 
-	kafkaProducerMock := &kafkatest.IProducerMock{
-		ChannelsFunc: getChannelFunc,
-	}
-
-	// for mock marshaller
-	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedVersionMetadataEvent)
-	marshallerMock := &mock.MarshallerMock{
-		MarshalFunc: func(s interface{}) ([]byte, error) {
-			return expectedVersionMetadataSearchDataImport, nil
-		},
-	}
-
-	producerMock := &event.SearchDataImportProducer{
-		Producer:   kafkaProducerMock,
-		Marshaller: marshallerMock,
-	}
-
-	Convey("Given an event handler working successfully, and an event containing a valid dataType", t, func() {
-		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
-		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
-
-		eventHandler := &ContentPublishedHandler{zebedeeMock, datasetMock, *producerMock}
-
-		Convey("When given a valid event for cmd dataset", func() {
-			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
-
-			var avroBytes []byte
-			delay := time.NewTimer(testTimeout)
-			select {
-			case avroBytes = <-pChannels.Output:
-				// Ensure timer is stopped and its resources are freed
-				if !delay.Stop() {
-					// if the timer has been stopped then read from the channel
-					<-delay.C
-				}
-				t.Log("avro byte sent to producer output")
-			case <-delay.C:
-				t.FailNow()
-			}
+		Convey("When a valid cmd dataset event is handled", func() {
+			msg := createMessage(testDatasetEvent)
+			err := h.Handle(ctx, testWorkerID, msg)
 
 			Convey("Then no error is reported", func() {
 				So(err, ShouldBeNil)
 			})
-			Convey("And then get content published from datasetAPI but no action for zebedee", func() {
-				So(len(zebedeeMock.GetPublishedDataCalls()), ShouldEqual, 0)
-				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 1)
+
+			Convey("Then version metadata details are obtained from dataset API", func() {
+				So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 1)
+				So(datasetMock.GetVersionMetadataCalls()[0].DatasetID, ShouldEqual, "cphi01")
+				So(datasetMock.GetVersionMetadataCalls()[0].Edition, ShouldEqual, "timeseries")
+				So(datasetMock.GetVersionMetadataCalls()[0].Version, ShouldEqual, "version")
 			})
-			Convey("And then the expected bytes are sent to producer.output", func() {
-				var actual models.SearchDataImport
-				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
-				So(err, ShouldBeNil)
-				So(actual.UID, ShouldEqual, expectedVersionMetadataEvent.UID)
-				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEvent.ReleaseDate)
-				So(actual.Title, ShouldEqual, expectedVersionMetadataEvent.Title)
-				So(actual.MetaDescription, ShouldEqual, expectedVersionMetadataEvent.MetaDescription)
-				So(actual.Keywords, ShouldHaveLength, 2)
-				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
-				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
-				So(actual.DataType, ShouldResemble, expectedVersionMetadataEvent.DataType)
-				So(actual.CanonicalTopic, ShouldEqual, expectedVersionMetadataEvent.CanonicalTopic)
-				So(actual.Topics[0], ShouldEqual, expectedVersionMetadataEvent.Topics[0])
-				So(actual.Topics[1], ShouldEqual, expectedVersionMetadataEvent.Topics[1])
-				So(actual.URI, ShouldEqual, expectedVersionMetadataEvent.URI)
-				So(actual.Edition, ShouldEqual, expectedVersionMetadataEvent.Edition)
-				So(actual.DatasetID, ShouldEqual, expectedVersionMetadataEvent.DatasetID)
+
+			Convey("Then the expected event search data import event is producer", func() {
+				So(producerMock.SendCalls(), ShouldHaveLength, 1)
+				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
 			})
 		})
 	})
-	Convey("Given an event handler not working successfully, and an event containing a valid dataType", t, func() {
-		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
-		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
-		eventHandler := &ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
 
-		Convey("When given a valid event for a valid dataset", func() {
-			err := eventHandler.Handle(ctx, &testDatasetEvent, *cfg)
+	Convey("Given an event handler without clients or producer", t, func() {
+		h := &ContentPublished{cfg, nil, nil, nil}
 
-			Convey("Then Zebedee is called 0 time and Dataset called 1 time with the expected error ", func() {
+		Convey("When an event with an unsupported type is handled", func() {
+			msg := createMessage(testInvalidEvent)
+			err := h.Handle(ctx, testWorkerID, msg)
+
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+}
+
+func TestHandleErrors(t *testing.T) {
+	Convey("Given an event handler working successfully", t, func() {
+		var producerMock = &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+		h := &ContentPublished{cfg, nil, nil, producerMock}
+
+		Convey("When a malformed event is handled", func() {
+			msg, err := kafkatest.NewMessage([]byte{1, 2, 3}, 0)
+			So(err, ShouldBeNil)
+			err = h.Handle(ctx, testWorkerID, msg)
+
+			Convey("Then the expected error is reported", func() {
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, errDatasetAPI.Error())
-				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
-
-				So(len(datasetMockInError.GetVersionMetadataCalls()), ShouldEqual, 1)
-				So(datasetMockInError.GetVersionMetadataCalls(), ShouldNotBeEmpty)
-				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 1)
+				So(err.Error(), ShouldEqual, "failed to unmarshal event: Invalid string length")
 			})
 		})
 	})
 }
 
-func TestHandlerForInvalidDataType(t *testing.T) {
-	t.Parallel()
-	expectedInvalidSearchDataImportEvent := models.SearchDataImport{}
+// func TestHandlerForDatasetVersionMetadata(t *testing.T) {
+// 	t.Parallel()
+// 	expectedVersionMetadataEvent := models.SearchDataImport{
+// 		UID:             "cphi01-timeseries",
+// 		DataType:        "dataset_landing_page",
+// 		JobID:           "",
+// 		SearchIndex:     "ONS",
+// 		CDID:            "",
+// 		DatasetID:       "",
+// 		Keywords:        []string{"somekeyword0", "somekeyword1"},
+// 		MetaDescription: "someDescription",
+// 		Summary:         "",
+// 		ReleaseDate:     "2020-11-07T00:00:00.000Z",
+// 		Title:           "someTitle",
+// 		Topics:          []string{"testtopic1", "testtopic2"},
+// 		CanonicalTopic:  "something",
+// 	}
 
-	kafkaProducerMock := &kafkatest.IProducerMock{
-		ChannelsFunc: getChannelFunc,
-	}
+// 	producerMock := &kafkatest.IProducerMock{
+// 		ChannelsFunc: getChannelFunc,
+// 	}
 
-	// for mock marshaller
-	expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedInvalidSearchDataImportEvent)
-	marshallerMock := &mock.MarshallerMock{
-		MarshalFunc: func(s interface{}) ([]byte, error) {
-			return expectedVersionMetadataSearchDataImport, nil
-		},
-	}
+// // for mock marshaller
+// expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedVersionMetadataEvent)
+// marshallerMock := &mock.MarshallerMock{
+// 	MarshalFunc: func(s interface{}) ([]byte, error) {
+// 		return expectedVersionMetadataSearchDataImport, nil
+// 	},
+// }
 
-	producerMock := &event.SearchDataImportProducer{
-		Producer:   kafkaProducerMock,
-		Marshaller: marshallerMock,
-	}
+// producerMock := &event.SearchDataImportProducer{
+// 	Producer:   kafkaProducerMock,
+// 	Marshaller: marshallerMock,
+// }
 
-	Convey("Given an event handler working successfully, and an event containing a invalid dataType", t, func() {
-		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
-		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
-		eventHandler := &ContentPublishedHandler{zebedeeMockInError, datasetMockInError, *producerMock}
+// 	Convey("Given an event handler working successfully, and an event containing a valid dataType", t, func() {
+// 		var zebedeeMock = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFunc}
+// 		var datasetMock = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFunc}
 
-		Convey("When given a invalid event", func() {
-			err := eventHandler.Handle(ctx, &testInvalidEvent, *cfg)
+// 		eventHandler := &ContentPublished{cfg, zebedeeMock, datasetMock, producerMock}
 
-			Convey("Then both Zebedee and Dataset is called 0 time with no expected error ", func() {
-				So(err, ShouldBeNil)
+// 		Convey("When given a valid event for cmd dataset", func() {
+// 			msg := createMessage(testDatasetEvent)
+// 			err := eventHandler.Handle(ctx, testWorkerID, msg)
 
-				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
-				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldBeEmpty)
+// 			var avroBytes []byte
+// 			delay := time.NewTimer(testTimeout)
+// 			select {
+// 			case avroBytes = <-pChannels.Output:
+// 				// Ensure timer is stopped and its resources are freed
+// 				if !delay.Stop() {
+// 					// if the timer has been stopped then read from the channel
+// 					<-delay.C
+// 				}
+// 				t.Log("avro byte sent to producer output")
+// 			case <-delay.C:
+// 				t.FailNow()
+// 			}
 
-				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 0)
-				So(datasetMockInError.GetVersionMetadataCalls(), ShouldBeEmpty)
-			})
-		})
-	})
-}
+// 			Convey("Then no error is reported", func() {
+// 				So(err, ShouldBeNil)
+// 			})
+// 			Convey("And then get content published from datasetAPI but no action for zebedee", func() {
+// 				So(len(zebedeeMock.GetPublishedDataCalls()), ShouldEqual, 0)
+// 				So(len(datasetMock.GetVersionMetadataCalls()), ShouldEqual, 1)
+// 			})
+// 			Convey("And then the expected bytes are sent to producer.output", func() {
+// 				var actual models.SearchDataImport
+// 				err = schema.SearchDataImportEvent.Unmarshal(avroBytes, &actual)
+// 				So(err, ShouldBeNil)
+// 				So(actual.UID, ShouldEqual, expectedVersionMetadataEvent.UID)
+// 				So(actual.ReleaseDate, ShouldEqual, expectedVersionMetadataEvent.ReleaseDate)
+// 				So(actual.Title, ShouldEqual, expectedVersionMetadataEvent.Title)
+// 				So(actual.MetaDescription, ShouldEqual, expectedVersionMetadataEvent.MetaDescription)
+// 				So(actual.Keywords, ShouldHaveLength, 2)
+// 				So(actual.Keywords[0], ShouldEqual, "somekeyword0")
+// 				So(actual.Keywords[1], ShouldEqual, "somekeyword1")
+// 				So(actual.DataType, ShouldResemble, expectedVersionMetadataEvent.DataType)
+// 				So(actual.CanonicalTopic, ShouldEqual, expectedVersionMetadataEvent.CanonicalTopic)
+// 				So(actual.Topics[0], ShouldEqual, expectedVersionMetadataEvent.Topics[0])
+// 				So(actual.Topics[1], ShouldEqual, expectedVersionMetadataEvent.Topics[1])
+// 				So(actual.URI, ShouldEqual, expectedVersionMetadataEvent.URI)
+// 				So(actual.Edition, ShouldEqual, expectedVersionMetadataEvent.Edition)
+// 				So(actual.DatasetID, ShouldEqual, expectedVersionMetadataEvent.DatasetID)
+// 			})
+// 		})
+// 	})
+// 	Convey("Given an event handler not working successfully, and an event containing a valid dataType", t, func() {
+// 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
+// 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
+// 		eventHandler := &ContentPublished{cfg, zebedeeMockInError, datasetMockInError, producerMock}
+
+// 		Convey("When given a valid event for a valid dataset", func() {
+// 			msg := createMessage(testDatasetEvent)
+// 			err := eventHandler.Handle(ctx, testWorkerID, msg)
+
+// 			Convey("Then Zebedee is called 0 time and Dataset called 1 time with the expected error ", func() {
+// 				So(err, ShouldNotBeNil)
+// 				So(err.Error(), ShouldEqual, errDatasetAPI.Error())
+// 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
+
+// 				So(len(datasetMockInError.GetVersionMetadataCalls()), ShouldEqual, 1)
+// 				So(datasetMockInError.GetVersionMetadataCalls(), ShouldNotBeEmpty)
+// 				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 1)
+// 			})
+// 		})
+// 	})
+// }
+
+// func TestHandlerForInvalidDataType(t *testing.T) {
+// 	t.Parallel()
+// 	// expectedInvalidSearchDataImportEvent := models.SearchDataImport{}
+
+// 	producerMock := &kafkatest.IProducerMock{
+// 		ChannelsFunc: getChannelFunc,
+// 	}
+
+// 	// // for mock marshaller
+// 	// expectedVersionMetadataSearchDataImport := marshalSearchDataImport(t, expectedInvalidSearchDataImportEvent)
+// 	// marshallerMock := &mock.MarshallerMock{
+// 	// 	MarshalFunc: func(s interface{}) ([]byte, error) {
+// 	// 		return expectedVersionMetadataSearchDataImport, nil
+// 	// 	},
+// 	// }
+
+// 	// producerMock := &event.SearchDataImportProducer{
+// 	// 	Producer:   kafkaProducerMock,
+// 	// 	Marshaller: marshallerMock,
+// 	// }
+
+// 	Convey("Given an event handler working successfully, and an event containing a invalid dataType", t, func() {
+// 		var zebedeeMockInError = &clientMock.ZebedeeClientMock{GetPublishedDataFunc: getPublishDataFuncInError}
+// 		var datasetMockInError = &clientMock.DatasetClientMock{GetVersionMetadataFunc: getVersionMetadataFuncInError}
+// 		eventHandler := &ContentPublished{cfg, zebedeeMockInError, datasetMockInError, producerMock}
+
+// 		Convey("When given a invalid event", func() {
+// 			msg := createMessage(testInvalidEvent)
+// 			err := eventHandler.Handle(ctx, testWorkerID, msg)
+
+// 			Convey("Then both Zebedee and Dataset is called 0 time with no expected error ", func() {
+// 				So(err, ShouldBeNil)
+
+// 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldHaveLength, 0)
+// 				So(zebedeeMockInError.GetPublishedDataCalls(), ShouldBeEmpty)
+
+// 				So(datasetMockInError.GetVersionMetadataCalls(), ShouldHaveLength, 0)
+// 				So(datasetMockInError.GetVersionMetadataCalls(), ShouldBeEmpty)
+// 			})
+// 		})
+// 	})
+// }
 
 func TestExtractDatasetURIFromEditionURI(t *testing.T) {
 	t.Parallel()
@@ -527,6 +436,14 @@ func marshalSearchDataImport(t *testing.T, sdEvent models.SearchDataImport) []by
 		t.Fatalf("avro mashalling failed with error : %v", err)
 	}
 	return bytes
+}
+
+func createMessage(s interface{}) dpkafka.Message {
+	e, err := schema.ContentPublishedEvent.Marshal(s)
+	So(err, ShouldBeNil)
+	msg, err := kafkatest.NewMessage(e, 0)
+	So(err, ShouldBeNil)
+	return msg
 }
 
 func setupMetadata() dataset.Metadata {

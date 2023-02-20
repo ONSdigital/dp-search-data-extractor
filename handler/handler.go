@@ -3,13 +3,15 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -19,32 +21,44 @@ const (
 	DatasetDataType = "datasets"
 )
 
-// ContentPublishedHandler struct to hold handle for config with zebedee, datasetAPI client and the producer
-type ContentPublishedHandler struct {
+// ContentPublished struct to hold handle for config with zebedee, datasetAPI client and the producer
+type ContentPublished struct {
+	Cfg        *config.Config
 	ZebedeeCli clients.ZebedeeClient
 	DatasetCli clients.DatasetClient
-	Producer   event.SearchDataImportProducer
+	Producer   kafka.IProducer
 }
 
-// Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) error {
-	logData := log.Data{
-		"event": cpEvent,
-	}
-	log.Info(ctx, "event handler called with event", logData)
+// Handle takes a single event and triages it according to its data type, which can be 'legacy' (zebedee) or 'datasets'
+// If the type is not correct, the message is ignored with just a log.
+func (h *ContentPublished) Handle(ctx context.Context, workerID int, msg kafka.Message) error {
+	e := &models.ContentPublished{}
+	s := schema.ContentPublishedEvent
 
-	switch cpEvent.DataType {
+	if err := s.Unmarshal(msg.GetData(), e); err != nil {
+		return &Error{
+			err: fmt.Errorf("failed to unmarshal event: %w", err),
+			logData: map[string]interface{}{
+				"msg_data": string(msg.GetData()),
+			},
+		}
+	}
+
+	logData := log.Data{"event": e}
+	log.Info(ctx, "event received", logData)
+
+	switch e.DataType {
 	case ZebedeeDataType:
-		if err := h.handleZebedeeType(ctx, cpEvent, cfg); err != nil {
+		if err := h.handleZebedeeType(ctx, e); err != nil {
 			return err
 		}
 	case DatasetDataType:
-		if err := h.handleDatasetDataType(ctx, cpEvent, cfg); err != nil {
+		if err := h.handleDatasetDataType(ctx, e); err != nil {
 			return err
 		}
 	default:
 		log.Info(ctx, "Invalid content data type received, no action")
-		return nil // TODO would this need to be an error?
+		return nil // No error returned, as we do not want the message to be re-tried
 	}
 
 	log.Info(ctx, "event successfully handled", logData)
@@ -102,3 +116,20 @@ func getIndexName(indexName string) string {
 
 	return OnsSearchIndex
 }
+
+// // ProduceExportCompleteEvent sends the final kafka message signifying the export complete
+// func (h *ContentPublished) ProduceExportCompleteEvent(e *event.ExportStart) error {
+// 	if err := h.Producer.Send(schema.SearchDataImportEvent, &models.SearchDataImport{
+// 		InstanceID:     e.InstanceID,
+// 		DatasetID:      e.DatasetID,
+// 		Edition:        e.Edition,
+// 		Version:        e.Version,
+// 		RowCount:       rowCount,
+// 		FileName:       fileName,
+// 		FilterOutputID: e.FilterOutputID,
+// 		Dimensions:     e.Dimensions,
+// 	}); err != nil {
+// 		return fmt.Errorf("error sending csv-created event: %w", err)
+// 	}
+// 	return nil
+// }

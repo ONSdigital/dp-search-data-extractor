@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-extractor/features/steps"
+	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
@@ -13,11 +15,27 @@ import (
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 type ComponentTest struct {
+	t *testing.T
+}
+
+func init() {
+	dplogs.Namespace = "dp-search-data-exporter"
 }
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-	testComponent := steps.NewComponent()
-	testComponent.RegisterSteps(ctx)
+	component := steps.NewComponent(f.t)
+
+	ctx.BeforeScenario(func(*godog.Scenario) {
+		if err := component.Reset(); err != nil {
+			log.Panicf("unable to initialise scenario: %s", err)
+		}
+	})
+
+	ctx.AfterScenario(func(*godog.Scenario, error) {
+		component.Close()
+	})
+
+	component.RegisterSteps(ctx)
 }
 
 func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {

@@ -18,6 +18,7 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/maxcnunes/httpfake v1.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/rdumont/assistdog v0.0.0-20201106100018-168b06230d14
 	github.com/smartystreets/goconvey v1.7.2
@@ -68,7 +69,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/maxcnunes/httpfake v1.2.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect

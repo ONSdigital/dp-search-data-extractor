@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
-	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -45,7 +45,7 @@ var PopulationTypes = map[string]string{
 }
 
 // handleDatasetDataType handles a kafka message corresponding to Dataset event type
-func (h *ContentPublishedHandler) handleDatasetDataType(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) error {
+func (h *ContentPublished) handleDatasetDataType(ctx context.Context, cpEvent *models.ContentPublished) error {
 	datasetID, edition, version, err := getIDsFromURI(cpEvent.URI)
 	if err != nil {
 		log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", err)
@@ -59,7 +59,7 @@ func (h *ContentPublishedHandler) handleDatasetDataType(ctx context.Context, cpE
 	}
 
 	// Make a call to DatasetAPI
-	datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
+	datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", h.Cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
 	if err != nil {
 		log.Error(ctx, "cannot get dataset published contents version %s from api", err)
 		return err
@@ -126,11 +126,17 @@ func (h *ContentPublishedHandler) handleDatasetDataType(ctx context.Context, cpE
 	datasetVersionMetadata.SearchIndex = getIndexName(cpEvent.SearchIndex)
 	datasetVersionMetadata.DataType = "dataset_landing_page"
 
-	// Marshall Avro and sending message
-	if sdImportErr := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); sdImportErr != nil {
-		log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr)
-		return sdImportErr
+	// // Marshall Avro and sending message
+	// if sdImportErr := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); sdImportErr != nil {
+	// 	log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr)
+	// 	return sdImportErr
+	// }
+
+	if err := h.Producer.Send(schema.SearchDataImportEvent, datasetVersionMetadata); err != nil {
+		log.Error(ctx, "error while attempting to send DatasetAPIImport event to producer", err)
+		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
+
 	return nil
 }
 

@@ -21,6 +21,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.GracefulShutdownTimeout, ShouldEqual, 5*time.Second)
 				So(cfg.HealthCheckInterval, ShouldEqual, 30*time.Second)
 				So(cfg.HealthCheckCriticalTimeout, ShouldEqual, 90*time.Second)
+				So(cfg.StopConsumingOnUnhealthy, ShouldBeTrue)
 				So(cfg.Kafka.ContentUpdatedGroup, ShouldEqual, "dp-search-data-extractor")
 				So(cfg.Kafka.ContentUpdatedTopic, ShouldEqual, "content-updated")
 				So(cfg.Kafka.ProducerTopic, ShouldEqual, "search-data-import")
