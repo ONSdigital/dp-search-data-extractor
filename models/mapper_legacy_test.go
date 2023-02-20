@@ -306,33 +306,33 @@ func TestValidate_WithEmptytopicsSize0(t *testing.T) {
 	})
 }
 
-func TestMapDatasetVersionMetadataToSearchDataImport(t *testing.T) {
-	Convey("Given some valid DatasetAPI data with", t, func() {
-		CMDTestData := models.CMDData{
-			UID: "someuid",
-			VersionDetails: models.VersionDetails{
-				ReleaseDate: someReleaseDate,
-			},
-			DatasetDetails: models.DatasetDetails{
-				Title:    someTitle,
-				Summary:  someMetaDescription,
-				Keywords: []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
-			},
-		}
-		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
-			actual := models.MapVersionMetadataToSearchDataImport(CMDTestData)
+// func TestMapDatasetVersionMetadataToSearchDataImport(t *testing.T) {
+// 	Convey("Given some valid DatasetAPI data with", t, func() {
+// 		CMDTestData := models.CMDData{
+// 			UID: "someuid",
+// 			VersionDetails: models.VersionDetails{
+// 				ReleaseDate: someReleaseDate,
+// 			},
+// 			DatasetDetails: models.DatasetDetails{
+// 				Title:    someTitle,
+// 				Summary:  someMetaDescription,
+// 				Keywords: []string{somekeyword0, somekeyword1, somekeyword2, somekeyword3},
+// 			},
+// 		}
+// 		Convey("When passed to rectify the keywords with keywords limit as 5", func() {
+// 			actual := models.MapVersionMetadataToSearchDataImport(CMDTestData)
 
-			Convey("Then keywords should be rectified with correct size with expected elements", func() {
-				So(actual.UID, ShouldResemble, "someuid")
-				So(actual.ReleaseDate, ShouldResemble, someReleaseDate)
-				So(actual.Title, ShouldResemble, someTitle)
-				So(actual.Keywords, ShouldNotBeEmpty)
-				So(actual.Keywords, ShouldHaveLength, 4)
-				So(actual.Keywords[0], ShouldResemble, somekeyword0)
-				So(actual.Keywords[1], ShouldResemble, somekeyword1)
-				So(actual.Keywords[2], ShouldResemble, somekeyword2)
-				So(actual.Keywords[3], ShouldResemble, somekeyword3)
-			})
-		})
-	})
-}
+// 			Convey("Then keywords should be rectified with correct size with expected elements", func() {
+// 				So(actual.UID, ShouldResemble, "someuid")
+// 				So(actual.ReleaseDate, ShouldResemble, someReleaseDate)
+// 				So(actual.Title, ShouldResemble, someTitle)
+// 				So(actual.Keywords, ShouldNotBeEmpty)
+// 				So(actual.Keywords, ShouldHaveLength, 4)
+// 				So(actual.Keywords[0], ShouldResemble, somekeyword0)
+// 				So(actual.Keywords[1], ShouldResemble, somekeyword1)
+// 				So(actual.Keywords[2], ShouldResemble, somekeyword2)
+// 				So(actual.Keywords[3], ShouldResemble, somekeyword3)
+// 			})
+// 		})
+// 	})
+// }

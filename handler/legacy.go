@@ -38,7 +38,8 @@ func (h *ContentPublishedHandler) handleZebedeeType(ctx context.Context, cpEvent
 		"keywordsLimit": cfg.KeywordsLimit,
 	}
 	log.Info(ctx, "zebedee data ", logData)
-	// Mapping Json to Avro
+
+	// Map data returned by Zebedee to the kafka Event structure
 	searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
 	searchData.TraceID = cpEvent.TraceID
 	searchData.JobID = cpEvent.JobID

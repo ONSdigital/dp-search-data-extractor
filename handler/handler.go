@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -43,8 +44,12 @@ func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.Co
 			return err
 		}
 	default:
-		log.Info(ctx, "Invalid content data type received, no action")
-		return nil // TODO would this need to be an error?
+		log.Warn(ctx,
+			"data type not handles by data extractor",
+			log.FormatErrors([]error{fmt.Errorf("unrecognised data type received")}),
+			log.Data{"data_type": cpEvent.DataType},
+		)
+		return nil
 	}
 
 	log.Info(ctx, "event successfully handled", logData)
