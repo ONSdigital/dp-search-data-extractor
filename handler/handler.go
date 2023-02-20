@@ -57,8 +57,12 @@ func (h *ContentPublished) Handle(ctx context.Context, workerID int, msg kafka.M
 			return err
 		}
 	default:
-		log.Info(ctx, "Invalid content data type received, no action")
-		return nil // No error returned, as we do not want the message to be re-tried
+		log.Warn(ctx,
+			"data type not handles by data extractor",
+			log.FormatErrors([]error{fmt.Errorf("unrecognised data type received")}),
+			log.Data{"data_type": e.DataType},
+		)
+		return nil
 	}
 
 	log.Info(ctx, "event successfully handled", logData)
@@ -116,20 +120,3 @@ func getIndexName(indexName string) string {
 
 	return OnsSearchIndex
 }
-
-// // ProduceExportCompleteEvent sends the final kafka message signifying the export complete
-// func (h *ContentPublished) ProduceExportCompleteEvent(e *event.ExportStart) error {
-// 	if err := h.Producer.Send(schema.SearchDataImportEvent, &models.SearchDataImport{
-// 		InstanceID:     e.InstanceID,
-// 		DatasetID:      e.DatasetID,
-// 		Edition:        e.Edition,
-// 		Version:        e.Version,
-// 		RowCount:       rowCount,
-// 		FileName:       fileName,
-// 		FilterOutputID: e.FilterOutputID,
-// 		Dimensions:     e.Dimensions,
-// 	}); err != nil {
-// 		return fmt.Errorf("error sending csv-created event: %w", err)
-// 	}
-// 	return nil
-// }

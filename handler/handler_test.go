@@ -164,7 +164,7 @@ func TestHandle(t *testing.T) {
 			Convey("Then the expected event search data import event is producer", func() {
 				So(producerMock.SendCalls(), ShouldHaveLength, 1)
 				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
-				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
+				So(producerMock.SendCalls()[0].Event, ShouldResemble, &expectedDatasetProducedEvent)
 			})
 		})
 	})
