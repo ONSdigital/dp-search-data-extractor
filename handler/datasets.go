@@ -29,7 +29,7 @@ func (h *ContentPublishedHandler) handleDatasetDataType(ctx context.Context, cpE
 		DatasetID:   datasetID,
 		TraceID:     cpEvent.TraceID,
 		JobID:       cpEvent.JobID,
-		SearchIndex: cpEvent.SearchIndex,
+		SearchIndex: getIndexName(cpEvent.SearchIndex),
 		DataType:    DefaultType,
 	}
 
