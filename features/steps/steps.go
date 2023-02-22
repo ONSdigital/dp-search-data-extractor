@@ -10,18 +10,22 @@ import (
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/google/go-cmp/cmp"
 	"github.com/rdumont/assistdog"
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^I send a kafka event to content published topic$`, c.sendKafkafkaEvent)
+	// ctx.Step(`^I send a kafka event to content published topic$`, c.sendKafkafkaEvent)
 	ctx.Step(`^the service starts`, c.theServiceStarts)
 	ctx.Step(`^dp-dataset-api is healthy`, c.datasetAPIIsHealthy)
 	ctx.Step(`^dp-dataset-api is unhealthy`, c.datasetAPIIsUnhealthy)
 	ctx.Step(`^zebedee is healthy`, c.zebedeeIsHealthy)
 	ctx.Step(`^zebedee is unhealthy`, c.zebedeeIsUnhealthy)
+	ctx.Step(`^the following published data for uri "([^"]*)" is available in zebedee$`, c.theFollowingZebedeeResponseIsAvailable)
+	ctx.Step(`^the following metadata with dataset-id "([^"]*)", edition "([^"]*)" and version "([^"]*)" is available in dp-dataset-api$`, c.theFollowingDatasetMetadataResponseIsAvailable)
+	ctx.Step(`^this content-updated event is queued, to be consumed$`, c.thisContentUpdatedEventIsQueued)
 	ctx.Step(`^no search-data-import events are produced`, c.noEventsAreProduced)
 	ctx.Step(`^I should receive a kafka event to search-data-import topic with the following fields$`, c.iShouldReceiveKafkaEvent)
 }
@@ -48,7 +52,7 @@ func (c *Component) datasetAPIIsUnhealthy() error {
 	const res = `{"status": "CRITICAL"}`
 	c.DatasetAPI.NewHandler().
 		Get("/health").
-		Reply(http.StatusInternalServerError).
+		Reply(http.StatusTooManyRequests).
 		BodyString(res)
 	return nil
 }
@@ -68,29 +72,29 @@ func (c *Component) zebedeeIsUnhealthy() error {
 	const res = `{"status": "CRITICAL"}`
 	c.Zebedee.NewHandler().
 		Get("/health").
-		Reply(http.StatusInternalServerError).
+		Reply(http.StatusTooManyRequests).
 		BodyString(res)
 	return nil
 }
 
 // theFollowingZebedeeResponseIsAvailable generate a mocked response for zebedee
-// GET /publisheddata/{uriString} with the provided response
-func (c *Component) theFollowingZebedeeResponseIsAvailable(uriString string, instance *godog.DocString) error {
-	c.DatasetAPI.NewHandler().
-		Get("/publisheddata/" + uriString).
+// GET /publisheddata?uri={uriString} with the provided response
+func (c *Component) theFollowingZebedeeResponseIsAvailable(uriString string, zebedeeData *godog.DocString) error {
+	c.Zebedee.NewHandler().
+		Get("/publisheddata?uri=" + uriString).
 		Reply(http.StatusOK).
-		BodyString(instance.Content)
+		BodyString(zebedeeData.Content)
 
 	return nil
 }
 
-// theFollowingDatasetMetadataIsAvailable generate a mocked response for dataset API
+// theFollowingDatasetMetadataResponseIsAvailable generate a mocked response for dataset API
 // GET /dataset/{id}/editions/{edition}/versions/{version}/metadata with the provided metadata response
-func (c *Component) theFollowingDatasetMetadataIsAvailable(id, edition, version string, instance *godog.DocString) error {
+func (c *Component) theFollowingDatasetMetadataResponseIsAvailable(id, edition, version string, metadata *godog.DocString) error {
 	c.DatasetAPI.NewHandler().
 		Get(fmt.Sprintf("/datasets/%s/editions/%s/versions/%s/metadata", id, edition, version)).
 		Reply(http.StatusOK).
-		BodyString(instance.Content).
+		BodyString(metadata.Content).
 		AddHeader("Etag", c.testETag)
 
 	return nil
@@ -108,6 +112,22 @@ func (c *Component) sendKafkafkaEvent(table *godog.Table) error {
 		}
 	}
 
+	return nil
+}
+
+// thisContentUpdatedEventIsQueued produces a new ContentPublished event with the contents defined by the input
+func (c *Component) thisContentUpdatedEventIsQueued(table *godog.Table) error {
+	testEvents, err := c.convertToKafkaEvents(table)
+	if err != nil {
+		return fmt.Errorf("error getting kafka events from table: %w", err)
+	}
+
+	log.Info(c.ctx, "event to send for testing: ", log.Data{
+		"event": testEvents[0],
+	})
+	if err := c.KafkaProducer.Send(schema.ContentPublishedEvent, testEvents[0]); err != nil {
+		return fmt.Errorf("failed to send event for testing: %w", err)
+	}
 	return nil
 }
 
