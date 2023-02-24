@@ -2,19 +2,15 @@ package main
 
 import (
 	"flag"
-	"io"
 	"log"
 	"os"
 	"testing"
 
-	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/features/steps"
 	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
-
-const componentLogFile = "component-output.txt"
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
@@ -50,31 +46,8 @@ func TestComponent(t *testing.T) {
 	if *componentFlag {
 		status := 0
 
-		cfg, err := config.Get()
-		if err != nil {
-			t.Fatalf("failed to get service config: %s", err)
-		}
-
-		var output io.Writer = os.Stdout
-
-		if cfg.ComponentTestUseLogFile {
-			logfile, err := os.Create(componentLogFile)
-			if err != nil {
-				t.Fatalf("could not create logs file: %s", err)
-			}
-
-			defer func() {
-				if err := logfile.Close(); err != nil {
-					t.Fatalf("failed to close logs file: %s", err)
-				}
-			}()
-			output = logfile
-
-			dplogs.SetDestination(logfile, nil)
-		}
-
 		var opts = godog.Options{
-			Output: colors.Colored(output),
+			Output: colors.Colored(os.Stdout),
 			Format: "pretty",
 			Paths:  flag.Args(),
 		}

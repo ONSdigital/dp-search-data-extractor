@@ -46,7 +46,11 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	searchData.JobID = cpEvent.JobID
 	searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
 
-	if err := h.Producer.Send(schema.SearchDataImportEvent, searchData); err != nil {
+	log.Info(ctx, "[DEBUG] rx", log.Data{"content_published": cpEvent})
+
+	log.Info(ctx, "[DEBUG] going to send", log.Data{"search_data": searchData})
+
+	if err := h.Producer.Send(schema.SearchDataImportEvent, &searchData); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}

@@ -81,9 +81,20 @@ func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
 	scanner.Scan()
 	uri := scanner.Text()
 
+	fmt.Println("Please type the dataset type (legacy or datasets)")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	dataType := scanner.Text()
+
+	fmt.Println("Please type the collection ID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	collectionID := scanner.Text()
+
 	return &models.ContentPublished{
-		URI:      uri,
-		DataType: "legacy",
-		TraceID:  "054435ded",
+		URI:          uri,
+		DataType:     dataType,
+		TraceID:      "054435ded",
+		CollectionID: collectionID,
 	}
 }
