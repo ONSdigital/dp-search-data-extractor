@@ -150,7 +150,7 @@ func (c *Component) thisSearchDataImportEventIsSent(table *godog.Table) error {
 	var got []*models.SearchDataImport
 
 	var e = &models.SearchDataImport{}
-	if err := c.KafkaProducer.ExpectMessage(schema.SearchDataImportEvent, e, c.waitEventTimeout); err != nil {
+	if err := c.KafkaProducer.WaitForMessageSent(schema.SearchDataImportEvent, e, c.waitEventTimeout); err != nil {
 		return fmt.Errorf("failed to expect sent message: %w", err)
 	}
 	got = append(got, e)

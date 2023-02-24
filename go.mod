@@ -2,16 +2,13 @@ module github.com/ONSdigital/dp-search-data-extractor
 
 go 1.19
 
-replace (
-	github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
-	github.com/ONSdigital/dp-kafka/v3 => ../dp-kafka
-)
+replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.228.0
 	github.com/ONSdigital/dp-component-test v0.7.0
 	github.com/ONSdigital/dp-healthcheck v1.5.0
-	github.com/ONSdigital/dp-kafka/v3 v3.8.1-0.20230220174335-8194185fbc41
+	github.com/ONSdigital/dp-kafka/v3 v3.8.1-0.20230224182617-45f9667dec1a
 	github.com/ONSdigital/dp-net v1.5.0
 	github.com/ONSdigital/log.go/v2 v2.3.0
 	github.com/cucumber/godog v0.12.5
