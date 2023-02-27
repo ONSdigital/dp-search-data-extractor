@@ -2,11 +2,9 @@ package steps
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -143,26 +141,10 @@ func (c *Component) thisSearchDataImportEventIsSent(eventDocstring *godog.DocStr
 	return c.ErrorFeature.StepError()
 }
 
-// noEventsAreProduced waits on the service's kafka producer output channel
+// noEventsAreProduced waits on the service's kafka producer
 // and validates that nothing is sent, within a time window of duration waitEventTimeout
 func (c *Component) noEventsAreProduced() error {
-	select {
-	case <-time.After(c.waitEventTimeout):
-		return nil
-	case <-c.svc.Producer.Channels().Closer:
-		return errors.New("closer channel closed")
-	case msg, ok := <-c.svc.Producer.Channels().Output:
-		if !ok {
-			return errors.New("output channel closed")
-		}
-
-		var e = &models.SearchDataImport{}
-		if err := schema.SearchDataImportEvent.Unmarshal(msg, e); err != nil {
-			return fmt.Errorf("error unmarshalling message: %w", err)
-		}
-
-		return fmt.Errorf("kafka event received in csv-created topic: %v", e)
-	}
+	return c.KafkaProducer.WaitNoMessageSent(c.waitEventTimeout)
 }
 
 // we are passing the string array as [xxxx,yyyy,zzz]
