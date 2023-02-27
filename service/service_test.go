@@ -31,28 +31,11 @@ var (
 		"DatasetAPI client": {},
 		"Kafka producer":    {},
 	}
-
 	errKafkaConsumer = errors.New("Kafka consumer error")
 	errKafkaProducer = errors.New("Kafka producer error")
 	errHealthcheck   = errors.New("healthCheck error")
 	errServer        = errors.New("HTTP Server error")
 	errAddCheck      = fmt.Errorf("healthcheck add check error")
-
-	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
-		return nil, errKafkaConsumer
-	}
-
-	funcDoGetKafkaProducerErr = func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
-		return nil, errKafkaProducer
-	}
-
-	funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-		return nil, errHealthcheck
-	}
-
-	funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
-		return nil
-	}
 )
 
 func TestNew(t *testing.T) {
@@ -64,7 +47,6 @@ func TestNew(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	Convey("Having a set of mocked dependencies", t, func() {
-
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
@@ -100,11 +82,11 @@ func TestInit(t *testing.T) {
 			return serverMock
 		}
 
-		datasetApiMock := &clientMock.DatasetClientMock{
+		datasetAPIMock := &clientMock.DatasetClientMock{
 			CheckerFunc: func(context.Context, *healthcheck.CheckState) error { return nil },
 		}
 		service.GetDatasetClient = func(cfg *config.Config) clients.DatasetClient {
-			return datasetApiMock
+			return datasetAPIMock
 		}
 
 		zebedeeMock := &clientMock.ZebedeeClientMock{
@@ -205,7 +187,6 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("Given that all dependencies are successfully initialised", func() {
-
 			Convey("Then service Init succeeds and all dependencies are initialised", func() {
 				err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
 				So(err, ShouldBeNil)
@@ -215,7 +196,7 @@ func TestInit(t *testing.T) {
 				So(svc.Consumer, ShouldResemble, consumerMock)
 				So(svc.Producer, ShouldResemble, producerMock)
 				So(svc.ZebedeeCli, ShouldResemble, zebedeeMock)
-				So(svc.DatasetCli, ShouldResemble, datasetApiMock)
+				So(svc.DatasetCli, ShouldResemble, datasetAPIMock)
 
 				Convey("Then all checks are registered", func() {
 					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 4)

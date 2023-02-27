@@ -20,7 +20,6 @@ type Config struct {
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
 	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
 	StopConsumingOnUnhealthy   bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
-	ComponentTestUseLogFile    bool          `envconfig:"COMPONENT_TEST_USE_LOG_FILE"`
 	Kafka                      *Kafka
 }
 
@@ -62,7 +61,6 @@ func Get() (*Config, error) {
 		DatasetAPIURL:              "http://localhost:22000",
 		ServiceAuthToken:           "",
 		StopConsumingOnUnhealthy:   true,
-		ComponentTestUseLogFile:    false,
 		Kafka: &Kafka{
 			ContentUpdatedGroup:       "dp-search-data-extractor",
 			ContentUpdatedTopic:       "content-updated",

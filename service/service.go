@@ -54,7 +54,8 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		DatasetCli: svc.DatasetCli,
 		Producer:   svc.Producer,
 	}
-	if err := svc.Consumer.RegisterHandler(ctx, h.Handle); err != nil {
+	err = svc.Consumer.RegisterHandler(ctx, h.Handle)
+	if err != nil {
 		return fmt.Errorf("could not register kafka handler: %w", err)
 	}
 

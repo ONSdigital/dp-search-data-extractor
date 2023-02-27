@@ -49,9 +49,4 @@ convey:
 
 .PHONY: test-component
 test-component:
-	go test -cover -coverpkg=github.com/ONSdigital/dp-search-data-extractor/... -component -race
-
-# .PHONY: test-component
-# test-component:
-# 	cd features/compose; MY_UID=$(MY_UID) MY_GID=$(MY_GID) docker-compose up --abort-on-container-exit
-# 	echo "please ignore error codes 0, like so: ERROR[xxxx] 0, as error code 0 means that there was no error"
+	go test -cover -race -coverpkg=github.com/ONSdigital/dp-search-data-extractor/... -component

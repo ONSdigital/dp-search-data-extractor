@@ -10,9 +10,9 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "type": "legacy",
       "description": {
         "data_type": "legacy",
-        "cdid": "123",
+        "cdid":      "123",
         "datasetId": "456",
-        "edition": "something"
+        "edition":   "something"
       }
     }
     """
@@ -23,5 +23,15 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       | some_uri           | legacy               |    123          |
 
     Then this search-data-import event is sent
-      | UID        | Edition   | DataType | SearchIndex | CDID | DatasetID | Keywords | Topics |
-      | something  | something | legacy   | ONS         | 123  | 456       |          |        |
+    """
+    {
+      "UID":         "something",
+      "Edition":     "something",
+      "DataType":    "legacy",
+      "SearchIndex": "ONS",
+      "CDID":        "123",
+      "DatasetID":   "456",
+      "Keywords":    [],
+      "Topics":      []
+    }
+    """

@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"log"
+	"fmt"
 	"os"
 	"testing"
 
@@ -18,28 +19,26 @@ type ComponentTest struct {
 	t *testing.T
 }
 
-func init() {
-	dplogs.Namespace = "dp-search-data-exporter"
-}
-
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	component := steps.NewComponent(f.t)
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
+	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		if err := component.Reset(); err != nil {
-			log.Panicf("unable to initialise scenario: %s", err)
+			return ctx, fmt.Errorf("unable to initialise scenario: %s", err)
 		}
+		return ctx, nil
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		component.Close()
+		return ctx, nil
 	})
 
 	component.RegisterSteps(ctx)
 }
 
 func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {
-
+	dplogs.Namespace = "dp-search-data-exporter"
 }
 
 func TestComponent(t *testing.T) {

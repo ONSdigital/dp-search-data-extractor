@@ -2,7 +2,10 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -57,4 +60,20 @@ func (h *ContentPublished) handleDatasetDataType(ctx context.Context, cpEvent *m
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
 	return nil
+}
+
+func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err error) {
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	s := strings.Split(parsedURL.Path, "/")
+	if len(s) < 7 {
+		return "", "", "", errors.New("not enough arguments in path for version metadata endpoint")
+	}
+	datasetID = s[2]
+	editionID = s[4]
+	versionID = s[6]
+	return
 }

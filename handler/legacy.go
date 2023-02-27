@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -46,14 +48,38 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	searchData.JobID = cpEvent.JobID
 	searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
 
-	log.Info(ctx, "[DEBUG] rx", log.Data{"content_published": cpEvent})
-
-	log.Info(ctx, "[DEBUG] going to send", log.Data{"search_data": searchData})
-
 	if err := h.Producer.Send(schema.SearchDataImportEvent, &searchData); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
 
 	return nil
+}
+
+func retrieveCorrectURI(uri string) (correctURI string, err error) {
+	correctURI = uri
+
+	// Remove edition segment of path from Zebedee dataset uri to
+	// enable retrieval of the dataset resource for edition
+	if strings.Contains(uri, DatasetDataType) {
+		correctURI, err = extractDatasetURI(uri)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return correctURI, nil
+}
+
+func extractDatasetURI(editionURI string) (string, error) {
+	parsedURI, err := url.Parse(editionURI)
+	if err != nil {
+		return "", err
+	}
+
+	slicedURI := strings.Split(parsedURI.Path, "/")
+	slicedURI = slicedURI[:len(slicedURI)-1]
+	datasetURI := strings.Join(slicedURI, "/")
+
+	return datasetURI, nil
 }

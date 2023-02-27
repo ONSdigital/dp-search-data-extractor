@@ -2,10 +2,7 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/url"
-	"strings"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
@@ -67,50 +64,6 @@ func (h *ContentPublished) Handle(ctx context.Context, workerID int, msg kafka.M
 
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
-}
-
-func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err error) {
-	parsedURL, err := url.Parse(uri)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	s := strings.Split(parsedURL.Path, "/")
-	if len(s) < 7 {
-		return "", "", "", errors.New("not enough arguments in path for version metadata endpoint")
-	}
-	datasetID = s[2]
-	editionID = s[4]
-	versionID = s[6]
-	return
-}
-
-func retrieveCorrectURI(uri string) (correctURI string, err error) {
-	correctURI = uri
-
-	// Remove edition segment of path from Zebedee dataset uri to
-	// enable retrieval of the dataset resource for edition
-	if strings.Contains(uri, DatasetDataType) {
-		correctURI, err = extractDatasetURI(uri)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return correctURI, nil
-}
-
-func extractDatasetURI(editionURI string) (string, error) {
-	parsedURI, err := url.Parse(editionURI)
-	if err != nil {
-		return "", err
-	}
-
-	slicedURI := strings.Split(parsedURI.Path, "/")
-	slicedURI = slicedURI[:len(slicedURI)-1]
-	datasetURI := strings.Join(slicedURI, "/")
-
-	return datasetURI, nil
 }
 
 func getIndexName(indexName string) string {

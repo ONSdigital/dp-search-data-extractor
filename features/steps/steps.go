@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	// ctx.Step(`^I send a kafka event to content published topic$`, c.sendKafkafkaEvent)
 	ctx.Step(`^the service starts`, c.theServiceStarts)
 	ctx.Step(`^dp-dataset-api is healthy`, c.datasetAPIIsHealthy)
 	ctx.Step(`^dp-dataset-api is unhealthy`, c.datasetAPIIsUnhealthy)
@@ -99,21 +99,6 @@ func (c *Component) theFollowingDatasetMetadataResponseIsAvailable(id, edition, 
 	return nil
 }
 
-// func (c *Component) sendKafkafkaEvent(table *godog.Table) error {
-// 	observationEvents, err := c.convertToKafkaEvents(table)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for _, e := range observationEvents {
-// 		if err := c.sendToConsumer(e); err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 // thisContentUpdatedEventIsQueued produces a new ContentPublished event with the contents defined by the input
 func (c *Component) thisContentUpdatedEventIsQueued(table *godog.Table) error {
 	assist := assistdog.NewDefault()
@@ -136,43 +121,19 @@ func (c *Component) thisContentUpdatedEventIsQueued(table *godog.Table) error {
 }
 
 // thisSearchDataImportEventIsSent checks that the provided event is produced and sent to kafka
-func (c *Component) thisSearchDataImportEventIsSent(table *godog.Table) error {
-	assist := assistdog.NewDefault()
-	assist.RegisterParser([]string{}, arrayParser)
-	r, err := assist.CreateSlice(new(models.SearchDataImport), table)
-	if err != nil {
-		return fmt.Errorf("failed to create slice from godog table: %w", err)
+func (c *Component) thisSearchDataImportEventIsSent(eventDocstring *godog.DocString) error {
+	event := &models.SearchDataImport{}
+	if err := json.Unmarshal([]byte(eventDocstring.Content), event); err != nil {
+		return fmt.Errorf("failed to unmarshal docstring to search data import event: %w", err)
 	}
-	expected := r.([]*models.SearchDataImport)
-
-	log.Info(c.ctx, "[DEBUG] expected set")
+	expected := []*models.SearchDataImport{event}
 
 	var got []*models.SearchDataImport
-
 	var e = &models.SearchDataImport{}
 	if err := c.KafkaProducer.WaitForMessageSent(schema.SearchDataImportEvent, e, c.waitEventTimeout); err != nil {
 		return fmt.Errorf("failed to expect sent message: %w", err)
 	}
 	got = append(got, e)
-
-	log.Info(c.ctx, "[DEBUG] got", log.Data{"got": got})
-
-	// select {
-	// case <-time.After(c.waitEventTimeout):
-	// 	return errors.New("timeout while waiting for kafka message being produced")
-	// case <-c.svc.Producer.Channels().Closer:
-	// 	return errors.New("closer channel closed")
-	// case msg, ok := <-c.svc.Producer.Channels().Output:
-	// 	if !ok {
-	// 		return errors.New("upstream channel closed")
-	// 	}
-
-	// 	var e = &models.SearchDataImport{}
-	// 	if err := schema.SearchDataImportEvent.Unmarshal(msg, e); err != nil {
-	// 		return fmt.Errorf("error unmarshalling message: %w", err)
-	// 	}
-	// 	got = append(got, e)
-	// }
 
 	if diff := cmp.Diff(got, expected); diff != "" {
 		//nolint
@@ -203,137 +164,6 @@ func (c *Component) noEventsAreProduced() error {
 		return fmt.Errorf("kafka event received in csv-created topic: %v", e)
 	}
 }
-
-// func (c *Component) processKafkaEvent() error {
-// 	c.inputData = models.ZebedeeData{
-// 		DataType: "legacy",
-// 		Description: models.Description{
-// 			CDID:      "123",
-// 			DatasetID: "456",
-// 			Edition:   "something",
-// 		},
-// 	}
-
-// 	marshelledData, err := json.Marshal(&c.inputData)
-// 	if err != nil {
-// 		return fmt.Errorf("error marshalling input data")
-// 	}
-// 	c.zebedeeClient = &zClientMock.ZebedeeClientMock{
-// 		CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error { return nil },
-// 		GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
-// 			return marshelledData, nil
-// 		},
-// 	}
-
-// 	datasetAPIJSONResponse := dataset.Metadata{
-// 		Version: dataset.Version{
-// 			ReleaseDate: "releasedate",
-// 		},
-// 		DatasetDetails: dataset.DatasetDetails{
-// 			Title:       "title",
-// 			Description: "description",
-// 			Keywords:    &[]string{"keyword1", "keyword2"},
-// 		},
-// 	}
-// 	c.datasetClient = &zClientMock.DatasetClientMock{
-// 		CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error { return nil },
-// 		GetVersionMetadataFunc: func(ctx context.Context, userAuthToken, serviceAuthToken, collectionId, datasetId, edition, version string) (dataset.Metadata, error) {
-// 			return datasetAPIJSONResponse, nil
-// 		},
-// 	}
-// 	// run application in separate goroutine
-// 	go func() {
-// 		c.svc, err = service.Run(context.Background(), c.serviceList, "", "", "", c.errorChan)
-// 	}()
-
-// 	signals := registerInterrupt()
-
-// 	// kill application
-// 	signals <- os.Interrupt
-
-// 	return err
-// }
-
-// func (c *Component) iShouldReceiveKafkaEvent(events *godog.Table) error {
-// 	assist := assistdog.NewDefault()
-// 	assist.RegisterParser([]string{}, arrayParser)
-// 	expected, err := assist.CreateSlice(new(models.SearchDataImport), events)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to create slice from godog table: %w", err)
-// 	}
-
-// 	var got []*models.SearchDataImport
-
-// 	select {
-// 	case <-time.After(c.waitEventTimeout):
-// 		return errors.New("timeout while waiting for kafka message being produced")
-// 	case <-c.svc.Producer.Channels().Closer:
-// 		return errors.New("closer channel closed")
-// 	case msg, ok := <-c.svc.Producer.Channels().Output:
-// 		if !ok {
-// 			return errors.New("upstream channel closed")
-// 		}
-
-// 		var e = &models.SearchDataImport{}
-// 		if err := schema.SearchDataImportEvent.Unmarshal(msg, e); err != nil {
-// 			return fmt.Errorf("error unmarshalling message: %w", err)
-// 		}
-// 		got = append(got, e)
-// 	}
-
-// 	if diff := cmp.Diff(got, expected); diff != "" {
-// 		//nolint
-// 		return fmt.Errorf("-got +expected)\n%s\n", diff)
-// 	}
-// 	return c.ErrorFeature.StepError()
-// }
-
-// noEventsAreProduced waits on the service's kafka producer output channel
-// and validates that nothing is sent, within a time window of duration waitEventTimeout
-// func (c *Component) noEventsAreProduced() error {
-// 	select {
-// 	case <-time.After(c.waitEventTimeout):
-// 		return nil
-// 	case <-c.svc.Producer.Channels().Closer:
-// 		return errors.New("closer channel closed")
-// 	case msg, ok := <-c.svc.Producer.Channels().Output:
-// 		if !ok {
-// 			return errors.New("output channel closed")
-// 		}
-
-// 		var e = &models.SearchDataImport{}
-// 		if err := schema.SearchDataImportEvent.Unmarshal(msg, e); err != nil {
-// 			return fmt.Errorf("error unmarshalling message: %w", err)
-// 		}
-
-// 		return fmt.Errorf("kafka event received in csv-created topic: %v", e)
-// 	}
-// }
-
-// func (c *Component) convertToKafkaEvents(table *godog.Table) ([]*models.ContentPublished, error) {
-// 	assist := assistdog.NewDefault()
-// 	assist.RegisterParser([]string{}, arrayParser)
-// 	events, err := assist.CreateSlice(&models.ContentPublished{}, table)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return events.([]*models.ContentPublished), nil
-// }
-
-// func (c *Component) sendToConsumer(e *models.ContentPublished) error {
-// 	bytes, err := schema.ContentPublishedEvent.Marshal(e)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to marshal event: %w", err)
-// 	}
-
-// 	msg, err := kafkatest.NewMessage(bytes, 0)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to create kafka message: %w", err)
-// 	}
-
-// 	c.svc.Consumer.Channels().Upstream <- msg
-// 	return nil
-// }
 
 // we are passing the string array as [xxxx,yyyy,zzz]
 // this is required to support array being used in kafka messages
