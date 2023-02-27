@@ -125,6 +125,7 @@ func (svc *Service) Close(ctx context.Context) error {
 		// If kafka consumer exists, stop listening to it.
 		// This will automatically stop the event consumer loops and no more messages will be processed.
 		// The kafka consumer will be closed after the service shuts down.
+		//nolint
 		if svc.Consumer != nil {
 			log.Info(ctx, "stopping kafka consumer listener...")
 			if err := svc.Consumer.StopAndWait(); err != nil {
@@ -147,6 +148,7 @@ func (svc *Service) Close(ctx context.Context) error {
 		}
 
 		// If kafka producer exists, close it.
+		//nolint
 		if svc.Producer != nil {
 			log.Info(ctx, "closing kafka producer")
 			if err := svc.Producer.Close(ctx); err != nil {
@@ -158,6 +160,7 @@ func (svc *Service) Close(ctx context.Context) error {
 		}
 
 		// If kafka consumer exists, close it.
+		//nolint
 		if svc.Consumer != nil {
 			log.Info(ctx, "closing kafka consumer")
 			if err := svc.Consumer.Close(ctx); err != nil {
