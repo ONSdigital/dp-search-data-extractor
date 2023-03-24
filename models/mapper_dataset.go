@@ -81,7 +81,6 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 		return // Dataset type is not Cantabular
 	}
 
-	s.DataType = t
 	log.Info(ctx, "identified dataset with cantabular type", log.Data{
 		"type":           t,
 		"num_dimensions": len(metadata.Dimensions)},

@@ -154,14 +154,15 @@ func TestPopulateCantabularFields(t *testing.T) {
 
 		Convey("When PopulateCantabularFields is called on a valid search data import struct", func() {
 			s := &models.SearchDataImport{
-				Summary: testSummary,
+				Summary:  testSummary,
+				DataType: "dataset_landing_page",
 			}
 			s.PopulateCantabularFields(ctx, metadata)
 
 			Convey("Then only the non-area-type dimensions are populated, with the expected values", func() {
 				So(*s, ShouldResemble, models.SearchDataImport{
 					Summary:  testSummary,
-					DataType: "cantabular_flexible_table",
+					DataType: "dataset_landing_page",
 					Dimensions: []models.Dimension{
 						{Name: "dim1", RawLabel: "label 1 (10 categories)", Label: "label 1"},
 						{Name: "dim2", RawLabel: "label 2 (12 Categories)", Label: "label 2"},
@@ -184,14 +185,15 @@ func TestPopulateCantabularFields(t *testing.T) {
 
 		Convey("When PopulateCantabularFields is called on a valid search data import struct", func() {
 			s := &models.SearchDataImport{
-				Summary: testSummary,
+				Summary:  testSummary,
+				DataType: "dataset_landing_page",
 			}
 			s.PopulateCantabularFields(ctx, metadata)
 
 			Convey("Then the expected population type fields are populated", func() {
 				So(*s, ShouldResemble, models.SearchDataImport{
 					Summary:    testSummary,
-					DataType:   "cantabular_flexible_table",
+					DataType:   "dataset_landing_page",
 					Dimensions: []models.Dimension{},
 					PopulationType: models.PopulationType{
 						Name:  "UR_HH",

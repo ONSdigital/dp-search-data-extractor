@@ -34,7 +34,7 @@ func main() {
 		KafkaVersion:    &cfg.Kafka.Version,
 		MaxMessageBytes: &cfg.Kafka.MaxBytes,
 	}
-	if cfg.Kafka.SecProtocol == config.KafkaTLSProtocolFlag {
+	if cfg.Kafka.SecProtocol == config.KafkaTLSProtocol {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(
 			cfg.Kafka.SecCACerts,
 			cfg.Kafka.SecClientCert,

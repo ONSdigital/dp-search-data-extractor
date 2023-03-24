@@ -63,7 +63,7 @@ var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.ICons
 		KafkaVersion:      &cfg.Version,
 		Offset:            &kafkaOffset,
 	}
-	if cfg.SecProtocol == config.KafkaTLSProtocolFlag {
+	if cfg.SecProtocol == config.KafkaTLSProtocol {
 		cgConfig.SecurityConfig = kafka.GetSecurityConfig(
 			cfg.SecCACerts,
 			cfg.SecClientCert,
@@ -86,7 +86,7 @@ var GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka) (kafka.IProd
 		KafkaVersion:      &cfg.Version,
 		MaxMessageBytes:   &cfg.MaxBytes,
 	}
-	if cfg.SecProtocol == config.KafkaTLSProtocolFlag {
+	if cfg.SecProtocol == config.KafkaTLSProtocol {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(
 			cfg.SecCACerts,
 			cfg.SecClientCert,

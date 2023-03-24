@@ -68,7 +68,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       {
         "UID":         "my-cantabular-dataset-my-edition",
         "Edition":     "my-edition",
-        "DataType":    "cantabular_flexible_table",
+        "DataType":    "dataset_landing_page",
         "SearchIndex": "ONS",
         "DatasetID":   "my-cantabular-dataset",
         "Keywords":    [ "keyword1", "keyword2" ],

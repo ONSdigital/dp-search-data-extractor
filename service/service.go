@@ -136,7 +136,7 @@ func (svc *Service) Close(ctx context.Context) error {
 			}
 		}
 
-		// stop any incoming requests before closing any outbound connections
+		// Shutdown the HTTP server
 		if svc.Server != nil {
 			log.Info(ctx, "shutting http server down...")
 			if err := svc.Server.Shutdown(ctx); err != nil {

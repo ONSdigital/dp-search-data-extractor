@@ -157,7 +157,7 @@ func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (ka
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create kafkatest consume: %w", err)
+		return nil, fmt.Errorf("failed to create kafkatest consumer: %w", err)
 	}
 	return c.KafkaConsumer.Mock, nil
 }
