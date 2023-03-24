@@ -13,6 +13,8 @@ import (
 
 const regexCleanDimensionLabel = `(\(\d+ (([Cc])ategories|([Cc])ategory)\))`
 
+const aggSep = "###"
+
 // CantabularTypes are dataset types corresponding to Cantabular datasets
 var CantabularTypes = map[string]struct{}{
 	"cantabular_flexible_table":     {},
@@ -94,10 +96,12 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 		if dim.IsAreaType != nil && *dim.IsAreaType {
 			continue
 		}
+		label := cleanDimensionLabel(dim.Label)
 		s.Dimensions = append(s.Dimensions, Dimension{
 			Name:     dim.ID,
 			RawLabel: dim.Label,
-			Label:    cleanDimensionLabel(dim.Label),
+			Label:    label,
+			AggKey:   aggregationKey(ctx, dim.ID, label),
 		})
 	}
 
@@ -111,8 +115,9 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 		)
 	}
 	s.PopulationType = PopulationType{
-		Name:  metadata.DatasetDetails.IsBasedOn.ID,
-		Label: popTypeLabel,
+		Name:   metadata.DatasetDetails.IsBasedOn.ID,
+		Label:  popTypeLabel,
+		AggKey: aggregationKey(ctx, metadata.DatasetDetails.IsBasedOn.ID, popTypeLabel),
 	}
 }
 
@@ -135,4 +140,20 @@ func GetURI(metadata *dataset.Metadata) string {
 		return metadata.DatasetDetails.Links.Version.URL
 	}
 	return metadata.Version.Links.Version.URL
+}
+
+// aggregationKey generates an aggregation key from the provided name (unique ID) and label (human friendly string)
+func aggregationKey(ctx context.Context, name, label string) string {
+	if name == "" && label == "" {
+		return ""
+	}
+
+	if strings.Contains(name, aggSep) {
+		log.Warn(ctx, "found aggregation key separator in name", log.Data{"name": name, "separator": aggSep})
+	}
+	if strings.Contains(label, aggSep) {
+		log.Warn(ctx, "found aggregation key separator in label", log.Data{"label": label, "separator": aggSep})
+	}
+
+	return fmt.Sprintf("%s%s%s", name, aggSep, label)
 }
