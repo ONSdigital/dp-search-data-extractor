@@ -1,31 +1,29 @@
 dp-search-data-extractor
 ================
+
 Service to retrieve published data to be used to update a search index
-This service calls /publisheddata endpoint on zebedee.
+This service calls /publisheddata endpoint on [zebedee](https://github.com/ONSdigital/zebedee) and metadata endpoint on [dataset API](https://github.com/ONSdigital/dp-dataset-api).
 
-This service listens to the "content-published" kafka topic for events of type contentPublishedEvent e.g. 
-"data": {
-  "contentPublishedEvent": {
-  "CollectionID": "",
-  "DataType": "",
-  "URI": "businessindustryandtrade"
-  }
-}
+This service listens to the "content-updated" kafka topic for events of type contentUpdatedEvent e.g. 
+see [schemas](schema) package.
 
-This service takes the URI, from the consumed event, and calls /publisheddata endpoint on zebedee. It passes in the URI as a path parameter e.g.
-http://localhost:8082/publisheddata?uri=businessindustryandtrade
-This service then logs whether Zebedee has retrieved the data successfully.
+This service takes the uri, from the consumed event, and either calls ... 
+1. ... /publisheddata endpoint on zebedee. It passes in the URI as a path parameter e.g.
+  http://localhost:8082/publisheddata?uri=businessindustryandtrade
+1. ... /datasets/<id>/editions/<edition>/versions/<version>/metadata endpoint on dataset API, e.g.
+  http://localhost:22000/datasets/CPIH01/editions/timeseries/versions/1/metadata
+
+See [search service architecture docs here](https://github.com/ONSdigital/dp-search-api/tree/develop/architecture#search-service-architecture)
 
 ###  healthcheck
 
         make debug and then 
         check http://localhost:25800/health
 
-**TODO** : we are simply writing the retrieved content to a file for now but in future this will be passed on to another service via an as yet unwritten kafka producer.
-
 ### Getting started
 
 * Run `make debug`
+* Run `make help` to see full list of make targets
 
 The service runs in the background consuming messages from Kafka.
 An example event can be created using the helper script, `make produce`.
@@ -43,6 +41,7 @@ An example event can be created using the helper script, `make produce`.
 | Environment variable           | Default                  | Description
 | ----------------------------   | -------------------------| -----------
 | BIND_ADDR                      | localhost:25800          | The host and port to bind to
+| DATASET_API_URL                | `http://localhost:22000` | The URL for the DatasetAPI
 | GRACEFUL_SHUTDOWN_TIMEOUT      | 5s                       | The graceful shutdown timeout in seconds (`time.Duration` format)
 | HEALTHCHECK_INTERVAL           | 30s                      | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_CRITICAL_TIMEOUT   | 90s                      | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
@@ -57,11 +56,10 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_SEC_SKIP_VERIFY          | false                    | ignore server certificate issues if set to `true` [[1]](#notes_1)
 | KAFKA_CONTENT_UPDATED_GROUP    | dp-search-data-extractor | The consumer group this application to consume content-updated messages
 | KAFKA_CONTENT_UPDATED_TOPIC    | content-updated          | The name of the topic to consume messages from
-| ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
 | KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
-| DATASET_API_URL                | `http://localhost:22000` | The URL for the DatasetAPI
-| SERVICE_AUTH_TOKEN             | ""                       | The user auth token for the DatasetAPI
-
+| SERVICE_AUTH_TOKEN             | _unset_                  | The user auth token for the DatasetAPI
+| STOP_CONSUMING_ON_UNHEALTHY    | true                     | Application stops consuming kafka messages if application is in unhealthy state
+| ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
 
 **Notes:**
 

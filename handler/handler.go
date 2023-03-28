@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	OnsSearchIndex  = "ONS"
+	OnsSearchIndex  = "ons"
 	ZebedeeDataType = "legacy"
 	DatasetDataType = "datasets"
 )

@@ -28,7 +28,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "UID":         "something",
       "Edition":     "something",
       "DataType":    "legacy",
-      "SearchIndex": "ONS",
+      "SearchIndex": "ons",
       "CDID":        "123",
       "DatasetID":   "456",
       "Keywords":    [],
