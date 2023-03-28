@@ -23,6 +23,7 @@ See [search service architecture docs here](https://github.com/ONSdigital/dp-sea
 ### Getting started
 
 * Run `make debug`
+* Run `make help` to see full list of make targets
 
 The service runs in the background consuming messages from Kafka.
 An example event can be created using the helper script, `make produce`.
