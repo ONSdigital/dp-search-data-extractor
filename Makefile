@@ -32,12 +32,12 @@ delimiter-%:
 	@echo '===================${GREEN} $* ${RESET}==================='
 
 .PHONY: debug
-debug: ## Used to run code locally in debug mode
+debug: ## Used to build and run code locally in debug mode
 	go build -tags 'debug' $(LDFLAGS) -o $(BINPATH)/dp-search-data-extractor
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-search-data-extractor
 
 .PHONY: debug-run
-debug-run: ## Used to build and run code locally in debug mode
+debug-run: ## Used to run code locally in debug mode
 	HUMAN_LOG=1 DEBUG=1 go run -tags 'debug' -race $(LDFLAGS) main.go
 
 .PHONY: fmt

@@ -57,7 +57,7 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_CONTENT_UPDATED_GROUP    | dp-search-data-extractor | The consumer group this application to consume content-updated messages
 | KAFKA_CONTENT_UPDATED_TOPIC    | content-updated          | The name of the topic to consume messages from
 | KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
-| SERVICE_AUTH_TOKEN             | ""                       | The user auth token for the DatasetAPI
+| SERVICE_AUTH_TOKEN             | _unset_                  | The user auth token for the DatasetAPI
 | STOP_CONSUMING_ON_UNHEALTHY    | true                     | Application stops consuming kafka messages if application is in unhealthy state
 | ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
 
