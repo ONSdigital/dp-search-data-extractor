@@ -59,7 +59,7 @@ func TestHandle(t *testing.T) {
 		UID:         "testedition",
 		Edition:     "testedition",
 		DataType:    "testDataType",
-		SearchIndex: "ONS",
+		SearchIndex: "ons",
 		CDID:        "testCDID",
 		Keywords:    []string{},
 	}
@@ -68,7 +68,7 @@ func TestHandle(t *testing.T) {
 		UID:            "cphi01-timeseries",
 		Edition:        "timeseries",
 		DataType:       "dataset_landing_page",
-		SearchIndex:    "ONS",
+		SearchIndex:    "ons",
 		DatasetID:      "cphi01",
 		Keywords:       []string{"keyword_1", "keyword_2"},
 		ReleaseDate:    "release date",
