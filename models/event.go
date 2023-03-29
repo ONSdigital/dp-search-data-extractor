@@ -35,10 +35,29 @@ type SearchDataImport struct {
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`
+	PopulationType  PopulationType       `avro:"population_type"`
+	Dimensions      []Dimension          `avro:"dimensions"`
 }
 
 // ReleaseDateChange represent a date change of a release
 type ReleaseDateDetails struct {
 	ChangeNotice string `avro:"change_notice"`
 	Date         string `avro:"previous_date"`
+}
+
+// Dimension represents the required information for each dataset dimension: name (unique ID) and label
+// and an aggregation key which combines name and label
+type Dimension struct {
+	Name     string `avro:"name"`
+	RawLabel string `avro:"raw_label"`
+	Label    string `avro:"label"`
+	AggKey   string `avro:"agg_key"`
+}
+
+// PopulationType represents the population type name (unique ID) and label
+// and an aggregation key which combines name and label
+type PopulationType struct {
+	Name   string `avro:"name"`
+	Label  string `avro:"label"`
+	AggKey string `avro:"agg_key"`
 }

@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"github.com/ONSdigital/dp-kafka/v2/avro"
+	"github.com/ONSdigital/dp-kafka/v3/avro"
 )
 
 var contentUpdated = `{
@@ -48,13 +48,31 @@ var searchDataImport = `{
     {"name": "survey",   "type": "string", "default": ""},
     {"name": "canonical_topic",   "type": "string", "default": ""},
     {"name": "date_changes", "type": {"type":"array","items":{
-     "name": "ReleaseDateDetails",
-     "type" : "record",
-     "fields" : [
-      {"name": "change_notice", "type": "string", "default": ""},
-      {"name": "previous_date", "type": "string", "default": ""}
-    ]}}},
-    {"name": "provisional_date", "type": "string", "default": ""}
+      "name": "ReleaseDateDetails",
+      "type" : "record",
+      "fields" : [
+        {"name": "change_notice", "type": "string", "default": ""},
+        {"name": "previous_date", "type": "string", "default": ""}
+      ]
+    }}},
+    {"name": "provisional_date", "type": "string", "default": ""},
+    {"name": "dimensions", "type": {"type": "array", "items": {
+      "name": "Dimension",
+      "type" : "record",
+      "fields": [
+        { "name": "name", "type": "string", "default": "" },
+        { "name": "raw_label", "type": "string", "default": "" },
+        { "name": "label", "type": "string", "default": "" },
+        { "name": "agg_key", "type": "string", "default": "" }
+      ]
+    }}},
+    {"name": "population_type", "type": {
+      "name": "PopulationType", "type": "record", "fields": [
+        { "name": "name", "type": "string", "default": ""},
+        { "name": "label", "type": "string", "default": ""},
+        { "name": "agg_key", "type": "string", "default": "" }
+      ]
+    }}
   ]
 }`
 

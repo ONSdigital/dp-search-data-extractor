@@ -10,36 +10,31 @@ import (
 	"sync"
 )
 
-var (
-	lockZebedeeClientMockChecker          sync.RWMutex
-	lockZebedeeClientMockGetPublishedData sync.RWMutex
-)
-
-// Ensure, that ZebedeeClientMock does implement ZebedeeClient.
+// Ensure, that ZebedeeClientMock does implement clients.ZebedeeClient.
 // If this is not the case, regenerate this file with moq.
 var _ clients.ZebedeeClient = &ZebedeeClientMock{}
 
 // ZebedeeClientMock is a mock implementation of clients.ZebedeeClient.
 //
-//     func TestSomethingThatUsesZebedeeClient(t *testing.T) {
+//	func TestSomethingThatUsesZebedeeClient(t *testing.T) {
 //
-//         // make and configure a mocked clients.ZebedeeClient
-//         mockedZebedeeClient := &ZebedeeClientMock{
-//             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
-// 	               panic("mock out the Checker method")
-//             },
-//             GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
-// 	               panic("mock out the GetPublishedData method")
-//             },
-//         }
+//		// make and configure a mocked clients.ZebedeeClient
+//		mockedZebedeeClient := &ZebedeeClientMock{
+//			CheckerFunc: func(contextMoqParam context.Context, checkState *healthcheck.CheckState) error {
+//				panic("mock out the Checker method")
+//			},
+//			GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
+//				panic("mock out the GetPublishedData method")
+//			},
+//		}
 //
-//         // use mockedZebedeeClient in code that requires clients.ZebedeeClient
-//         // and then make assertions.
+//		// use mockedZebedeeClient in code that requires clients.ZebedeeClient
+//		// and then make assertions.
 //
-//     }
+//	}
 type ZebedeeClientMock struct {
 	// CheckerFunc mocks the Checker method.
-	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
+	CheckerFunc func(contextMoqParam context.Context, checkState *healthcheck.CheckState) error
 
 	// GetPublishedDataFunc mocks the GetPublishedData method.
 	GetPublishedDataFunc func(ctx context.Context, uriString string) ([]byte, error)
@@ -48,10 +43,10 @@ type ZebedeeClientMock struct {
 	calls struct {
 		// Checker holds details about calls to the Checker method.
 		Checker []struct {
-			// In1 is the in1 argument value.
-			In1 context.Context
-			// In2 is the in2 argument value.
-			In2 *healthcheck.CheckState
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+			// CheckState is the checkState argument value.
+			CheckState *healthcheck.CheckState
 		}
 		// GetPublishedData holds details about calls to the GetPublishedData method.
 		GetPublishedData []struct {
@@ -61,40 +56,43 @@ type ZebedeeClientMock struct {
 			UriString string
 		}
 	}
+	lockChecker          sync.RWMutex
+	lockGetPublishedData sync.RWMutex
 }
 
 // Checker calls CheckerFunc.
-func (mock *ZebedeeClientMock) Checker(in1 context.Context, in2 *healthcheck.CheckState) error {
+func (mock *ZebedeeClientMock) Checker(contextMoqParam context.Context, checkState *healthcheck.CheckState) error {
 	if mock.CheckerFunc == nil {
 		panic("ZebedeeClientMock.CheckerFunc: method is nil but ZebedeeClient.Checker was just called")
 	}
 	callInfo := struct {
-		In1 context.Context
-		In2 *healthcheck.CheckState
+		ContextMoqParam context.Context
+		CheckState      *healthcheck.CheckState
 	}{
-		In1: in1,
-		In2: in2,
+		ContextMoqParam: contextMoqParam,
+		CheckState:      checkState,
 	}
-	lockZebedeeClientMockChecker.Lock()
+	mock.lockChecker.Lock()
 	mock.calls.Checker = append(mock.calls.Checker, callInfo)
-	lockZebedeeClientMockChecker.Unlock()
-	return mock.CheckerFunc(in1, in2)
+	mock.lockChecker.Unlock()
+	return mock.CheckerFunc(contextMoqParam, checkState)
 }
 
 // CheckerCalls gets all the calls that were made to Checker.
 // Check the length with:
-//     len(mockedZebedeeClient.CheckerCalls())
+//
+//	len(mockedZebedeeClient.CheckerCalls())
 func (mock *ZebedeeClientMock) CheckerCalls() []struct {
-	In1 context.Context
-	In2 *healthcheck.CheckState
+	ContextMoqParam context.Context
+	CheckState      *healthcheck.CheckState
 } {
 	var calls []struct {
-		In1 context.Context
-		In2 *healthcheck.CheckState
+		ContextMoqParam context.Context
+		CheckState      *healthcheck.CheckState
 	}
-	lockZebedeeClientMockChecker.RLock()
+	mock.lockChecker.RLock()
 	calls = mock.calls.Checker
-	lockZebedeeClientMockChecker.RUnlock()
+	mock.lockChecker.RUnlock()
 	return calls
 }
 
@@ -110,15 +108,16 @@ func (mock *ZebedeeClientMock) GetPublishedData(ctx context.Context, uriString s
 		Ctx:       ctx,
 		UriString: uriString,
 	}
-	lockZebedeeClientMockGetPublishedData.Lock()
+	mock.lockGetPublishedData.Lock()
 	mock.calls.GetPublishedData = append(mock.calls.GetPublishedData, callInfo)
-	lockZebedeeClientMockGetPublishedData.Unlock()
+	mock.lockGetPublishedData.Unlock()
 	return mock.GetPublishedDataFunc(ctx, uriString)
 }
 
 // GetPublishedDataCalls gets all the calls that were made to GetPublishedData.
 // Check the length with:
-//     len(mockedZebedeeClient.GetPublishedDataCalls())
+//
+//	len(mockedZebedeeClient.GetPublishedDataCalls())
 func (mock *ZebedeeClientMock) GetPublishedDataCalls() []struct {
 	Ctx       context.Context
 	UriString string
@@ -127,8 +126,8 @@ func (mock *ZebedeeClientMock) GetPublishedDataCalls() []struct {
 		Ctx       context.Context
 		UriString string
 	}
-	lockZebedeeClientMockGetPublishedData.RLock()
+	mock.lockGetPublishedData.RLock()
 	calls = mock.calls.GetPublishedData
-	lockZebedeeClientMockGetPublishedData.RUnlock()
+	mock.lockGetPublishedData.RUnlock()
 	return calls
 }

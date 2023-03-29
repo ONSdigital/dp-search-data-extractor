@@ -2,193 +2,68 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
-	"strings"
 
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/dp-search-data-extractor/event"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const (
-	OnsSearchIndex  = "ONS"
+	OnsSearchIndex  = "ons"
 	ZebedeeDataType = "legacy"
 	DatasetDataType = "datasets"
 )
 
-// ContentPublishedHandler struct to hold handle for config with zebedee, datasetAPI client and the producer
-type ContentPublishedHandler struct {
+// ContentPublished struct to hold handle for config with zebedee, datasetAPI client and the producer
+type ContentPublished struct {
+	Cfg        *config.Config
 	ZebedeeCli clients.ZebedeeClient
 	DatasetCli clients.DatasetClient
-	Producer   event.SearchDataImportProducer
+	Producer   kafka.IProducer
 }
 
-// Handle takes a single event.
-func (h *ContentPublishedHandler) Handle(ctx context.Context, cpEvent *models.ContentPublished, cfg config.Config) error {
-	logData := log.Data{
-		"event": cpEvent,
-	}
-	log.Info(ctx, "event handler called with event", logData)
-	var zebedeeContentPublished []byte
-	var err error
-	if cpEvent.DataType == ZebedeeDataType {
-		// obtain correct uri to callback to Zebedee to retrieve content metadata
-		uri, InvalidURIErr := retrieveCorrectURI(cpEvent.URI)
-		if InvalidURIErr != nil {
-			return InvalidURIErr
-		}
+// Handle takes a single event and triages it according to its data type, which can be 'legacy' (zebedee) or 'datasets'
+// If the type is not correct, the message is ignored with just a log.
+func (h *ContentPublished) Handle(ctx context.Context, workerID int, msg kafka.Message) error {
+	e := &models.ContentPublished{}
+	s := schema.ContentPublishedEvent
 
-		zebedeeContentPublished, err = h.ZebedeeCli.GetPublishedData(ctx, uri)
-		if err != nil {
-			log.Error(ctx, "failed to retrieve published data from zebedee", err)
+	if err := s.Unmarshal(msg.GetData(), e); err != nil {
+		return &Error{
+			err: fmt.Errorf("failed to unmarshal event: %w", err),
+			logData: map[string]interface{}{
+				"msg_data": string(msg.GetData()),
+			},
+		}
+	}
+
+	logData := log.Data{"event": e}
+	log.Info(ctx, "event received", logData)
+
+	switch e.DataType {
+	case ZebedeeDataType:
+		if err := h.handleZebedeeType(ctx, e); err != nil {
 			return err
 		}
-
-		// byte slice to Json & unMarshall Json
-		var zebedeeData models.ZebedeeData
-		err = json.Unmarshal(zebedeeContentPublished, &zebedeeData)
-		if err != nil {
-			log.Fatal(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err)
+	case DatasetDataType:
+		if err := h.handleDatasetDataType(ctx, e); err != nil {
 			return err
 		}
-
-		// keywords validation
-		logData = log.Data{
-			"uid":           zebedeeData.UID,
-			"keywords":      zebedeeData.Description.Keywords,
-			"keywordsLimit": cfg.KeywordsLimit,
-		}
-		log.Info(ctx, "zebedee data ", logData)
-		// Mapping Json to Avro
-		searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, cfg.KeywordsLimit)
-		searchData.TraceID = cpEvent.TraceID
-		searchData.JobID = cpEvent.JobID
-		searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
-
-		// Marshall Avro and sending message
-		if sdImportErr := h.Producer.SearchDataImport(ctx, searchData); sdImportErr != nil {
-			log.Error(ctx, "error while attempting to send SearchDataImport event to producer", sdImportErr)
-			return sdImportErr
-		}
-	} else if cpEvent.DataType == DatasetDataType {
-		datasetID, edition, version, getIDErr := getIDsFromURI(cpEvent.URI)
-		if getIDErr != nil {
-			log.Error(ctx, "error while attempting to get Ids for dataset, edition and version", getIDErr)
-			return getIDErr
-		}
-
-		// ID is be a combination of the dataset id and the edition like so: <datasets_id>-<edition>
-		generatedID := fmt.Sprintf("%s-%s", datasetID, edition)
-
-		// Make a call to DatasetAPI
-		datasetMetadataPublished, metadataErr := h.DatasetCli.GetVersionMetadata(ctx, "", cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
-		if metadataErr != nil {
-			log.Error(ctx, "cannot get dataset published contents version %s from api", metadataErr)
-			return metadataErr
-		}
-		logData = log.Data{
-			"uid generated":    generatedID,
-			"contentPublished": datasetMetadataPublished,
-		}
-		log.Info(ctx, "datasetAPI response ", logData)
-
-		// Mapping Json to Avro
-		versionDetails := models.VersionDetails{
-			ReleaseDate: datasetMetadataPublished.ReleaseDate,
-		}
-
-		datasetDetailsData := models.DatasetDetails{
-			Title:          datasetMetadataPublished.Title,
-			Summary:        datasetMetadataPublished.Description,
-			CanonicalTopic: datasetMetadataPublished.CanonicalTopic,
-			Subtopics:      datasetMetadataPublished.Subtopics,
-			Edition:        edition,
-			DatasetID:      datasetID,
-			URI:            cpEvent.URI,
-			Type:           "dataset_landing_page",
-		}
-
-		if datasetMetadataPublished.Keywords != nil {
-			datasetDetailsData.Keywords = *datasetMetadataPublished.Keywords
-		}
-
-		versionMetadata := models.CMDData{
-			UID:            generatedID,
-			VersionDetails: versionDetails,
-			DatasetDetails: datasetDetailsData,
-		}
-
-		datasetVersionMetadata := models.MapVersionMetadataToSearchDataImport(versionMetadata)
-		logData = log.Data{
-			"datasetVersionData": datasetVersionMetadata,
-		}
-		log.Info(ctx, "datasetVersionMetadata ", logData)
-
-		datasetVersionMetadata.TraceID = cpEvent.TraceID
-		datasetVersionMetadata.JobID = cpEvent.JobID
-		datasetVersionMetadata.SearchIndex = getIndexName(cpEvent.SearchIndex)
-		datasetVersionMetadata.DataType = "dataset_landing_page"
-
-		// Marshall Avro and sending message
-		if sdImportErr := h.Producer.SearchDataImport(ctx, datasetVersionMetadata); sdImportErr != nil {
-			log.Fatal(ctx, "error while attempting to send DatasetAPIImport event to producer", sdImportErr)
-			return sdImportErr
-		}
-	} else {
-		log.Info(ctx, "Invalid content data type received, no action")
-		return err
+	default:
+		log.Warn(ctx,
+			"data type not handles by data extractor",
+			log.FormatErrors([]error{fmt.Errorf("unrecognised data type received")}),
+			log.Data{"data_type": e.DataType},
+		)
+		return nil
 	}
+
 	log.Info(ctx, "event successfully handled", logData)
 	return nil
-}
-
-func getIDsFromURI(uri string) (datasetID, editionID, versionID string, err error) {
-	parsedURL, err := url.Parse(uri)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	s := strings.Split(parsedURL.Path, "/")
-	if len(s) < 7 {
-		return "", "", "", errors.New("not enough arguments in path for version metadata endpoint")
-	}
-	datasetID = s[2]
-	editionID = s[4]
-	versionID = s[6]
-	return
-}
-
-func retrieveCorrectURI(uri string) (correctURI string, err error) {
-	correctURI = uri
-
-	// Remove edition segment of path from Zebedee dataset uri to
-	// enable retrieval of the dataset resource for edition
-	if strings.Contains(uri, DatasetDataType) {
-		correctURI, err = extractDatasetURI(uri)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return correctURI, nil
-}
-
-func extractDatasetURI(editionURI string) (string, error) {
-	parsedURI, err := url.Parse(editionURI)
-	if err != nil {
-		return "", err
-	}
-
-	slicedURI := strings.Split(parsedURI.Path, "/")
-	slicedURI = slicedURI[:len(slicedURI)-1]
-	datasetURI := strings.Join(slicedURI, "/")
-
-	return datasetURI, nil
 }
 
 func getIndexName(indexName string) string {

@@ -2,93 +2,183 @@ package steps
 
 import (
 	"context"
-	"net/http"
+	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"testing"
+	"time"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	dphttp "github.com/ONSdigital/dp-net/http"
-	"github.com/ONSdigital/dp-search-data-extractor/clients"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	kafkatest "github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
-	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
-	"github.com/ONSdigital/dp-search-data-extractor/service/mock"
+	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/maxcnunes/httpfake"
+)
+
+const (
+	WaitEventTimeout = 5 * time.Second // maximum time that the component test consumer will wait for a kafka event
+)
+
+var (
+	BuildTime = "1625046891"
+	GitCommit = "7434fe334d9f51b7239f978094ea29d10ac33b16"
+	Version   = ""
 )
 
 type Component struct {
-	ErrorFeature  componenttest.ErrorFeature
-	inputData     models.ZebedeeData
-	serviceList   *service.ExternalServiceList
-	KafkaConsumer kafka.IConsumerGroup
-	KafkaProducer kafka.IProducer
-	zebedeeClient clients.ZebedeeClient
-	datasetClient clients.DatasetClient
-	errorChan     chan error
-	svc           *service.Service
-	cfg           *config.Config
+	componenttest.ErrorFeature
+	DatasetAPI       *httpfake.HTTPFake  // Dataset API mock at HTTP level
+	Zebedee          *httpfake.HTTPFake  // Zebedee mock at HTTP level
+	KafkaProducer    *kafkatest.Producer // Mock for service kafka producer
+	KafkaConsumer    *kafkatest.Consumer // Mock for service kafka consumer
+	errorChan        chan error
+	svc              *service.Service
+	cfg              *config.Config
+	wg               *sync.WaitGroup
+	signals          chan os.Signal
+	waitEventTimeout time.Duration
+	testETag         string
+	ctx              context.Context
 }
 
-func NewComponent() *Component {
-	c := &Component{errorChan: make(chan error)}
+func NewComponent(t *testing.T) *Component {
+	c := &Component{
+		DatasetAPI:       httpfake.New(),
+		Zebedee:          httpfake.New(),
+		errorChan:        make(chan error),
+		waitEventTimeout: WaitEventTimeout,
+		wg:               &sync.WaitGroup{},
+		testETag:         "13c7791bafdbaaf5e6660754feb1a58cd6aaa892",
+		ctx:              context.Background(),
+	}
+	service.GetKafkaConsumer = c.GetKafkaConsumer
+	service.GetKafkaProducer = c.GetKafkaProducer
+	return c
+}
 
-	consumer := kafkatest.NewMessageConsumer(false)
-	consumer.CheckerFunc = funcCheck
-	c.KafkaConsumer = consumer
+// initService initialises the server, the mocks and waits for the dependencies to be ready
+func (c *Component) initService(ctx context.Context) error {
+	// register interrupt signals
+	c.signals = make(chan os.Signal, 1)
+	signal.Notify(c.signals, syscall.SIGINT, syscall.SIGTERM)
 
-	producer := kafkatest.NewMessageProducer(false)
-	producer.CheckerFunc = funcCheck
-	c.KafkaProducer = producer
-
+	// Read config
 	cfg, err := config.Get()
 	if err != nil {
-		return nil
+		return fmt.Errorf("failed to get config: %w", err)
+	}
+
+	cfg.HealthCheckInterval = time.Second
+	cfg.DatasetAPIURL = c.DatasetAPI.ResolveURL("")
+	cfg.ZebedeeURL = c.Zebedee.ResolveURL("")
+
+	log.Info(ctx, "config used by component tests", log.Data{"cfg": cfg})
+
+	// Create service and initialise it
+	c.svc = service.New()
+	if err = c.svc.Init(ctx, cfg, BuildTime, GitCommit, Version); err != nil {
+		return fmt.Errorf("unexpected service Init error in NewComponent: %w", err)
 	}
 
 	c.cfg = cfg
 
-	initMock := &mock.InitialiserMock{
-		DoGetKafkaConsumerFunc: c.DoGetConsumer,
-		DoGetKafkaProducerFunc: c.DoGetProducer,
-		DoGetHealthCheckFunc:   c.DoGetHealthCheck,
-		DoGetHTTPServerFunc:    c.DoGetHTTPServer,
-		DoGetZebedeeClientFunc: c.DoGetZebedeeClient,
-		DoGetDatasetClientFunc: c.DoGetDatasetClient,
+	return nil
+}
+
+func (c *Component) startService(ctx context.Context) error {
+	if err := c.svc.Start(ctx, c.errorChan); err != nil {
+		return fmt.Errorf("unexpected error while starting service: %w", err)
 	}
 
-	c.serviceList = service.NewServiceList(initMock)
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
 
-	return c
-}
+		// blocks until an os interrupt or a fatal error occurs
+		select {
+		case err := <-c.errorChan:
+			if errClose := c.svc.Close(ctx); errClose != nil {
+				log.Warn(ctx, "error closing server during error handing", log.Data{"close_error": errClose})
+			}
+			panic(fmt.Errorf("unexpected error received from errorChan: %w", err))
+		case sig := <-c.signals:
+			log.Info(ctx, "os signal received", log.Data{"signal": sig})
+		}
 
-func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (service.HealthChecker, error) {
-	return &mock.HealthCheckerMock{
-		AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
-		StartFunc:    func(ctx context.Context) {},
-		StopFunc:     func() {},
-	}, nil
-}
+		if err := c.svc.Close(ctx); err != nil {
+			panic(fmt.Errorf("unexpected error during service graceful shutdown: %w", err))
+		}
+	}()
 
-func (c *Component) DoGetHTTPServer(bindAddr string, router http.Handler) service.HTTPServer {
-	return dphttp.NewServer(bindAddr, router)
-}
-
-func (c *Component) DoGetConsumer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IConsumerGroup, err error) {
-	return c.KafkaConsumer, nil
-}
-
-func (c *Component) DoGetProducer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IProducer, err error) {
-	return c.KafkaProducer, nil
-}
-
-func (c *Component) DoGetZebedeeClient(cfg *config.Config) clients.ZebedeeClient {
-	return c.zebedeeClient
-}
-
-func (c *Component) DoGetDatasetClient(cfg *config.Config) clients.DatasetClient {
-	return c.datasetClient
-}
-
-func funcCheck(ctx context.Context, state *healthcheck.CheckState) error {
 	return nil
+}
+
+// Close kills the application under test and waits for it to complete the graceful shutdown, or timeout
+func (c *Component) Close() {
+	// kill application
+	c.signals <- os.Interrupt
+
+	// wait for graceful shutdown to finish (or timeout)
+	c.wg.Wait()
+}
+
+// Reset re-initialises the service under test and the api mocks.
+// Note that the service under test should not be started yet
+// to prevent race conditions if it tries to call un-initialised dependencies (steps)
+func (c *Component) Reset() error {
+	if err := c.initService(c.ctx); err != nil {
+		return fmt.Errorf("failed to initialise service: %w", err)
+	}
+
+	c.DatasetAPI.Reset()
+	c.Zebedee.Reset()
+
+	return nil
+}
+
+// GetKafkaConsumer creates a new kafkatest consumer and stores it to the caller Component struct
+// It returns the mock, so it can be used by the service under test.
+// If there is any error creating the mock, it is also returned to the service.
+func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
+	var err error
+	c.KafkaConsumer, err = kafkatest.NewConsumer(
+		c.ctx,
+		&kafka.ConsumerGroupConfig{
+			BrokerAddrs:       cfg.Addr,
+			Topic:             cfg.ContentUpdatedTopic,
+			GroupName:         cfg.ContentUpdatedGroup,
+			MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+			KafkaVersion:      &cfg.Version,
+		},
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kafkatest consumer: %w", err)
+	}
+	return c.KafkaConsumer.Mock, nil
+}
+
+// GetKafkaProducer creates a new kafkatest producer and stores it to the caller Component struct
+// It returns the mock, so it can be used by the service under test.
+// If there is any error creating the mock, it is also returned to the service.
+func (c *Component) GetKafkaProducer(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+	var err error
+	c.KafkaProducer, err = kafkatest.NewProducer(
+		c.ctx,
+		&kafka.ProducerConfig{
+			BrokerAddrs:       cfg.Addr,
+			Topic:             cfg.ProducerTopic,
+			MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+			KafkaVersion:      &cfg.Version,
+		},
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kafkatest producer: %w", err)
+	}
+	return c.KafkaProducer.Mock, nil
 }

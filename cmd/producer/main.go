@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -28,17 +28,28 @@ func main() {
 	}
 
 	// Create Kafka Producer
-	pChannels := kafka.CreateProducerChannels()
-	kafkaProducer, err := kafka.NewProducer(ctx, cfg.KafkaAddr, cfg.ContentUpdatedTopic, pChannels, &kafka.ProducerConfig{
-		KafkaVersion: &cfg.KafkaVersion,
-	})
+	pConfig := &kafka.ProducerConfig{
+		BrokerAddrs:     cfg.Kafka.Addr,
+		Topic:           cfg.Kafka.ContentUpdatedTopic,
+		KafkaVersion:    &cfg.Kafka.Version,
+		MaxMessageBytes: &cfg.Kafka.MaxBytes,
+	}
+	if cfg.Kafka.SecProtocol == config.KafkaTLSProtocol {
+		pConfig.SecurityConfig = kafka.GetSecurityConfig(
+			cfg.Kafka.SecCACerts,
+			cfg.Kafka.SecClientCert,
+			cfg.Kafka.SecClientKey,
+			cfg.Kafka.SecSkipVerify,
+		)
+	}
+	kafkaProducer, err := kafka.NewProducer(ctx, pConfig)
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.ContentUpdatedTopic})
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.ContentUpdatedTopic})
 		os.Exit(1)
 	}
 
 	// kafka error logging go-routines
-	kafkaProducer.Channels().LogErrors(ctx, "kafka producer")
+	kafkaProducer.LogErrors(ctx)
 
 	time.Sleep(500 * time.Millisecond)
 	scanner := bufio.NewScanner(os.Stdin)
@@ -70,9 +81,20 @@ func scanEvent(scanner *bufio.Scanner) *models.ContentPublished {
 	scanner.Scan()
 	uri := scanner.Text()
 
+	fmt.Println("Please type the dataset type (legacy or datasets)")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	dataType := scanner.Text()
+
+	fmt.Println("Please type the collection ID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	collectionID := scanner.Text()
+
 	return &models.ContentPublished{
-		URI:      uri,
-		DataType: "legacy",
-		TraceID:  "054435ded",
+		URI:          uri,
+		DataType:     dataType,
+		TraceID:      "054435ded",
+		CollectionID: collectionID,
 	}
 }
