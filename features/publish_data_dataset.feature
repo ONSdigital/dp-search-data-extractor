@@ -51,9 +51,9 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "description":  "description",
       "keywords":     [ "keyword1", "keyword2" ],
       "dimensions": [
-         { "id": "dim1", "label": "label 1 (11 categories)" },
-         { "id": "dim2", "label": "label 2 (22 categories)", "is_area_type": true },
-         { "id": "dim3", "label": "label 3 (33 categories)" }
+         { "id": "dim1", "label": "label 1 (11 categories)", "is_area_type": true },
+         { "id": "dim3.0", "label": "label 3 (33 categories)" },
+         { "id": "dim3.1", "label": "label 3 (40 categories)" }
       ]
     }
     """
@@ -77,14 +77,13 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "Title":       "title",
         "Topics":      [],
         "PopulationType": {
-          "Key": "all_usual_residents_in_households",
-          "AggKey": "all_usual_residents_in_households###All usual residents in households",
+          "Key": "all-usual-residents-in-households",
+          "AggKey": "all-usual-residents-in-households###All usual residents in households",
           "Name":  "UR_HH",
           "Label": "All usual residents in households"
         },
         "Dimensions": [
-          { "Key": "label_1", "AggKey": "label_1###label 1", "Name": "dim1", "Label": "label 1", "RawLabel": "label 1 (11 categories)" },
-          { "Key": "label_3", "AggKey": "label_3###label 3", "Name": "dim3", "Label": "label 3", "RawLabel": "label 3 (33 categories)"}
+          { "Key": "label-3", "AggKey": "label-3###label 3", "Name": "dim3.0,dim3.1", "Label": "label 3", "RawLabel": "label 3 (33 categories),label 3 (40 categories)"}
         ]
       }
       """
