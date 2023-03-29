@@ -77,13 +77,14 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "Title":       "title",
         "Topics":      [],
         "PopulationType": {
+          "Key": "all_usual_residents_in_households",
+          "AggKey": "all_usual_residents_in_households###All usual residents in households",
           "Name":  "UR_HH",
-          "Label": "All usual residents in households",
-          "AggKey": "UR_HH###All usual residents in households"
+          "Label": "All usual residents in households"
         },
         "Dimensions": [
-          { "Name": "dim1", "Label": "label 1", "RawLabel": "label 1 (11 categories)", "AggKey": "dim1###label 1" },
-          { "Name": "dim3", "Label": "label 3", "RawLabel": "label 3 (33 categories)", "AggKey": "dim3###label 3"}
+          { "Key": "label_1", "AggKey": "label_1###label 1", "Name": "dim1", "Label": "label 1", "RawLabel": "label 1 (11 categories)" },
+          { "Key": "label_3", "AggKey": "label_3###label 3", "Name": "dim3", "Label": "label 3", "RawLabel": "label 3 (33 categories)"}
         ]
       }
       """

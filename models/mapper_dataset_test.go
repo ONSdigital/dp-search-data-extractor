@@ -164,9 +164,9 @@ func TestPopulateCantabularFields(t *testing.T) {
 					Summary:  testSummary,
 					DataType: "dataset_landing_page",
 					Dimensions: []models.Dimension{
-						{Name: "dim1", RawLabel: "label 1 (10 categories)", Label: "label 1", AggKey: "dim1###label 1"},
-						{Name: "dim2", RawLabel: "label 2 (12 Categories)", Label: "label 2", AggKey: "dim2###label 2"},
-						{Name: "dim4", RawLabel: "label 4 (1 category)", Label: "label 4", AggKey: "dim4###label 4"},
+						{Key: "label_1", AggKey: "label_1###label 1", Name: "dim1", Label: "label 1", RawLabel: "label 1 (10 categories)"},
+						{Key: "label_2", AggKey: "label_2###label 2", Name: "dim2", Label: "label 2", RawLabel: "label 2 (12 Categories)"},
+						{Key: "label_4", AggKey: "label_4###label 4", Name: "dim4", Label: "label 4", RawLabel: "label 4 (1 category)"},
 					},
 				})
 			})
@@ -196,9 +196,10 @@ func TestPopulateCantabularFields(t *testing.T) {
 					DataType:   "dataset_landing_page",
 					Dimensions: []models.Dimension{},
 					PopulationType: models.PopulationType{
+						Key:    "all_usual_residents_in_households",
+						AggKey: "all_usual_residents_in_households###All usual residents in households",
 						Name:   "UR_HH",
 						Label:  "All usual residents in households",
-						AggKey: "UR_HH###All usual residents in households",
 					},
 				})
 			})

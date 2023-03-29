@@ -98,10 +98,11 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 		}
 		label := cleanDimensionLabel(dim.Label)
 		s.Dimensions = append(s.Dimensions, Dimension{
+			Key:      key(label),
+			AggKey:   aggregationKey(ctx, key(label), label),
 			Name:     dim.ID,
-			RawLabel: dim.Label,
 			Label:    label,
-			AggKey:   aggregationKey(ctx, dim.ID, label),
+			RawLabel: dim.Label,
 		})
 	}
 
@@ -115,9 +116,10 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 		)
 	}
 	s.PopulationType = PopulationType{
+		Key:    key(popTypeLabel),
+		AggKey: aggregationKey(ctx, key(popTypeLabel), popTypeLabel),
 		Name:   metadata.DatasetDetails.IsBasedOn.ID,
 		Label:  popTypeLabel,
-		AggKey: aggregationKey(ctx, metadata.DatasetDetails.IsBasedOn.ID, popTypeLabel),
 	}
 }
 
@@ -142,18 +144,29 @@ func GetURI(metadata *dataset.Metadata) string {
 	return metadata.Version.Links.Version.URL
 }
 
-// aggregationKey generates an aggregation key from the provided name (unique ID) and label (human friendly string)
-func aggregationKey(ctx context.Context, name, label string) string {
-	if name == "" && label == "" {
+// key generates a key from the provided label converted to snake case
+func key(label string) string {
+	return strings.ReplaceAll(
+		strings.ToLower(
+			strings.TrimSpace(label),
+		),
+		" ", "_",
+	)
+}
+
+// aggregationKey generates an aggregation key
+// from the provided key (unique identifier) and label (human friendly string)
+func aggregationKey(ctx context.Context, key, label string) string {
+	if key == "" && label == "" {
 		return ""
 	}
 
-	if strings.Contains(name, aggSep) {
-		log.Warn(ctx, "found aggregation key separator in name", log.Data{"name": name, "separator": aggSep})
+	if strings.Contains(key, aggSep) {
+		log.Warn(ctx, "found aggregation key separator in name", log.Data{"name": key, "separator": aggSep})
 	}
 	if strings.Contains(label, aggSep) {
 		log.Warn(ctx, "found aggregation key separator in label", log.Data{"label": label, "separator": aggSep})
 	}
 
-	return fmt.Sprintf("%s%s%s", name, aggSep, label)
+	return fmt.Sprintf("%s%s%s", key, aggSep, label)
 }
