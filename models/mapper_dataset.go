@@ -88,36 +88,76 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 		"num_dimensions": len(metadata.Dimensions)},
 	)
 
-	s.Dimensions = []Dimension{}
-	for i := range metadata.Dimensions {
+	s.Dimensions = MapDimensions(ctx, metadata.Dimensions)
+	s.PopulationType = MapPopulationType(ctx, metadata.DatasetDetails.IsBasedOn.ID)
+}
+
+// MapDimensions returns a slice of dimensions corresponding to the provided slice of dataset versionDimensions.
+// The new dimensions are keyed by human friendly label. If multiple dimensions have the same key, they will be collapsed into 1 single dimension.
+// Collapsed dimensions keep all the original names and labels as csv values, as this information is very valuable to know what was combined, if necessary.
+func MapDimensions(ctx context.Context, dimensions []dataset.VersionDimension) []Dimension {
+	dimensionsByKey := map[string]*Dimension{}
+	for i := range dimensions {
 		// Using pointers to prevent copying lots of data.
 		// TODO consider changing type to []*VersionDimension in dp-api-clients-go
-		dim := &metadata.Dimensions[i]
+		dim := &dimensions[i]
 		if dim.IsAreaType != nil && *dim.IsAreaType {
 			continue
 		}
-		label := cleanDimensionLabel(dim.Label)
-		s.Dimensions = append(s.Dimensions, Dimension{
-			Name:     dim.ID,
-			RawLabel: dim.Label,
-			Label:    label,
-			AggKey:   aggregationKey(ctx, dim.ID, label),
-		})
+
+		lbl := cleanDimensionLabel(dim.Label)
+		k := key(lbl)
+		_, ok := dimensionsByKey[k]
+		if !ok {
+			// If no dimension with the same key exists, create a new one
+			dimensionsByKey[k] = &Dimension{
+				Key:      k,
+				AggKey:   aggregationKey(ctx, k, lbl),
+				Name:     dim.ID,
+				Label:    lbl,
+				RawLabel: dim.Label,
+			}
+		} else {
+			// If the dimension key already exists, they collapse into a single searchable dimension,
+			// but we keep the name and raw label for all the original dimensions before collapsing as csv values
+			if dim.ID != "" {
+				dimensionsByKey[k].Name += fmt.Sprintf(",%s", dim.ID)
+			}
+			if dim.Label != "" {
+				dimensionsByKey[k].RawLabel += fmt.Sprintf(",%s", dim.Label)
+			}
+		}
 	}
 
-	popTypeLabel, ok := PopulationTypes[metadata.DatasetDetails.IsBasedOn.ID]
+	// efficiently create the slice to be returned from the map of dimensions
+	dims := make([]Dimension, len(dimensionsByKey))
+	i := 0
+	for _, dim := range dimensionsByKey {
+		dims[i] = *dim
+		i++
+	}
+	return dims
+}
+
+// MapPopulationType a PopulationType that contains a
+// The new dimensions are keyed by human friendly label. If multiple dimensions have the same key, they will be collapsed into 1 single dimension.
+// Collapsed dimensions keep all the original names and labels as csv values, as this information is very valuable to know what was combined, if necessary.
+func MapPopulationType(ctx context.Context, basedOnID string) PopulationType {
+	lbl, ok := PopulationTypes[basedOnID]
 	if !ok {
 		log.Warn(ctx, "population type not identified",
 			log.Data{
-				"pop_type":    metadata.DatasetDetails.IsBasedOn.ID,
+				"pop_type":    basedOnID,
 				"valid_types": PopulationTypes,
 			},
 		)
 	}
-	s.PopulationType = PopulationType{
-		Name:   metadata.DatasetDetails.IsBasedOn.ID,
-		Label:  popTypeLabel,
-		AggKey: aggregationKey(ctx, metadata.DatasetDetails.IsBasedOn.ID, popTypeLabel),
+	k := key(lbl)
+	return PopulationType{
+		Key:    k,
+		AggKey: aggregationKey(ctx, k, lbl),
+		Name:   basedOnID,
+		Label:  lbl,
 	}
 }
 
@@ -142,18 +182,29 @@ func GetURI(metadata *dataset.Metadata) string {
 	return metadata.Version.Links.Version.URL
 }
 
-// aggregationKey generates an aggregation key from the provided name (unique ID) and label (human friendly string)
-func aggregationKey(ctx context.Context, name, label string) string {
-	if name == "" && label == "" {
+// key generates a key from the provided label by lower casing and converting spaces to hyphens
+func key(label string) string {
+	return strings.ReplaceAll(
+		strings.ToLower(
+			strings.TrimSpace(label),
+		),
+		" ", "-",
+	)
+}
+
+// aggregationKey generates an aggregation key
+// from the provided key (unique identifier) and label (human friendly string)
+func aggregationKey(ctx context.Context, key, label string) string {
+	if key == "" && label == "" {
 		return ""
 	}
 
-	if strings.Contains(name, aggSep) {
-		log.Warn(ctx, "found aggregation key separator in name", log.Data{"name": name, "separator": aggSep})
+	if strings.Contains(key, aggSep) {
+		log.Warn(ctx, "found aggregation key separator in name", log.Data{"name": key, "separator": aggSep})
 	}
 	if strings.Contains(label, aggSep) {
 		log.Warn(ctx, "found aggregation key separator in label", log.Data{"label": label, "separator": aggSep})
 	}
 
-	return fmt.Sprintf("%s%s%s", name, aggSep, label)
+	return fmt.Sprintf("%s%s%s", key, aggSep, label)
 }

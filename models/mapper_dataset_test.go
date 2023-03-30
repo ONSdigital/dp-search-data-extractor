@@ -133,9 +133,7 @@ func TestPopulateCantabularFields(t *testing.T) {
 		})
 	})
 
-	Convey("Given a dataset metadata with is_based_on field with a cantabular type and 4 dimensions, one being area type", t, func() {
-		areaTypeTrue := true
-		areaTypeFalse := false
+	Convey("Given a dataset metadata with is_based_on field with a cantabular type with a dimension", t, func() {
 		metadata := &dataset.Metadata{
 			DatasetDetails: dataset.DatasetDetails{
 				IsBasedOn: &dataset.IsBasedOn{
@@ -144,10 +142,7 @@ func TestPopulateCantabularFields(t *testing.T) {
 			},
 			Version: dataset.Version{
 				Dimensions: []dataset.VersionDimension{
-					{ID: "dim1", Label: "label 1 (10 categories)"},
-					{ID: "dim2", Label: "label 2 (12 Categories)", IsAreaType: &areaTypeFalse},
-					{ID: "dim3", IsAreaType: &areaTypeTrue},
-					{ID: "dim4", Label: "label 4 (1 category)"},
+					{ID: "dim1", Label: "Label 1 (10 categories)"},
 				},
 			},
 		}
@@ -159,14 +154,12 @@ func TestPopulateCantabularFields(t *testing.T) {
 			}
 			s.PopulateCantabularFields(ctx, metadata)
 
-			Convey("Then only the non-area-type dimensions are populated, with the expected values", func() {
+			Convey("Then the expeced dimension is populated", func() {
 				So(*s, ShouldResemble, models.SearchDataImport{
 					Summary:  testSummary,
 					DataType: "dataset_landing_page",
 					Dimensions: []models.Dimension{
-						{Name: "dim1", RawLabel: "label 1 (10 categories)", Label: "label 1", AggKey: "dim1###label 1"},
-						{Name: "dim2", RawLabel: "label 2 (12 Categories)", Label: "label 2", AggKey: "dim2###label 2"},
-						{Name: "dim4", RawLabel: "label 4 (1 category)", Label: "label 4", AggKey: "dim4###label 4"},
+						{Key: "label-1", AggKey: "label-1###Label 1", Name: "dim1", Label: "Label 1", RawLabel: "Label 1 (10 categories)"},
 					},
 				})
 			})
@@ -196,11 +189,64 @@ func TestPopulateCantabularFields(t *testing.T) {
 					DataType:   "dataset_landing_page",
 					Dimensions: []models.Dimension{},
 					PopulationType: models.PopulationType{
+						Key:    "all-usual-residents-in-households",
+						AggKey: "all-usual-residents-in-households###All usual residents in households",
 						Name:   "UR_HH",
 						Label:  "All usual residents in households",
-						AggKey: "UR_HH###All usual residents in households",
 					},
 				})
+			})
+		})
+	})
+}
+
+func TestMapDimensions(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("Given 2 dimensions with the same label and different number of categories", t, func() {
+		dims := []dataset.VersionDimension{
+			{ID: "dim1", Label: "Label 1 (10 categories)"},
+			{ID: "dim2", Label: "Label 1 (1 category)"},
+		}
+
+		Convey("Then MapDimensions collapses them into a single dimension with the expected values", func() {
+			mappedDimensions := models.MapDimensions(ctx, dims)
+			So(mappedDimensions, ShouldHaveLength, 1)
+			So(mappedDimensions[0], ShouldResemble, models.Dimension{
+				Key:      "label-1",
+				AggKey:   "label-1###Label 1",
+				Name:     "dim1,dim2",
+				Label:    "Label 1",
+				RawLabel: "Label 1 (10 categories),Label 1 (1 category)",
+			})
+		})
+	})
+
+	Convey("Given 3 dimensions, only one being area type", t, func() {
+		areaTypeTrue := true
+		areaTypeFalse := false
+		dims := []dataset.VersionDimension{
+			{ID: "dim1", Label: "Label 1 (10 categories)"},
+			{ID: "dim2", Label: "Label 2", IsAreaType: &areaTypeTrue},
+			{ID: "dim3", Label: "Label 3", IsAreaType: &areaTypeFalse},
+		}
+
+		Convey("Then only the non-area type dimensions are mapped", func() {
+			mappedDimensions := models.MapDimensions(ctx, dims)
+			So(mappedDimensions, ShouldHaveLength, 2)
+			So(mappedDimensions, ShouldContain, models.Dimension{
+				Key:      "label-1",
+				AggKey:   "label-1###Label 1",
+				Name:     "dim1",
+				Label:    "Label 1",
+				RawLabel: "Label 1 (10 categories)",
+			})
+			So(mappedDimensions, ShouldContain, models.Dimension{
+				Key:      "label-3",
+				AggKey:   "label-3###Label 3",
+				Name:     "dim3",
+				Label:    "Label 3",
+				RawLabel: "Label 3",
 			})
 		})
 	})

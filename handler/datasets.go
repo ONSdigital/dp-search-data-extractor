@@ -39,7 +39,7 @@ func (h *ContentPublished) handleDatasetDataType(ctx context.Context, cpEvent *m
 	// Make a call to DatasetAPI
 	datasetMetadataPublished, err := h.DatasetCli.GetVersionMetadata(ctx, "", h.Cfg.ServiceAuthToken, cpEvent.CollectionID, datasetID, edition, version)
 	if err != nil {
-		log.Error(ctx, "cannot get dataset published contents version %s from api", err)
+		log.Error(ctx, "cannot get dataset published metadata from api", err)
 		return err
 	}
 	log.Info(ctx, "successfully obtained metadata from dataset api", log.Data{

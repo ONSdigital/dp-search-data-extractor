@@ -48,16 +48,18 @@ type ReleaseDateDetails struct {
 // Dimension represents the required information for each dataset dimension: name (unique ID) and label
 // and an aggregation key which combines name and label
 type Dimension struct {
-	Name     string `avro:"name"`
-	RawLabel string `avro:"raw_label"`
-	Label    string `avro:"label"`
+	Key      string `avro:"key"`
 	AggKey   string `avro:"agg_key"`
+	Name     string `avro:"name"`
+	Label    string `avro:"label"`
+	RawLabel string `avro:"raw_label"`
 }
 
 // PopulationType represents the population type name (unique ID) and label
 // and an aggregation key which combines name and label
 type PopulationType struct {
+	Key    string `avro:"key"`
+	AggKey string `avro:"agg_key"`
 	Name   string `avro:"name"`
 	Label  string `avro:"label"`
-	AggKey string `avro:"agg_key"`
 }
