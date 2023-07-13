@@ -1,6 +1,0 @@
-CVE-2020-26160 # No upgrade path for github.com/dgrijalva/jwt-go. See: https://ossindex.sonatype.org/vulnerability/c16fb56d-9de6-4065-9fca-d2b4cfb13020?component-type=golang&component-name=github.com%2Fdgrijalva%2Fjwt-go&utm_source=nancy-client&utm_medium=integration&utm_content=0.0.0-dev
-sonatype-2021-4899 #  1 non-CVE vulnerability found. To see more details, please create a free account at https://ossindex.sonatype.org/ and request for this information using your registered account
-CVE-2022-29153 # HashiCorp Consul and Consul Enterprise through 2022-04-12 allow SSRF.
-CVE-2022-21698 # client_golang is the instrumentation library for Go applications in  Prometheus, and the promhttp package in client_golang provides tooling  around HTTP servers and clients. In client_golang prior to version 1.11.1, HTTP server is susceptible to a Denial of Service through unbounded cardinality, and potential memory exhaustion, when handling requests with  non-standard HTTP methods.
-sonatype-2021-1401 # 1 non-CVE vulnerability found. To see more details, please create a free account at https://ossindex.sonatype.org/ and request for this information using your registered account
-sonatype-2019-0890 # 1 non-CVE vulnerability found. To see more details, please create an account at https://ossindex.sonatype.org/ and request for this information using your registered account

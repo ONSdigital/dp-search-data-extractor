@@ -2,7 +2,14 @@ module github.com/ONSdigital/dp-search-data-extractor
 
 go 1.20
 
-replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
+// to fix: [CVE-2023-32731] CWE-Other
+replace google.golang.org/grpc => google.golang.org/grpc v1.55.0
+
+// to avoid the following vulnerabilities:
+//     - CVE-2022-29153 # pkg:golang/github.com/hashicorp/consul/api@v1.1.0 and pkg:golang/github.com/hashicorp/consul/sdk@v0.1.1
+//     - sonatype-2021-1401 # pkg:golang/github.com/miekg/dns@v1.0.14
+//     - sonatype-2019-0890 # pkg:golang/github.com/pkg/sftp@v1.10.1
+replace github.com/spf13/cobra => github.com/spf13/cobra v1.7.0
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.252.1
@@ -12,7 +19,7 @@ require (
 	github.com/ONSdigital/dp-net v1.5.0
 	github.com/ONSdigital/log.go/v2 v2.4.1
 	github.com/cucumber/godog v0.12.5
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/maxcnunes/httpfake v1.2.4
@@ -69,9 +76,8 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/smartystreets/assertions v1.13.1 // indirect
-	github.com/spf13/afero v1.8.2 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
