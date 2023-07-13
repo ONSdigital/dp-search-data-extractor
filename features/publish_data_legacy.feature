@@ -8,6 +8,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
     {
       "type": "legacy",
+      "URI": "some_uri",
       "description": {
         "data_type": "legacy",
         "cdid":      "123",
@@ -25,7 +26,8 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     Then this search-data-import event is sent
     """
     {
-      "UID":         "something",
+      "UID":         "some_uri",
+      "URI":         "some_uri",
       "Edition":     "something",
       "DataType":    "legacy",
       "SearchIndex": "ons",

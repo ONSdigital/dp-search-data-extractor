@@ -16,7 +16,7 @@ const (
 // truncation.
 func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int) SearchDataImport {
 	searchData := SearchDataImport{
-		UID:             zebedeeData.Description.Title,
+		UID:             zebedeeData.URI,
 		URI:             zebedeeData.URI,
 		DataType:        zebedeeData.DataType,
 		CDID:            zebedeeData.Description.CDID,
@@ -29,7 +29,6 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		Topics:          zebedeeData.Description.Topics,
 	}
 	if zebedeeData.Description.Edition != "" {
-		searchData.UID += zebedeeData.Description.Edition
 		searchData.Edition = zebedeeData.Description.Edition
 	}
 	if zebedeeData.DataType == ReleaseDataType {

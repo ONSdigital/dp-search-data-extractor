@@ -28,6 +28,7 @@ const (
 	someSurvey          = "Some survey"
 	someLanguage        = "some language"
 	canonicalTopic      = "some topic"
+	someURI             = "/some/uri/for/testing"
 
 	sometopic0 = "topic0"
 	sometopic1 = "topic1"
@@ -37,6 +38,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 	Convey("Given some valid zebedee data", t, func() {
 		zebedeeData := models.ZebedeeData{
 			UID:      someTitle,
+			URI:      someURI,
 			DataType: someRelease,
 			DateChanges: []models.ReleaseDateChange{
 				{
@@ -64,6 +66,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 		}
 		zebedeeDataWithEdition := models.ZebedeeData{
 			UID:      someTitle,
+			URI:      someURI,
 			DataType: someRelease,
 			DateChanges: []models.ReleaseDateChange{
 				{
@@ -93,7 +96,8 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 		Convey("When mapped with a default keywords limit when edition is present", func() {
 			result := models.MapZebedeeDataToSearchDataImport(zebedeeDataWithEdition, -1)
 			Convey("Then the result should be validly mapped with 4 keywords when edition is present", func() {
-				So(result.UID, ShouldResemble, someTitle+someEdition)
+				So(result.UID, ShouldResemble, someURI)
+				So(result.URI, ShouldResemble, someURI)
 				So(result.Edition, ShouldResemble, someEdition)
 				So(result.DataType, ShouldResemble, someRelease)
 				So(result.CDID, ShouldResemble, someCDID)
@@ -130,7 +134,8 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 		Convey("When mapped with a default keywords limit", func() {
 			result := models.MapZebedeeDataToSearchDataImport(zebedeeData, -1)
 			Convey("Then the result should be validly mapped with 4 keywords", func() {
-				So(result.UID, ShouldResemble, someTitle)
+				So(result.UID, ShouldResemble, someURI)
+				So(result.URI, ShouldResemble, someURI)
 				So(result.DataType, ShouldResemble, someRelease)
 				So(result.CDID, ShouldResemble, someCDID)
 				So(result.DatasetID, ShouldResemble, someDatasetID)

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
@@ -18,11 +19,14 @@ import (
 )
 
 var (
-	testWorkerID = 1
-	ctx          = context.Background()
+	testWorkerID   = 1
+	ctx            = context.Background()
+	testZebedeeURI = "testZebedeeURI"
+	testEdition    = "testEdition"
+	testDataType   = "testDataType"
 
 	testZebedeeEvent = models.ContentPublished{
-		URI:          "testZebdeeUri",
+		URI:          testZebedeeURI,
 		DataType:     "legacy",
 		CollectionID: "testZebdeeCollectionID",
 	}
@@ -39,7 +43,7 @@ var (
 		CollectionID: "invalidDatasetApiCollectionID",
 	}
 
-	mockZebedeePublishedResponse = `{"description":{"cdid": "testCDID","edition": "testedition"},"type": "testDataType"}`
+	mockZebedeePublishedResponse = fmt.Sprintf(`{"description":{"cdid": "testCDID","edition": %q},"type": %q, "URI": %q}`, testEdition, testDataType, testZebedeeURI)
 	getPublishDataFunc           = func(ctx context.Context, uriString string) ([]byte, error) {
 		data := []byte(mockZebedeePublishedResponse)
 		return data, nil
@@ -56,9 +60,10 @@ var (
 
 func TestHandle(t *testing.T) {
 	expectedZebedeeProducedEvent := &models.SearchDataImport{
-		UID:         "testedition",
-		Edition:     "testedition",
-		DataType:    "testDataType",
+		UID:         testZebedeeURI,
+		URI:         testZebedeeURI,
+		Edition:     testEdition,
+		DataType:    testDataType,
 		SearchIndex: "ons",
 		CDID:        "testCDID",
 		Keywords:    []string{},
