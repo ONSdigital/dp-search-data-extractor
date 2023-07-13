@@ -80,6 +80,38 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 			So(err.Error(), ShouldEqual, "failed to send search data import event: failed to send kafka message")
 		})
 	})
+
+	Convey("Given a handler with a zebedee mock that returns a content item with no title", t, func() {
+		mockZebedeePublishedResponse = `{"description":{"cdid": "testCDID","edition": "testEdition"},"type": "test", "URI": "test"}`
+		getPublishDataFunc = func(ctx context.Context, uriString string) ([]byte, error) {
+			data := []byte(mockZebedeePublishedResponse)
+			return data, nil
+		}
+
+		zebedeeMock := &clientMock.ZebedeeClientMock{
+			GetPublishedDataFunc: getPublishDataFunc,
+		}
+
+		producerMock := &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+
+		h := &ContentPublished{
+			ZebedeeCli: zebedeeMock,
+			Producer:   producerMock,
+			Cfg: &config.Config{
+				KeywordsLimit: 10,
+			},
+		}
+
+		Convey("Then the zebedee handler doesn't create an import event", func() {
+			err := h.handleZebedeeType(ctx, &testZebedeeEvent)
+			So(err, ShouldBeNil)
+			So(len(producerMock.SendCalls()), ShouldEqual, 0)
+		})
+	})
 }
 
 func TestExtractDatasetURIFromEditionURI(t *testing.T) {

@@ -24,6 +24,7 @@ var (
 	testZebedeeURI = "testZebedeeURI"
 	testEdition    = "testEdition"
 	testDataType   = "testDataType"
+	testTitle      = "testTitle"
 
 	testZebedeeEvent = models.ContentPublished{
 		URI:          testZebedeeURI,
@@ -43,7 +44,7 @@ var (
 		CollectionID: "invalidDatasetApiCollectionID",
 	}
 
-	mockZebedeePublishedResponse = fmt.Sprintf(`{"description":{"cdid": "testCDID","edition": %q},"type": %q, "URI": %q}`, testEdition, testDataType, testZebedeeURI)
+	mockZebedeePublishedResponse = fmt.Sprintf(`{"description":{"cdid": "testCDID","edition": %q, "title": %q},"type": %q, "URI": %q}`, testEdition, testTitle, testDataType, testZebedeeURI)
 	getPublishDataFunc           = func(ctx context.Context, uriString string) ([]byte, error) {
 		data := []byte(mockZebedeePublishedResponse)
 		return data, nil
@@ -62,6 +63,7 @@ func TestHandle(t *testing.T) {
 	expectedZebedeeProducedEvent := &models.SearchDataImport{
 		UID:         testZebedeeURI,
 		URI:         testZebedeeURI,
+		Title:       testTitle,
 		Edition:     testEdition,
 		DataType:    testDataType,
 		SearchIndex: "ons",
