@@ -4,10 +4,11 @@ dp-search-data-extractor
 Service to retrieve published data to be used to update a search index
 This service calls /publisheddata endpoint on [zebedee](https://github.com/ONSdigital/zebedee) and metadata endpoint on [dataset API](https://github.com/ONSdigital/dp-dataset-api).
 
-This service listens to the "content-updated" kafka topic for events of type contentUpdatedEvent e.g. 
+This service listens to the "content-updated" kafka topic for events of type contentUpdatedEvent e.g.
 see [schemas](schema) package.
 
-This service takes the uri, from the consumed event, and either calls ... 
+This service takes the uri, from the consumed event, and either calls ...
+
 1. ... /publisheddata endpoint on zebedee. It passes in the URI as a path parameter e.g.
   http://localhost:8082/publisheddata?uri=businessindustryandtrade
 1. ... /datasets/<id>/editions/<edition>/versions/<version>/metadata endpoint on dataset API, e.g.
@@ -30,7 +31,7 @@ An example event can be created using the helper script, `make produce`.
 
 ### Dependencies
 
-* golang 1.16.x
+* golang 1.20.x
 * Running instance of zebedee
 * Requires running…
   * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
