@@ -23,7 +23,7 @@ func main() {
 	// Get Config
 	cfg, err := config.Get()
 	if err != nil {
-		log.Fatal(ctx, "error getting config", err)
+		log.Error(ctx, "error getting config", err)
 		os.Exit(1)
 	}
 
@@ -44,7 +44,7 @@ func main() {
 	}
 	kafkaProducer, err := kafka.NewProducer(ctx, pConfig)
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.ContentUpdatedTopic})
+		log.Error(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.ContentUpdatedTopic})
 		os.Exit(1)
 	}
 
@@ -59,7 +59,7 @@ func main() {
 
 		bytes, err := schema.ContentPublishedEvent.Marshal(e)
 		if err != nil {
-			log.Fatal(ctx, "content-published event error", err)
+			log.Error(ctx, "content-published event error", err)
 			os.Exit(1)
 		}
 

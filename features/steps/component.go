@@ -45,7 +45,7 @@ type Component struct {
 	ctx              context.Context
 }
 
-func NewComponent(t *testing.T) *Component {
+func NewComponent(_ *testing.T) *Component {
 	c := &Component{
 		DatasetAPI:       httpfake.New(),
 		Zebedee:          httpfake.New(),
@@ -143,7 +143,7 @@ func (c *Component) Reset() error {
 // GetKafkaConsumer creates a new kafkatest consumer and stores it to the caller Component struct
 // It returns the mock, so it can be used by the service under test.
 // If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
+func (c *Component) GetKafkaConsumer(_ context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
 	var err error
 	c.KafkaConsumer, err = kafkatest.NewConsumer(
 		c.ctx,
@@ -165,7 +165,7 @@ func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (ka
 // GetKafkaProducer creates a new kafkatest producer and stores it to the caller Component struct
 // It returns the mock, so it can be used by the service under test.
 // If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaProducer(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+func (c *Component) GetKafkaProducer(_ context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
 	var err error
 	c.KafkaProducer, err = kafkatest.NewProducer(
 		c.ctx,

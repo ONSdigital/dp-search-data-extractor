@@ -28,7 +28,7 @@ type ContentPublished struct {
 
 // Handle takes a single event and triages it according to its data type, which can be 'legacy' (zebedee) or 'datasets'
 // If the type is not correct, the message is ignored with just a log.
-func (h *ContentPublished) Handle(ctx context.Context, workerID int, msg kafka.Message) error {
+func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 	e := &models.ContentPublished{}
 	s := schema.ContentPublishedEvent
 

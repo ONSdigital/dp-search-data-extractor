@@ -37,7 +37,7 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	component.RegisterSteps(ctx)
 }
 
-func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {
+func (f *ComponentTest) InitializeTestSuite(_ *godog.TestSuiteContext) {
 	dplogs.Namespace = "dp-search-data-exporter"
 }
 
