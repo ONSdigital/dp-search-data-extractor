@@ -335,6 +335,9 @@ func TestClose(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 				return nil
 			},
+			CloseFunc: func(ctx context.Context, optFuncs ...kafka.OptFunc) error {
+				return nil
+			},
 		}
 
 		svc := service.Service{

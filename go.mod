@@ -3,13 +3,13 @@ module github.com/ONSdigital/dp-search-data-extractor
 go 1.20
 
 // to fix: [CVE-2023-32731] CWE-Other
-replace google.golang.org/grpc => google.golang.org/grpc v1.55.0
+replace google.golang.org/grpc v1.35.0 => google.golang.org/grpc v1.55.0
 
 // to avoid the following vulnerabilities:
 //     - CVE-2022-29153 # pkg:golang/github.com/hashicorp/consul/api@v1.1.0 and pkg:golang/github.com/hashicorp/consul/sdk@v0.1.1
 //     - sonatype-2021-1401 # pkg:golang/github.com/miekg/dns@v1.0.14
 //     - sonatype-2019-0890 # pkg:golang/github.com/pkg/sftp@v1.10.1
-replace github.com/spf13/cobra => github.com/spf13/cobra v1.7.0
+replace github.com/spf13/cobra v1.1.1 => github.com/spf13/cobra v1.7.0
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.252.1
@@ -85,10 +85,10 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.9.1 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
