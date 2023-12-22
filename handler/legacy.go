@@ -20,15 +20,11 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		return InvalidURIErr
 	}
 
-	fmt.Println("got uri")
-
 	zebedeeContentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, uri)
 	if err != nil {
 		log.Error(ctx, "failed to retrieve published data from zebedee", err)
 		return err
 	}
-
-	fmt.Println("got published data")
 
 	// byte slice to Json & unMarshall Json
 	var zebedeeData models.ZebedeeData
@@ -38,16 +34,12 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		return err
 	}
 
-	fmt.Println("unmarshalled data")
-
 	// keywords validation
 	log.Info(ctx, "zebedee data ", log.Data{
 		"uid":           zebedeeData.UID,
 		"keywords":      zebedeeData.Description.Keywords,
 		"keywordsLimit": h.Cfg.KeywordsLimit,
 	})
-
-	fmt.Println("logged data")
 
 	if zebedeeData.Description.Title == "" {
 		log.Info(ctx, "not processing content as no title present", log.Data{
@@ -56,8 +48,6 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		})
 		return nil
 	}
-
-	fmt.Println("ignored")
 
 	// Map data returned by Zebedee to the kafka Event structure
 	searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, h.Cfg.KeywordsLimit)
