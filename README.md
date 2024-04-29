@@ -4,7 +4,7 @@ dp-search-data-extractor
 Service to retrieve published data to be used to update a search index
 This service calls /publisheddata endpoint on [zebedee](https://github.com/ONSdigital/zebedee) and metadata endpoint on [dataset API](https://github.com/ONSdigital/dp-dataset-api).
 
-This service listens to the "content-updated" kafka topic for events of type contentUpdatedEvent e.g.
+This service listens to the `content-updated` kafka topic for events of type contentUpdatedEvent e.g.
 see [schemas](schema) package.
 
 This service takes the uri, from the consumed event, and either calls ...
@@ -15,11 +15,6 @@ This service takes the uri, from the consumed event, and either calls ...
   http://localhost:22000/datasets/CPIH01/editions/timeseries/versions/1/metadata
 
 See [search service architecture docs here](https://github.com/ONSdigital/dp-search-api/tree/develop/architecture#search-service-architecture)
-
-###  healthcheck
-
-        make debug and then 
-        check http://localhost:25800/health
 
 ### Getting started
 
@@ -57,6 +52,7 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_SEC_SKIP_VERIFY          | false                    | ignore server certificate issues if set to `true` [[1]](#notes_1)
 | KAFKA_CONTENT_UPDATED_GROUP    | dp-search-data-extractor | The consumer group this application to consume content-updated messages
 | KAFKA_CONTENT_UPDATED_TOPIC    | content-updated          | The name of the topic to consume messages from
+| KAFKA_PRODUCER_TOPIC           | search-data-import       | The name of the topic to produce messages to
 | KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
 | SERVICE_AUTH_TOKEN             | _unset_                  | The user auth token for the DatasetAPI
 | STOP_CONSUMING_ON_UNHEALTHY    | true                     | Application stops consuming kafka messages if application is in unhealthy state
@@ -80,6 +76,6 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### License
 
-Copyright © 2022, Office for National Statistics (https://www.ons.gov.uk)
+Copyright © 2024, Office for National Statistics (https://www.ons.gov.uk)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
