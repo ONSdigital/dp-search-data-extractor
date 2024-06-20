@@ -201,8 +201,6 @@ func TestPopulateCantabularFields(t *testing.T) {
 }
 
 func TestMapDimensions(t *testing.T) {
-	ctx := context.Background()
-
 	Convey("Given 2 dimensions with the same label and different number of categories", t, func() {
 		dims := []dataset.VersionDimension{
 			{ID: "dim1", Label: "Label 1 (10 categories)"},

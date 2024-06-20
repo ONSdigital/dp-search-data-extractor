@@ -12,9 +12,12 @@ const KafkaTLSProtocol = "TLS"
 // Config represents service configuration for dp-search-data-extractor
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	EnableTopicCache           bool          `envconfig:"ENABLE_TOPICS_CACHE"`
+	TopicCacheUpdateInterval   time.Duration `envconfig:"TOPICS_CACHE_UPDATE_INTERVAL"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
@@ -53,11 +56,14 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   "localhost:25800",
+		EnableTopicCache:           false,
+		TopicCacheUpdateInterval:   30 * time.Minute,
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
 		KeywordsLimit:              -1,
+		TopicAPIURL:                "http://localhost:25300",
 		DatasetAPIURL:              "http://localhost:22000",
 		ServiceAuthToken:           "",
 		StopConsumingOnUnhealthy:   true,

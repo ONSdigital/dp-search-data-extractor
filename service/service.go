@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-search-data-extractor/cache"
+	cachePrivate "github.com/ONSdigital/dp-search-data-extractor/cache/private"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/handler"
+	topicCli "github.com/ONSdigital/dp-topic-api/sdk"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -16,12 +19,14 @@ import (
 // Service contains all the configs, server and clients to run the event handler service
 type Service struct {
 	Cfg         *config.Config
+	Cache       cache.List
 	Server      HTTPServer
 	HealthCheck HealthChecker
 	Consumer    kafka.IConsumerGroup
 	Producer    kafka.IProducer
 	ZebedeeCli  clients.ZebedeeClient
 	DatasetCli  clients.DatasetClient
+	TopicCli    topicCli.Clienter
 }
 
 func New() *Service {
@@ -47,13 +52,27 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 
 	svc.ZebedeeCli = GetZebedee(cfg)
 	svc.DatasetCli = GetDatasetClient(cfg)
+	svc.TopicCli = GetTopicClient(cfg)
 
 	h := handler.ContentPublished{
 		Cfg:        svc.Cfg,
 		ZebedeeCli: svc.ZebedeeCli,
 		DatasetCli: svc.DatasetCli,
 		Producer:   svc.Producer,
+		Cache:      svc.Cache,
 	}
+
+	// if svc.Cfg.EnableTopicCache {
+	// Initialise caching
+	svc.Cache.Topic, err = cache.NewTopicCache(ctx, &svc.Cfg.TopicCacheUpdateInterval)
+	if err != nil {
+		log.Error(ctx, "failed to create topics cache", err)
+		return err
+	}
+
+	// Load cache with topics on startup
+	svc.Cache.Topic.AddUpdateFuncs(cachePrivate.UpdateDataTopics(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
+
 	err = svc.Consumer.RegisterHandler(ctx, h.Handle)
 	if err != nil {
 		return fmt.Errorf("could not register kafka handler: %w", err)

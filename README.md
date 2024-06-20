@@ -34,29 +34,32 @@ An example event can be created using the helper script, `make produce`.
 
 ### Configuration
 
-| Environment variable           | Default                  | Description
-| ----------------------------   | -------------------------| -----------
-| BIND_ADDR                      | localhost:25800          | The host and port to bind to
-| DATASET_API_URL                | `http://localhost:22000` | The URL for the DatasetAPI
-| GRACEFUL_SHUTDOWN_TIMEOUT      | 5s                       | The graceful shutdown timeout in seconds (`time.Duration` format)
-| HEALTHCHECK_INTERVAL           | 30s                      | Time between self-healthchecks (`time.Duration` format)
-| HEALTHCHECK_CRITICAL_TIMEOUT   | 90s                      | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
-| KAFKA_ADDR                     | "localhost:9092"         | The address of Kafka (accepts list)
-| KAFKA_OFFSET_OLDEST            | true                     | Start processing Kafka messages in order from the oldest in the queue
-| KAFKA_VERSION                  | `1.0.2`                  | The version of Kafka
-| KAFKA_NUM_WORKERS              | 1                        | The maximum number of parallel kafka consumers
-| KAFKA_SEC_PROTO                | _unset_   (only `TLS`)   | if set to `TLS`, kafka connections will use TLS
-| KAFKA_SEC_CLIENT_KEY           | _unset_                  | PEM [2] for the client key (optional, used for client auth) [[1]](#notes_1)
-| KAFKA_SEC_CLIENT_CERT          | _unset_                  | PEM [2] for the client certificate (optional, used for client auth) [[1]](#notes_1)
-| KAFKA_SEC_CA_CERTS             | _unset_                  | PEM [2] of CA cert chain if using private CA for the server cert [[1]](#notes_1)
-| KAFKA_SEC_SKIP_VERIFY          | false                    | ignore server certificate issues if set to `true` [[1]](#notes_1)
-| KAFKA_CONTENT_UPDATED_GROUP    | dp-search-data-extractor | The consumer group this application to consume content-updated messages
-| KAFKA_CONTENT_UPDATED_TOPIC    | content-updated          | The name of the topic to consume messages from
-| KAFKA_PRODUCER_TOPIC           | search-data-import       | The name of the topic to produce messages to
-| KEYWORDS_LIMITS                | -1                       | The keywords allowed, default no limit
-| SERVICE_AUTH_TOKEN             | _unset_                  | The user auth token for the DatasetAPI
-| STOP_CONSUMING_ON_UNHEALTHY    | true                     | Application stops consuming kafka messages if application is in unhealthy state
-| ZEBEDEE_URL                    | `http://localhost:8082`  | The URL for the Zebedee
+| Environment variable       | Default                  | Description
+|----------------------------|--------------------------| -----------
+| BIND_ADDR                  | localhost:25800          | The host and port to bind to
+| DATASET_API_URL            | `http://localhost:22000` | The URL for the DatasetAPI
+| GRACEFUL_SHUTDOWN_TIMEOUT  | 5s                       | The graceful shutdown timeout in seconds (`time.Duration` format)
+| HEALTHCHECK_INTERVAL       | 30s                      | Time between self-healthchecks (`time.Duration` format)
+| HEALTHCHECK_CRITICAL_TIMEOUT | 90s                      | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
+| KAFKA_ADDR                 | "localhost:9092"         | The address of Kafka (accepts list)
+| KAFKA_OFFSET_OLDEST        | true                     | Start processing Kafka messages in order from the oldest in the queue
+| KAFKA_VERSION              | `1.0.2`                  | The version of Kafka
+| KAFKA_NUM_WORKERS          | 1                        | The maximum number of parallel kafka consumers
+| KAFKA_SEC_PROTO            | _unset_   (only `TLS`)   | if set to `TLS`, kafka connections will use TLS
+| KAFKA_SEC_CLIENT_KEY       | _unset_                  | PEM [2] for the client key (optional, used for client auth) [[1]](#notes_1)
+| KAFKA_SEC_CLIENT_CERT      | _unset_                  | PEM [2] for the client certificate (optional, used for client auth) [[1]](#notes_1)
+| KAFKA_SEC_CA_CERTS         | _unset_                  | PEM [2] of CA cert chain if using private CA for the server cert [[1]](#notes_1)
+| KAFKA_SEC_SKIP_VERIFY      | false                    | ignore server certificate issues if set to `true` [[1]](#notes_1)
+| KAFKA_CONTENT_UPDATED_GROUP | dp-search-data-extractor | The consumer group this application to consume content-updated messages
+| KAFKA_CONTENT_UPDATED_TOPIC | content-updated          | The name of the topic to consume messages from
+| KAFKA_PRODUCER_TOPIC       | search-data-import       | The name of the topic to produce messages to
+| KEYWORDS_LIMITS            | -1                       | The keywords allowed, default no limit
+| SERVICE_AUTH_TOKEN         | _unset_                  | The service auth token for the dp-search-data-extractor
+| STOP_CONSUMING_ON_UNHEALTHY | true                     | Application stops consuming kafka messages if application is in unhealthy state
+| ENABLE_TOPICS_CACHE        | false                    | Enable the topics cache, this is a combination feature flag with TOPICS_CACHE_UPDATE_INTERVAL
+| TOPICS_CACHE_UPDATE_INTERVAL | 30m                      | The time interval to update topics cache (`time.Duration` format), this is a combination feature flag with ENABLE_TOPICS_CACHE
+| TOPIC_API_URL              | `http://localhost:25300` | The URL for the Topic API
+| ZEBEDEE_URL                | `http://localhost:8082`  | The URL for the Zebedee
 
 **Notes:**
 
