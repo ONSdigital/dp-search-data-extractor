@@ -7,14 +7,14 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	dpkafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-kafka/v3/avro"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	"github.com/ONSdigital/dp-search-data-extractor/cache"
+	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
-
-	dpkafka "github.com/ONSdigital/dp-kafka/v3"
-	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -86,6 +86,10 @@ func TestHandle(t *testing.T) {
 	}
 
 	Convey("Given an event handler with a working zebedee client and kafka producer", t, func() {
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
 		var zebedeeMock = &clientMock.ZebedeeClientMock{
 			GetPublishedDataFunc: getPublishDataFunc,
 		}
@@ -94,7 +98,7 @@ func TestHandle(t *testing.T) {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, zebedeeMock, nil, producerMock}
+		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, producerMock}
 
 		Convey("When a legacy event containing a valid URI is handled", func() {
 			msg := createMessage(testZebedeeEvent)
@@ -118,12 +122,16 @@ func TestHandle(t *testing.T) {
 	})
 
 	Convey("Given an event handler with a failing zebedee client", t, func() {
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
 		var zebedeeMock = &clientMock.ZebedeeClientMock{
 			GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
 				return nil, errors.New("zebedee error")
 			},
 		}
-		h := &ContentPublished{cfg, zebedeeMock, nil, nil}
+		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, nil}
 
 		Convey("When a legacy event containing a valid URI is handled", func() {
 			msg := createMessage(testZebedeeEvent)
@@ -137,6 +145,10 @@ func TestHandle(t *testing.T) {
 	})
 
 	Convey("Given an event handler with a working dataset api client and kafka producer", t, func() {
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
 		var datasetMock = &clientMock.DatasetClientMock{
 			GetVersionMetadataFunc: getVersionMetadataFunc,
 		}
@@ -145,7 +157,7 @@ func TestHandle(t *testing.T) {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, nil, datasetMock, producerMock}
+		h := &ContentPublished{cfg, *cacheList, nil, datasetMock, producerMock}
 
 		Convey("When a valid cmd dataset event is handled", func() {
 			msg := createMessage(testDatasetEvent)
@@ -171,12 +183,16 @@ func TestHandle(t *testing.T) {
 	})
 
 	Convey("Given an event handler with a failing dataset api client", t, func() {
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
 		var datasetMock = &clientMock.DatasetClientMock{
 			GetVersionMetadataFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, edition string, version string) (dataset.Metadata, error) {
 				return dataset.Metadata{}, errors.New("dataset api error")
 			},
 		}
-		h := &ContentPublished{cfg, nil, datasetMock, nil}
+		h := &ContentPublished{cfg, *cacheList, nil, datasetMock, nil}
 
 		Convey("When a valid cmd dataset event is handled", func() {
 			msg := createMessage(testDatasetEvent)
@@ -190,7 +206,11 @@ func TestHandle(t *testing.T) {
 	})
 
 	Convey("Given an event handler without clients or producer", t, func() {
-		h := &ContentPublished{cfg, nil, nil, nil}
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, nil}
 
 		Convey("When an event with an unsupported type is handled", func() {
 			msg := createMessage(testInvalidEvent)
@@ -205,12 +225,16 @@ func TestHandle(t *testing.T) {
 
 func TestHandleErrors(t *testing.T) {
 	Convey("Given an event handler working successfully", t, func() {
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
 		var producerMock = &kafkatest.IProducerMock{
 			SendFunc: func(schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, nil, nil, producerMock}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, producerMock}
 
 		Convey("When a malformed event is handled", func() {
 			msg, err := kafkatest.NewMessage([]byte{1, 2, 3}, 0)

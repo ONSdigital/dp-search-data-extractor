@@ -18,6 +18,8 @@ func TestConfig(t *testing.T) {
 			})
 			Convey("Then the values should be set to the expected defaults", func() {
 				So(cfg.BindAddr, ShouldEqual, "localhost:25800")
+				So(cfg.EnableTopicTagging, ShouldBeFalse)
+				So(cfg.TopicCacheUpdateInterval, ShouldEqual, 30*time.Minute)
 				So(cfg.GracefulShutdownTimeout, ShouldEqual, 5*time.Second)
 				So(cfg.HealthCheckInterval, ShouldEqual, 30*time.Second)
 				So(cfg.HealthCheckCriticalTimeout, ShouldEqual, 90*time.Second)
@@ -40,6 +42,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.Kafka.ProducerMinBrokersHealthy, ShouldEqual, 1)
 				So(cfg.ZebedeeURL, ShouldEqual, "http://localhost:8082")
 				So(cfg.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
+				So(cfg.TopicAPIURL, ShouldEqual, "http://localhost:25300")
 				So(cfg.ServiceAuthToken, ShouldEqual, "")
 			})
 			Convey("Then a second call to config should return the same config", func() {

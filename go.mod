@@ -8,10 +8,12 @@ replace github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.260.1
+	github.com/ONSdigital/dp-cache v0.3.0
 	github.com/ONSdigital/dp-component-test v0.12.0
 	github.com/ONSdigital/dp-healthcheck v1.6.3
 	github.com/ONSdigital/dp-kafka/v3 v3.10.0
 	github.com/ONSdigital/dp-net v1.5.0
+	github.com/ONSdigital/dp-topic-api v0.23.0
 	github.com/ONSdigital/log.go/v2 v2.4.3
 	github.com/cucumber/godog v0.14.1
 	github.com/google/go-cmp v0.6.0
@@ -34,7 +36,7 @@ require (
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.6.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
@@ -71,9 +73,8 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

@@ -173,10 +173,10 @@ func GetURI(metadata *dataset.Metadata) string {
 	if metadata == nil {
 		return ""
 	}
-	if len(metadata.DatasetLinks.LatestVersion.URL) > 0 {
+	if metadata.DatasetLinks.LatestVersion.URL != "" {
 		return metadata.DatasetLinks.LatestVersion.URL
 	}
-	if len(metadata.DatasetDetails.Links.Version.URL) > 0 {
+	if metadata.DatasetDetails.Links.Version.URL != "" {
 		return metadata.DatasetDetails.Links.Version.URL
 	}
 	return metadata.Version.Links.Version.URL

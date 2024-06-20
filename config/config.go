@@ -12,15 +12,19 @@ const KafkaTLSProtocol = "TLS"
 // Config represents service configuration for dp-search-data-extractor
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	EnableTopicTagging         bool          `envconfig:"TOPIC_TAGGING_ENABLED"`
+	TopicCacheUpdateInterval   time.Duration `envconfig:"TOPIC_CACHE_UPDATE_INTERVAL"`
+	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
-	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
-	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
-	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
-	StopConsumingOnUnhealthy   bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
-	Kafka                      *Kafka
+
+	ZebedeeURL               string `envconfig:"ZEBEDEE_URL"`
+	KeywordsLimit            int    `envconfig:"KEYWORDS_LIMITS"`
+	DatasetAPIURL            string `envconfig:"DATASET_API_URL"`
+	ServiceAuthToken         string `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
+	StopConsumingOnUnhealthy bool   `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
+	Kafka                    *Kafka
 }
 
 // Kafka contains the config required to connect to Kafka
@@ -53,11 +57,14 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   "localhost:25800",
+		EnableTopicTagging:         false,
+		TopicCacheUpdateInterval:   30 * time.Minute,
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
 		KeywordsLimit:              -1,
+		TopicAPIURL:                "http://localhost:25300",
 		DatasetAPIURL:              "http://localhost:22000",
 		ServiceAuthToken:           "",
 		StopConsumingOnUnhealthy:   true,

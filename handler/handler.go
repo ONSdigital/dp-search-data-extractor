@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
@@ -21,6 +22,7 @@ const (
 // ContentPublished struct to hold handle for config with zebedee, datasetAPI client and the producer
 type ContentPublished struct {
 	Cfg        *config.Config
+	Cache      cache.List
 	ZebedeeCli clients.ZebedeeClient
 	DatasetCli clients.DatasetClient
 	Producer   kafka.IProducer

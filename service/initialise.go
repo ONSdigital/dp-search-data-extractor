@@ -13,6 +13,7 @@ import (
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
+	topicCli "github.com/ONSdigital/dp-topic-api/sdk"
 )
 
 // GetHTTPServer creates an HTTP Server with the provided bind address and router
@@ -44,6 +45,11 @@ var GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
 // GetDatasetClient gets the Dataset API client
 var GetDatasetClient = func(cfg *config.Config) clients.DatasetClient {
 	return dataset.NewAPIClient(cfg.DatasetAPIURL)
+}
+
+// GetTopicClient gets the Topic API client
+var GetTopicClient = func(cfg *config.Config) topicCli.Clienter {
+	return topicCli.New(cfg.TopicAPIURL)
 }
 
 // GetKafkaConsumer returns a Kafka Consumer group
