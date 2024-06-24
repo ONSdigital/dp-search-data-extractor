@@ -10,6 +10,7 @@ image_resource:
 
 inputs:
   - name: dp-search-data-extractor
+    path: dp-search-data-extractor
 
 run:
-  path: dp-search-data-extractor/ci/scripts/component.sh
+  path: dp-search-data-extractor/ci/scripts/lint.sh
