@@ -17,7 +17,7 @@ import (
 func UpdateTopics(ctx context.Context, serviceAuthToken string, topicClient topicCli.Clienter) func() []*cache.Topic {
 	return func() []*cache.Topic {
 		var topics []*cache.Topic
-		processedTopics := make(map[string]bool)
+		processedTopics := make(map[string]struct{})
 
 		// get root topic from dp-topic-api
 		rootTopic, err := topicClient.GetRootTopicsPrivate(ctx, topicCli.Headers{ServiceAuthToken: "Bearer " + serviceAuthToken})
@@ -41,7 +41,7 @@ func UpdateTopics(ctx context.Context, serviceAuthToken string, topicClient topi
 
 		// recursively process topics and their subtopics
 		for i := range rootTopicItems {
-			processTopic(ctx, serviceAuthToken, topicClient, rootTopicItems[i].ID, &topics, processedTopics, "")
+			processTopic(ctx, serviceAuthToken, topicClient, rootTopicItems[i].ID, &topics, processedTopics, "", 0)
 		}
 
 		// Check if any topics were found
@@ -54,19 +54,29 @@ func UpdateTopics(ctx context.Context, serviceAuthToken string, topicClient topi
 	}
 }
 
-func processTopic(ctx context.Context, serviceAuthToken string, topicClient topicCli.Clienter, topicID string, topics *[]*cache.Topic, processedTopics map[string]bool, parentTopicID string) {
-	// Check if the topic is already processed
-	if processedTopics[topicID] {
+func processTopic(ctx context.Context, serviceAuthToken string, topicClient topicCli.Clienter, topicID string, topics *[]*cache.Topic, processedTopics map[string]struct{}, parentTopicID string, depth int) {
+	log.Info(ctx, "Processing topic at depth", log.Data{
+		"topic_id": topicID,
+		"depth":    depth,
+	})
+
+	// Check if the topic has already been processed
+	if _, exists := processedTopics[topicID]; exists {
+		err := errors.New("topic already processed")
+		log.Error(ctx, "Skipping already processed topic", err, log.Data{
+			"topic_id": topicID,
+			"depth":    depth,
+		})
 		return
 	}
 
 	// Get the topic details from the topic client
 	topic, err := topicClient.GetTopicPrivate(ctx, topicCli.Headers{ServiceAuthToken: "Bearer " + serviceAuthToken}, topicID)
 	if err != nil {
-		logData := log.Data{
-			topicID: topicID,
-		}
-		log.Error(ctx, "failed to get topic details from topic-api", err, logData)
+		log.Error(ctx, "failed to get topic details from topic-api", err, log.Data{
+			"topic_id": topicID,
+			"depth":    depth,
+		})
 		return
 	}
 
@@ -74,12 +84,12 @@ func processTopic(ctx context.Context, serviceAuthToken string, topicClient topi
 		// Append the current topic to the list of topics
 		*topics = append(*topics, mapTopicModelToCache(*topic.Current, parentTopicID))
 		// Mark this topic as processed
-		processedTopics[topicID] = true
+		processedTopics[topicID] = struct{}{}
 
 		// Process each subtopic recursively
 		if topic.Current.SubtopicIds != nil {
 			for _, subTopicID := range *topic.Current.SubtopicIds {
-				processTopic(ctx, serviceAuthToken, topicClient, subTopicID, topics, processedTopics, topicID)
+				processTopic(ctx, serviceAuthToken, topicClient, subTopicID, topics, processedTopics, topicID, depth+1)
 			}
 		}
 	}
