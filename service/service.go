@@ -110,6 +110,11 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 		}
 	}
 
+	// Start cache updates
+	if svc.Cfg.EnableTopicTagging {
+		go svc.Cache.Topic.StartUpdates(ctx, svcErrors)
+	}
+
 	// Always start healthcheck.
 	// If start/stop on health updates is enabled,
 	// the consumer will start consuming on the first healthy update
@@ -140,6 +145,11 @@ func (svc *Service) Close(ctx context.Context) error {
 			log.Info(ctx, "stopping health checker...")
 			svc.HealthCheck.Stop()
 			log.Info(ctx, "stopped health checker")
+		}
+
+		// stop cache updates
+		if svc.Cfg.EnableTopicTagging {
+			svc.Cache.Topic.Close()
 		}
 
 		// If kafka consumer exists, stop listening to it.
