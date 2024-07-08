@@ -20,6 +20,8 @@ type Subtopic struct {
 	LocaliseKeyName string
 	Slug            string
 	ReleaseDate     *time.Time
+	// This is a reference to the parent topic
+	ParentID string
 }
 
 // GetNewSubTopicsMap creates a new subtopics id map to store subtopic ids with addition to mutex locking
@@ -31,11 +33,12 @@ func NewSubTopicsMap() *Subtopics {
 }
 
 // Get returns subtopic for given key (id)
-func (sts *Subtopics) Get(key string) Subtopic {
+func (sts *Subtopics) Get(key string) (Subtopic, bool) {
 	sts.mutex.RLock()
 	defer sts.mutex.RUnlock()
 
-	return sts.subtopicsMap[key]
+	subtopic, exists := sts.subtopicsMap[key]
+	return subtopic, exists
 }
 
 // GetSubtopics returns an array of subtopics

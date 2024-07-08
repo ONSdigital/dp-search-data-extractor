@@ -26,29 +26,27 @@ func getMockTopicCache(ctx context.Context) (*TopicCache, error) {
 		return nil, err
 	}
 
-	testTopicCache.Cache.Set("economy", GetMockTopic("6734", "economy", "Economy", ""))
-	testTopicCache.Cache.Set("environmentalaccounts", GetMockTopic("1834", "environmentalaccounts", "Environmental Accounts", "6734"))
-	testTopicCache.Cache.Set("governmentpublicsectorandtaxes", GetMockTopic("8268", "governmentpublicsectorandtaxes", "Government Public Sector and Taxes", "6734"))
-	testTopicCache.Cache.Set("publicsectorfinance", GetMockTopic("3687", "publicsectorfinance", "Public Sector Finance", "8268"))
+	rootTopicID := testTopicCache.GetTopicCacheKey()
+	testTopicCache.Set(rootTopicID, GetMockRootTopic(rootTopicID))
 
 	return testTopicCache, nil
 }
 
-// GetMockTopic returns a mocked topic which contains all the information for the mock data topic
-func GetMockTopic(id, slug, title, parentID string) *Topic {
-	mockTopic := &Topic{
-		ID:              id,
-		Slug:            slug,
-		LocaliseKeyName: title,
-		ParentID:        parentID,
-		Query:           "1834,1234",
+// GetMockRootTopic returns the mocked root topic
+func GetMockRootTopic(rootTopicID string) *Topic {
+	mockDataTopic := &Topic{
+		ID:   rootTopicID,
+		Slug: "root",
 	}
 
-	mockTopic.List = NewSubTopicsMap()
-	mockTopic.List.AppendSubtopicID("1234", Subtopic{ID: "1234", LocaliseKeyName: "International Migration", ReleaseDate: timeHelper("2022-10-10T08:30:00Z")})
-	mockTopic.List.AppendSubtopicID("1834", Subtopic{ID: "1834", LocaliseKeyName: "Environmental Accounts", ReleaseDate: timeHelper("2022-11-09T09:30:00Z")})
+	mockDataTopic.List = NewSubTopicsMap()
+	mockDataTopic.List.AppendSubtopicID("economy", Subtopic{ID: "6734", Slug: "economy", LocaliseKeyName: "Economy", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: ""})
+	mockDataTopic.List.AppendSubtopicID("environmentalaccounts", Subtopic{ID: "1834", Slug: "environmentalaccounts", LocaliseKeyName: "Environmental Accounts", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "6734"})
+	mockDataTopic.List.AppendSubtopicID("governmentpublicsectorandtaxes", Subtopic{ID: "8268", Slug: "governmentpublicsectorandtaxes", LocaliseKeyName: "Government Public Sector and Taxes", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "6734"})
+	mockDataTopic.List.AppendSubtopicID("publicsectorfinance", Subtopic{ID: "3687", Slug: "publicsectorfinance", LocaliseKeyName: "Public Sector Finance", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "8268"})
+	mockDataTopic.List.AppendSubtopicID("internationalmigration", Subtopic{ID: "1234", Slug: "internationalmigration", LocaliseKeyName: "International Migration", ReleaseDate: timeHelper("2022-10-10T08:30:00Z")})
 
-	return mockTopic
+	return mockDataTopic
 }
 
 // timeHelper is a helper function given a time returns a Time pointer

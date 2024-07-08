@@ -71,7 +71,7 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		}
 
 		// Load cache with topics on startup
-		svc.Cache.Topic.AddUpdateFuncs(cachePrivate.UpdateTopics(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
+		svc.Cache.Topic.AddUpdateFunc(svc.Cache.Topic.GetTopicCacheKey(), cachePrivate.UpdateTopicCache(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
 	}
 
 	err = svc.Consumer.RegisterHandler(ctx, h.Handle)

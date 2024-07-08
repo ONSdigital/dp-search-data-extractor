@@ -59,7 +59,7 @@ func TestNewTopicCache(t *testing.T) {
 	})
 }
 
-func TestGetData(t *testing.T) {
+func TestGetTopic(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -72,7 +72,7 @@ func TestGetData(t *testing.T) {
 		slug := "economy"
 
 		Convey("When GetData is called", func() {
-			testCacheData, err := mockCacheList.Topic.GetData(ctx, slug)
+			testCacheData, err := mockCacheList.Topic.GetTopic(ctx, slug)
 
 			Convey("Then a topic cache data should be successfully returned", func() {
 				So(testCacheData, ShouldNotBeNil)

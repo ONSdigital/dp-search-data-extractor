@@ -25,8 +25,6 @@ type Topic struct {
 	Query string
 	// List is a map[string]Subtopics which contains the topic id and a list of it's subtopics
 	List *Subtopics
-	// This is a reference to the parent topic
-	ParentID string
 }
 
 // NewTopicCache create a topic cache object to be used in the service which will update at every updateInterval
@@ -84,26 +82,49 @@ func (tc *TopicCache) AddUpdateFunc(title string, updateFunc func() *Topic) {
 	}
 }
 
-// AddUpdateFuncs adds an update function to the topic cache for a topic with the `title` passed to the function
-// This update function will then be triggered once or at every fixed interval as per the prior setup of the TopicCache
-func (tc *TopicCache) AddUpdateFuncs(updateFunc func() []*Topic) {
-	// Invoke the updateFunc to get the slice of *Topic
-	topics := updateFunc()
+// GetTopicCacheKey gets the constant value set for the root topic cache key
+func (tc *TopicCache) GetTopicCacheKey() string {
+	return TopicCacheKey
+}
 
-	// Iterate over each topic in the returned slice
-	for _, topic := range topics {
-		// Define an update function for the current topic
-		// This update function simply returns the current topic as-is
-		singleUpdateFunc := func() *Topic {
-			return topic
+func (tc *TopicCache) GetTopic(ctx context.Context, slug string) (*Subtopic, error) {
+	dataTopicCache, err := tc.GetData(ctx, TopicCacheKey)
+	if err != nil {
+		logData := log.Data{
+			"key": TopicCacheKey,
 		}
+		log.Error(ctx, "failed to get the data topic cache", err, logData)
+		return nil, err
+	}
 
-		// Add the update function to the TopicCache for the current topic's title
-		tc.AddUpdateFunc(topic.Slug, singleUpdateFunc)
+	// Retrieve the subtopic from the list
+	topicCacheItem, exists := dataTopicCache.List.Get(slug)
+	if !exists {
+		err := errors.New("requested topic does not exist in cache")
+		log.Error(ctx, "failed to get topic from cache", err, log.Data{
+			"slug": slug,
+		})
+		return nil, err
+	}
+
+	return &topicCacheItem, nil
+}
+
+// GetTopicFromSubtopic returns an empty topic cache in the event when updating the cache of the topic fails
+func (tc *TopicCache) GetTopicFromSubtopic(subtopic *Subtopic) *Topic {
+	if subtopic == nil {
+		return nil
+	}
+
+	return &Topic{
+		ID:              subtopic.ID,
+		Slug:            subtopic.Slug,
+		LocaliseKeyName: subtopic.LocaliseKeyName,
+		List:            NewSubTopicsMap(),
 	}
 }
 
-// GetEmptyTopic returns an empty topic cache in the event when updating the cache of the topic fails
+// GetEmptyTopic returns an empty topic cache e.g in an event where updating the cache of the topic fails
 func GetEmptyTopic() *Topic {
 	return &Topic{
 		List: NewSubTopicsMap(),

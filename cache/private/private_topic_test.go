@@ -14,22 +14,16 @@ import (
 )
 
 var (
-	testEconomyRootSubTopicPrivate = models.TopicResponse{
-		ID:      "6734",
-		Next:    &testEconomyRootTopic,
-		Current: &testEconomyRootTopic,
-	}
-
-	testBusinessRootSubTopicPrivate = models.TopicResponse{
-		ID:      "1234",
-		Next:    &testBusinessRootTopic,
-		Current: &testBusinessRootTopic,
-	}
-
 	testEconomyRootTopic = models.Topic{
 		ID:          "6734",
 		Title:       "Economy",
 		SubtopicIds: &[]string{"1834"},
+	}
+
+	testEconomyRootTopic2 = models.Topic{
+		ID:          "6734",
+		Title:       "Economy",
+		SubtopicIds: &[]string{"1834", "1234"},
 	}
 
 	testBusinessRootTopic = models.Topic{
@@ -37,20 +31,51 @@ var (
 		Title:       "Business",
 		SubtopicIds: &[]string{},
 	}
+
+	testBusinessRootTopic2 = models.Topic{
+		ID:          "1234",
+		Title:       "Business",
+		SubtopicIds: &[]string{"6734"},
+	}
+
+	testEconomyRootTopicPrivate = models.TopicResponse{
+		ID:      "6734",
+		Next:    &testEconomyRootTopic,
+		Current: &testEconomyRootTopic,
+	}
+
+	testEconomyRootTopicPrivate2 = models.TopicResponse{
+		ID:      "6734",
+		Next:    &testEconomyRootTopic2,
+		Current: &testEconomyRootTopic2,
+	}
+
+	testBusinessRootTopicPrivate = models.TopicResponse{
+		ID:      "1234",
+		Next:    &testBusinessRootTopic,
+		Current: &testBusinessRootTopic,
+	}
+
+	testBusinessRootTopicPrivate2 = models.TopicResponse{
+		ID:      "1234",
+		Next:    &testBusinessRootTopic2,
+		Current: &testBusinessRootTopic2,
+	}
+
+	expectedTopicCache = &cache.Topic{
+		ID:              cache.TopicCacheKey,
+		LocaliseKeyName: "Root",
+		Query:           "6734, 1234",
+	}
 )
 
-func TestUpdateTopics(t *testing.T) {
+func TestUpdateTopicCache(t *testing.T) {
 	ctx := context.Background()
 	serviceAuthToken := "test-token"
 
-	expectedTopics := []*cache.Topic{
-		{ID: "6734", LocaliseKeyName: "Economy", Query: "6734,1834"},
-		{ID: "1834", LocaliseKeyName: "Environmental Accounts"},
-		{ID: "1234", LocaliseKeyName: "Business"},
-	}
-	emptyTopic := []*cache.Topic{cache.GetEmptyTopic()}
+	emptyTopic := cache.GetEmptyTopic()
 
-	Convey("Given root topics exist in the topic API and have subtopics", t, func() {
+	Convey("Given root topic exist and have subtopics with no duplicate topics", t, func() {
 		mockClient := &mockTopic.ClienterMock{
 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
@@ -58,32 +83,38 @@ func TestUpdateTopics(t *testing.T) {
 					Offset:       0,
 					Limit:        50,
 					TotalCount:   2,
-					PrivateItems: &[]models.TopicResponse{testEconomyRootSubTopicPrivate, testBusinessRootSubTopicPrivate},
+					PrivateItems: &[]models.TopicResponse{testEconomyRootTopicPrivate, testBusinessRootTopicPrivate},
 				}, nil
 			},
 			GetTopicPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, topicID string) (*models.TopicResponse, topicCliErr.Error) {
 				switch topicID {
 				case "6734":
 					return &models.TopicResponse{
+						ID: topicID,
 						Current: &models.Topic{
 							ID:          "6734",
 							Title:       "Economy",
+							Slug:        "economy",
 							SubtopicIds: &[]string{"1834"},
 						},
 					}, nil
 				case "1834":
 					return &models.TopicResponse{
+						ID: topicID,
 						Current: &models.Topic{
 							ID:          "1834",
 							Title:       "Environmental Accounts",
+							Slug:        "environmentalaccounts",
 							SubtopicIds: &[]string{},
 						},
 					}, nil
 				case "1234":
 					return &models.TopicResponse{
+						ID: topicID,
 						Current: &models.Topic{
 							ID:          "1234",
 							Title:       "Business",
+							Slug:        "business",
 							SubtopicIds: &[]string{},
 						},
 					}, nil
@@ -95,16 +126,63 @@ func TestUpdateTopics(t *testing.T) {
 			},
 		}
 
-		Convey("When UpdateTopicsPrivate is called", func() {
-			respTopics := UpdateTopics(ctx, serviceAuthToken, mockClient)()
+		Convey("When UpdateTopicCache (Private) is called", func() {
+			respTopic := UpdateTopicCache(ctx, serviceAuthToken, mockClient)()
 
 			Convey("Then the topics cache is returned", func() {
-				So(respTopics, ShouldNotBeNil)
-				So(len(respTopics), ShouldEqual, len(expectedTopics))
-				for i, expected := range expectedTopics {
-					So(respTopics[i].ID, ShouldEqual, expected.ID)
-					So(respTopics[i].LocaliseKeyName, ShouldEqual, expected.LocaliseKeyName)
-				}
+				So(respTopic, ShouldNotBeNil)
+				So(respTopic.ID, ShouldEqual, expectedTopicCache.ID)
+				So(respTopic.LocaliseKeyName, ShouldEqual, expectedTopicCache.LocaliseKeyName)
+
+				So(len(respTopic.List.GetSubtopics()), ShouldEqual, 3)
+			})
+		})
+
+		Convey("And given root topics exist and have subtopics with duplicate topics", func() {
+			mockClient.GetRootTopicsPrivateFunc = func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
+				return &models.PrivateSubtopics{
+					Count:        2,
+					Offset:       0,
+					Limit:        50,
+					TotalCount:   2,
+					PrivateItems: &[]models.TopicResponse{testEconomyRootTopicPrivate, testBusinessRootTopicPrivate, testEconomyRootTopicPrivate, testBusinessRootTopicPrivate},
+				}, nil
+			}
+
+			Convey("When UpdateTopicCache (Private) is called", func() {
+				respTopic := UpdateTopicCache(ctx, serviceAuthToken, mockClient)()
+
+				Convey("Then the topics cache is returned with expected number of topics excluding duplicates", func() {
+					So(respTopic, ShouldNotBeNil)
+					So(respTopic.ID, ShouldEqual, expectedTopicCache.ID)
+					So(respTopic.LocaliseKeyName, ShouldEqual, expectedTopicCache.LocaliseKeyName)
+
+					So(len(respTopic.List.GetSubtopics()), ShouldEqual, 3)
+				})
+			})
+		})
+
+		Convey("And given root topics exist and private items that have subtopics that can end up in a recursive loop", func() {
+			mockClient.GetRootTopicsPrivateFunc = func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
+				return &models.PrivateSubtopics{
+					Count:        2,
+					Offset:       0,
+					Limit:        50,
+					TotalCount:   2,
+					PrivateItems: &[]models.TopicResponse{testEconomyRootTopicPrivate, testEconomyRootTopicPrivate2, testBusinessRootTopicPrivate2},
+				}, nil
+			}
+
+			Convey("When UpdateTopicCache (Private) is called", func() {
+				respTopic := UpdateTopicCache(ctx, serviceAuthToken, mockClient)()
+
+				Convey("Then the topics cache is returned as expected with no duplicates and does not get stuck in a loop", func() {
+					So(respTopic, ShouldNotBeNil)
+					So(respTopic.ID, ShouldEqual, expectedTopicCache.ID)
+					So(respTopic.LocaliseKeyName, ShouldEqual, expectedTopicCache.LocaliseKeyName)
+
+					So(len(respTopic.List.GetSubtopics()), ShouldEqual, 3)
+				})
 			})
 		})
 	})
@@ -118,11 +196,11 @@ func TestUpdateTopics(t *testing.T) {
 			},
 		}
 
-		Convey("When UpdateTopicsPrivate is called", func() {
-			respTopics := UpdateTopics(ctx, serviceAuthToken, mockClient)()
+		Convey("When UpdateTopicCache (Private) is called", func() {
+			respTopic := UpdateTopicCache(ctx, serviceAuthToken, mockClient)()
 
 			Convey("Then an empty topic cache should be returned", func() {
-				So(respTopics, ShouldResemble, emptyTopic)
+				So(respTopic, ShouldResemble, emptyTopic)
 			})
 		})
 	})
@@ -138,18 +216,26 @@ func TestUpdateTopics(t *testing.T) {
 					PrivateItems: nil,
 				}, nil
 			},
+			GetTopicPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, topicID string) (*models.TopicResponse, topicCliErr.Error) {
+				return &models.TopicResponse{
+					Current: &models.Topic{
+						ID:          topicID,
+						SubtopicIds: nil,
+					},
+				}, nil
+			},
 		}
 
-		Convey("When UpdateTopicsPrivate is called", func() {
-			respTopics := UpdateTopics(ctx, serviceAuthToken, mockClient)()
+		Convey("When UpdateTopicCache (Private) is called", func() {
+			respTopic := UpdateTopicCache(ctx, serviceAuthToken, mockClient)()
 
 			Convey("Then an empty topic cache should be returned", func() {
-				So(respTopics, ShouldResemble, emptyTopic)
+				So(respTopic, ShouldResemble, emptyTopic)
 			})
 		})
 	})
 
-	Convey("Given root topics exist but no topics found", t, func() {
+	Convey("Given root topics exist but no data topics found", t, func() {
 		mockClient := &mockTopic.ClienterMock{
 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
@@ -162,8 +248,8 @@ func TestUpdateTopics(t *testing.T) {
 			},
 		}
 
-		Convey("When UpdateTopicsPrivate is called", func() {
-			respTopics := UpdateTopics(ctx, serviceAuthToken, mockClient)()
+		Convey("When UpdateTopicCache (Private) is called", func() {
+			respTopics := UpdateTopicCache(ctx, serviceAuthToken, mockClient)()
 
 			Convey("Then an empty topic cache should be returned", func() {
 				So(respTopics, ShouldResemble, emptyTopic)
