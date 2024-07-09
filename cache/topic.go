@@ -88,17 +88,17 @@ func (tc *TopicCache) GetTopicCacheKey() string {
 }
 
 func (tc *TopicCache) GetTopic(ctx context.Context, slug string) (*Subtopic, error) {
-	dataTopicCache, err := tc.GetData(ctx, TopicCacheKey)
+	topicCache, err := tc.GetData(ctx, TopicCacheKey)
 	if err != nil {
 		logData := log.Data{
 			"key": TopicCacheKey,
 		}
-		log.Error(ctx, "failed to get the data topic cache", err, logData)
+		log.Error(ctx, "failed to get the topic cache", err, logData)
 		return nil, err
 	}
 
 	// Retrieve the subtopic from the list
-	topicCacheItem, exists := dataTopicCache.List.Get(slug)
+	topicCacheItem, exists := topicCache.List.Get(slug)
 	if !exists {
 		err := errors.New("requested topic does not exist in cache")
 		log.Error(ctx, "failed to get topic from cache", err, log.Data{

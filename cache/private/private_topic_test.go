@@ -235,7 +235,7 @@ func TestUpdateTopicCache(t *testing.T) {
 		})
 	})
 
-	Convey("Given root topics exist but no data topics found", t, func() {
+	Convey("Given root topics exist but no topics found", t, func() {
 		mockClient := &mockTopic.ClienterMock{
 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
