@@ -54,14 +54,6 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 	svc.DatasetCli = GetDatasetClient(cfg)
 	svc.TopicCli = GetTopicClient(cfg)
 
-	h := handler.ContentPublished{
-		Cfg:        svc.Cfg,
-		ZebedeeCli: svc.ZebedeeCli,
-		DatasetCli: svc.DatasetCli,
-		Producer:   svc.Producer,
-		Cache:      svc.Cache,
-	}
-
 	if svc.Cfg.EnableTopicTagging {
 		// Initialise caching
 		svc.Cache.Topic, err = cache.NewTopicCache(ctx, &svc.Cfg.TopicCacheUpdateInterval)
@@ -72,6 +64,14 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 
 		// Load cache with topics on startup
 		svc.Cache.Topic.AddUpdateFunc(svc.Cache.Topic.GetTopicCacheKey(), cachePrivate.UpdateTopicCache(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
+	}
+
+	h := handler.ContentPublished{
+		Cfg:        svc.Cfg,
+		ZebedeeCli: svc.ZebedeeCli,
+		DatasetCli: svc.DatasetCli,
+		Producer:   svc.Producer,
+		Cache:      svc.Cache,
 	}
 
 	err = svc.Consumer.RegisterHandler(ctx, h.Handle)

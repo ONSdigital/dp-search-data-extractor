@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -14,7 +15,7 @@ const (
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
 // It also optionally takes a limit which truncates the keywords to the desired amount. This value can be -1 for no
 // truncation.
-func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int) SearchDataImport {
+func MapZebedeeDataToSearchDataImport(ctx context.Context, zebedeeData ZebedeeData, keywordsLimit int, topicCache *cache.TopicCache, topicTagging bool) SearchDataImport {
 	searchData := SearchDataImport{
 		UID:             zebedeeData.URI,
 		URI:             zebedeeData.URI,
@@ -47,7 +48,44 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		searchData.Language = zebedeeData.Description.Language
 		searchData.CanonicalTopic = zebedeeData.Description.CanonicalTopic
 	}
+
+	if topicTagging {
+		// Set to track unique topic IDs
+		uniqueTopics := make(map[string]struct{})
+
+		// Add existing topics in searchData.Topics
+		for _, topicID := range searchData.Topics {
+			if _, exists := uniqueTopics[topicID]; !exists {
+				uniqueTopics[topicID] = struct{}{}
+			}
+		}
+
+		// Break URI into segments and exclude the last segment
+		uriSegments := strings.Split(zebedeeData.URI, "/")
+
+		// Add topics based on URI segments
+		for _, segment := range uriSegments {
+			AddTopicWithParents(ctx, segment, topicCache, uniqueTopics)
+		}
+
+		// Convert set to slice
+		searchData.Topics = make([]string, 0, len(uniqueTopics))
+		for topicID := range uniqueTopics {
+			searchData.Topics = append(searchData.Topics, topicID)
+		}
+	}
 	return searchData
+}
+
+func AddTopicWithParents(ctx context.Context, slug string, topicCache *cache.TopicCache, uniqueTopics map[string]struct{}) {
+	if topic, _ := topicCache.GetTopic(ctx, slug); topic != nil {
+		if _, exists := uniqueTopics[topic.ID]; !exists {
+			uniqueTopics[topic.ID] = struct{}{}
+			if topic.ParentSlug != "" {
+				AddTopicWithParents(ctx, topic.ParentSlug, topicCache, uniqueTopics)
+			}
+		}
+	}
 }
 
 // RectifyKeywords sanitises a slice of keywords, splitting any that contain commas into seperate keywords and trimming

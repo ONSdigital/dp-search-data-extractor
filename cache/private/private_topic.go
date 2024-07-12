@@ -47,7 +47,7 @@ func UpdateTopicCache(ctx context.Context, serviceAuthToken string, topicClient 
 
 		// recursively process topics and their subtopics
 		for i := range rootTopicItems {
-			processTopic(ctx, serviceAuthToken, topicClient, rootTopicItems[i].ID, topicCache, processedTopics, "", 0)
+			processTopic(ctx, serviceAuthToken, topicClient, rootTopicItems[i].ID, topicCache, processedTopics, "", "", 0)
 		}
 
 		// Check if any topics were found
@@ -60,7 +60,7 @@ func UpdateTopicCache(ctx context.Context, serviceAuthToken string, topicClient 
 	}
 }
 
-func processTopic(ctx context.Context, serviceAuthToken string, topicClient topicCli.Clienter, topicID string, topicCache *cache.Topic, processedTopics map[string]struct{}, parentTopicID string, depth int) {
+func processTopic(ctx context.Context, serviceAuthToken string, topicClient topicCli.Clienter, topicID string, topicCache *cache.Topic, processedTopics map[string]struct{}, parentTopicID, parentTopicSlug string, depth int) {
 	log.Info(ctx, "Processing topic at depth", log.Data{
 		"topic_id": topicID,
 		"depth":    depth,
@@ -88,7 +88,7 @@ func processTopic(ctx context.Context, serviceAuthToken string, topicClient topi
 
 	if topic != nil {
 		// Initialize subtopic list for the current topic if it doesn't exist
-		subtopic := mapTopicModelToCache(*topic.Current, parentTopicID)
+		subtopic := mapTopicModelToCache(*topic.Current, parentTopicID, parentTopicSlug)
 
 		// Add the current topic to the topicCache's List
 		topicCache.List.AppendSubtopicID(topic.Current.Slug, subtopic)
@@ -99,18 +99,19 @@ func processTopic(ctx context.Context, serviceAuthToken string, topicClient topi
 		// Process each subtopic recursively
 		if topic.Current.SubtopicIds != nil {
 			for _, subTopicID := range *topic.Current.SubtopicIds {
-				processTopic(ctx, serviceAuthToken, topicClient, subTopicID, topicCache, processedTopics, topicID, depth+1)
+				processTopic(ctx, serviceAuthToken, topicClient, subTopicID, topicCache, processedTopics, topicID, topic.Current.Slug, depth+1)
 			}
 		}
 	}
 }
 
-func mapTopicModelToCache(topic models.Topic, parentID string) cache.Subtopic {
+func mapTopicModelToCache(topic models.Topic, parentID, parentSlug string) cache.Subtopic {
 	return cache.Subtopic{
 		ID:              topic.ID,
 		Slug:            topic.Slug,
 		LocaliseKeyName: topic.Title,
 		ReleaseDate:     topic.ReleaseDate,
 		ParentID:        parentID,
+		ParentSlug:      parentSlug,
 	}
 }

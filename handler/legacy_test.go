@@ -14,7 +14,7 @@ import (
 )
 
 func TestHandleZebedeeTypeErrors(t *testing.T) {
-	Convey("Given an empty handler and a ContentPbulished event with a malformed URI that contains 'datasets' substring", t, func() {
+	Convey("Given an empty handler and a ContentPublished event with a malformed URI that contains 'datasets' substring", t, func() {
 		h := &ContentPublished{}
 		cpEvent := models.ContentPublished{
 			URI: "wrong%%datasets",

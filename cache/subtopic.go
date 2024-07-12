@@ -21,7 +21,8 @@ type Subtopic struct {
 	Slug            string
 	ReleaseDate     *time.Time
 	// This is a reference to the parent topic
-	ParentID string
+	ParentID   string
+	ParentSlug string
 }
 
 // GetNewSubTopicsMap creates a new subtopics id map to store subtopic ids with addition to mutex locking
