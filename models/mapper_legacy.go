@@ -15,7 +15,7 @@ const (
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
 // It also optionally takes a limit which truncates the keywords to the desired amount. This value can be -1 for no
 // truncation.
-func MapZebedeeDataToSearchDataImport(ctx context.Context, zebedeeData ZebedeeData, keywordsLimit int, topicCache *cache.TopicCache, topicTagging bool) SearchDataImport {
+func MapZebedeeDataToSearchDataImport(ctx context.Context, zebedeeData ZebedeeData, keywordsLimit int, topicCache *cache.TopicCache, enableTopicTagging bool) SearchDataImport {
 	searchData := SearchDataImport{
 		UID:             zebedeeData.URI,
 		URI:             zebedeeData.URI,
@@ -49,7 +49,7 @@ func MapZebedeeDataToSearchDataImport(ctx context.Context, zebedeeData ZebedeeDa
 		searchData.CanonicalTopic = zebedeeData.Description.CanonicalTopic
 	}
 
-	if topicTagging {
+	if enableTopicTagging {
 		// Set to track unique topic IDs
 		uniqueTopics := make(map[string]struct{})
 

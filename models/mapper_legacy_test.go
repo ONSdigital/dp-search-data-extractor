@@ -102,8 +102,9 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get mock cache list: %v", err)
 		}
-		Convey("When topic tagging is off", func() {
-			Convey("When mapped with a default keywords limit when edition is present", func() {
+
+		Convey("When topic tagging is disabled", func() {
+			Convey("And mapped with a default keywords limit when edition is present", func() {
 				result := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeDataWithEdition, -1, cacheList.Topic, false)
 				Convey("Then the result should be validly mapped with 4 keywords when edition is present", func() {
 					So(result.UID, ShouldResemble, someURI)
@@ -141,7 +142,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 					So(result.Topics[1], ShouldResemble, sometopic1)
 				})
 			})
-			Convey("When mapped with a default keywords limit", func() {
+			Convey("And mapped with a default keywords limit", func() {
 				result := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeData, -1, cacheList.Topic, false)
 				Convey("Then the result should be validly mapped with 4 keywords", func() {
 					So(result.UID, ShouldResemble, someURI)
@@ -178,7 +179,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 					So(result.Topics[1], ShouldResemble, sometopic1)
 				})
 			})
-			Convey("When mapped with a keywords limit of 2", func() {
+			Convey("And mapped with a keywords limit of 2", func() {
 				result := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeData, 2, cacheList.Topic, false)
 				Convey("Then the result should be validly mapped with 2 keywords", func() {
 					So(result.DataType, ShouldResemble, someRelease)
@@ -196,8 +197,8 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				})
 			})
 		})
-		Convey("When topic tagging is on", func() {
-			Convey("When mapped with a default keywords limit when edition is present", func() {
+		Convey("When topic tagging is enabled", func() {
+			Convey("And mapped with a default keywords limit when edition is present", func() {
 				result := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeDataWithEdition, -1, cacheList.Topic, true)
 				Convey("Then the result should be validly mapped with 4 keywords when edition is present", func() {
 					So(result.UID, ShouldResemble, someURI)
@@ -233,7 +234,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 					So(result.Topics, ShouldHaveLength, 3)
 				})
 			})
-			Convey("When mapped with a default keywords limit", func() {
+			Convey("And mapped with a default keywords limit", func() {
 				result := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeData, -1, cacheList.Topic, true)
 				Convey("Then the result should be validly mapped with 4 keywords", func() {
 					So(result.UID, ShouldResemble, someURI)
@@ -268,7 +269,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 					So(result.Topics, ShouldHaveLength, 3)
 				})
 			})
-			Convey("When mapped with a keywords limit of 2", func() {
+			Convey("And mapped with a keywords limit of 2", func() {
 				result := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeData, 2, cacheList.Topic, true)
 				Convey("Then the result should be validly mapped with 2 keywords", func() {
 					So(result.DataType, ShouldResemble, someRelease)
