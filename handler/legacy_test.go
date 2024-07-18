@@ -7,6 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-kafka/v3/avro"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
@@ -152,6 +153,81 @@ func TestRetrieveCorrectURI(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(datasetURI, ShouldEqual, expectedURI)
 			})
+		})
+	})
+}
+
+func TestTagSearchDataWithURITopics(t *testing.T) {
+	Convey("Test tagSearchDataWithURITopics", t, func() {
+		// Set up mock cache list
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
+
+		searchData := models.SearchDataImport{
+			UID:             "12345",
+			URI:             "/economy/environmentalaccounts",
+			DataType:        "dataset",
+			Edition:         "2021",
+			JobID:           "job-123",
+			SearchIndex:     "search-index",
+			CanonicalTopic:  "canonical-topic",
+			CDID:            "CDID-123",
+			DatasetID:       "dataset-123",
+			Keywords:        []string{"keyword1", "keyword2"},
+			MetaDescription: "meta description",
+			ReleaseDate:     "2021-01-01",
+			Summary:         "summary",
+			Title:           "title",
+			Topics:          []string{"1234"},
+			TraceID:         "trace-123",
+			Cancelled:       false,
+			Finalised:       false,
+			ProvisionalDate: "2021-01-02",
+			Published:       true,
+			Survey:          "survey",
+			Language:        "en",
+		}
+
+		Convey("When topics are initially empty", func() {
+			searchData.Topics = []string{}
+			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
+
+			expectedTopics := []string{"6734", "1834"}
+
+			So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+			So(updatedImporterEventData.Topics, ShouldContain, "1834")
+			So(updatedImporterEventData.Topics, ShouldContain, "6734")
+		})
+
+		Convey("When topics are initially not empty", func() {
+			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
+
+			expectedTopics := []string{"1234", "6734", "1834"}
+
+			So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+			So(updatedImporterEventData.Topics, ShouldContain, "1834")
+			So(updatedImporterEventData.Topics, ShouldContain, "1234")
+		})
+
+		Convey("When URI does not match any topics", func() {
+			searchData.URI = "/non-existing-topic"
+			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
+
+			So(updatedImporterEventData.Topics, ShouldResemble, searchData.Topics)
+		})
+
+		Convey("When URI segments contain unrelated topics", func() {
+			searchData.URI = "/economy/environmentalaccounts/non-existing-slug"
+			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
+
+			expectedTopics := []string{"1234", "6734", "1834"}
+
+			So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+			So(updatedImporterEventData.Topics, ShouldContain, "1234")
+			So(updatedImporterEventData.Topics, ShouldContain, "6734")
+			So(updatedImporterEventData.Topics, ShouldContain, "1834")
 		})
 	})
 }

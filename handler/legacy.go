@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -50,10 +51,13 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	}
 
 	// Map data returned by Zebedee to the kafka Event structure
-	searchData := models.MapZebedeeDataToSearchDataImport(ctx, zebedeeData, h.Cfg.KeywordsLimit, h.Cache.Topic, h.Cfg.EnableTopicTagging)
+	searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, h.Cfg.KeywordsLimit)
 	searchData.TraceID = cpEvent.TraceID
 	searchData.JobID = cpEvent.JobID
 	searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
+	if h.Cfg.EnableTopicTagging {
+		searchData = tagSearchDataWithURITopics(ctx, searchData, h.Cache.Topic)
+	}
 
 	if err := h.Producer.Send(schema.SearchDataImportEvent, &searchData); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
@@ -61,6 +65,48 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	}
 
 	return nil
+}
+
+// Auto tag search data topics based on the URI segments of the request
+func tagSearchDataWithURITopics(ctx context.Context, searchData models.SearchDataImport, topicCache *cache.TopicCache) models.SearchDataImport {
+	// Set to track unique topic IDs
+	uniqueTopics := make(map[string]struct{})
+
+	// Add existing topics in searchData.Topics
+	for _, topicID := range searchData.Topics {
+		if _, exists := uniqueTopics[topicID]; !exists {
+			uniqueTopics[topicID] = struct{}{}
+		}
+	}
+
+	// Break URI into segments and exclude the last segment
+	uriSegments := strings.Split(searchData.URI, "/")
+
+	// Add topics based on URI segments
+	for _, segment := range uriSegments {
+		AddTopicWithParents(ctx, segment, topicCache, uniqueTopics)
+	}
+
+	// Convert set to slice
+	searchData.Topics = make([]string, 0, len(uniqueTopics))
+	for topicID := range uniqueTopics {
+		searchData.Topics = append(searchData.Topics, topicID)
+	}
+
+	return searchData
+}
+
+// AddTopicWithParents adds a topic and its parents to the uniqueTopics map if they don't already exist.
+// It recursively adds parent topics until it reaches the root topic.
+func AddTopicWithParents(ctx context.Context, slug string, topicCache *cache.TopicCache, uniqueTopics map[string]struct{}) {
+	if topic, _ := topicCache.GetTopic(ctx, slug); topic != nil {
+		if _, exists := uniqueTopics[topic.ID]; !exists {
+			uniqueTopics[topic.ID] = struct{}{}
+			if topic.ParentSlug != "" {
+				AddTopicWithParents(ctx, topic.ParentSlug, topicCache, uniqueTopics)
+			}
+		}
+	}
 }
 
 func retrieveCorrectURI(uri string) (correctURI string, err error) {
