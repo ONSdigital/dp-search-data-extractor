@@ -158,7 +158,7 @@ func TestRetrieveCorrectURI(t *testing.T) {
 }
 
 func TestTagSearchDataWithURITopics(t *testing.T) {
-	Convey("Test tagSearchDataWithURITopics", t, func() {
+	Convey("Given tagSearchDataWithURITopics", t, func() {
 		// Set up mock cache list
 		cacheList, err := cache.GetMockCacheList(ctx)
 		if err != nil {
@@ -194,40 +194,50 @@ func TestTagSearchDataWithURITopics(t *testing.T) {
 			searchData.Topics = []string{}
 			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
 
-			expectedTopics := []string{"6734", "1834"}
+			Convey("Then the resulting topics should contain only topics from the URI", func() {
+				expectedTopics := []string{"6734", "1834"}
 
-			So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
-			So(updatedImporterEventData.Topics, ShouldContain, "1834")
-			So(updatedImporterEventData.Topics, ShouldContain, "6734")
+				So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+				So(updatedImporterEventData.Topics, ShouldContain, "1834")
+				So(updatedImporterEventData.Topics, ShouldContain, "6734")
+			})
 		})
 
 		Convey("When topics are initially not empty", func() {
 			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
 
-			expectedTopics := []string{"1234", "6734", "1834"}
+			Convey("Then the resulting topics should contain both the default and the topics obtained from the URI", func() {
+				expectedTopics := []string{"1234", "6734", "1834"}
 
-			So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
-			So(updatedImporterEventData.Topics, ShouldContain, "1834")
-			So(updatedImporterEventData.Topics, ShouldContain, "1234")
+				So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+				So(updatedImporterEventData.Topics, ShouldContain, "1834")
+				So(updatedImporterEventData.Topics, ShouldContain, "1234")
+			})
 		})
 
 		Convey("When URI does not match any topics", func() {
 			searchData.URI = "/non-existing-topic"
 			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
 
-			So(updatedImporterEventData.Topics, ShouldResemble, searchData.Topics)
+			Convey("Then the resulting topics should contain only the default", func() {
+				expectedTopics := []string{"1234"}
+				So(updatedImporterEventData.Topics, ShouldResemble, searchData.Topics)
+				So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+			})
 		})
 
 		Convey("When URI segments contain unrelated topics", func() {
 			searchData.URI = "/economy/environmentalaccounts/non-existing-slug"
 			updatedImporterEventData := tagSearchDataWithURITopics(ctx, searchData, cacheList.Topic)
 
-			expectedTopics := []string{"1234", "6734", "1834"}
+			Convey("Then the resulting topics should contain only related topics", func() {
+				expectedTopics := []string{"1234", "6734", "1834"}
 
-			So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
-			So(updatedImporterEventData.Topics, ShouldContain, "1234")
-			So(updatedImporterEventData.Topics, ShouldContain, "6734")
-			So(updatedImporterEventData.Topics, ShouldContain, "1834")
+				So(updatedImporterEventData.Topics, ShouldHaveLength, len(expectedTopics))
+				So(updatedImporterEventData.Topics, ShouldContain, "1234")
+				So(updatedImporterEventData.Topics, ShouldContain, "6734")
+				So(updatedImporterEventData.Topics, ShouldContain, "1834")
+			})
 		})
 	})
 }

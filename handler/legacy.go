@@ -74,9 +74,7 @@ func tagSearchDataWithURITopics(ctx context.Context, searchData models.SearchDat
 
 	// Add existing topics in searchData.Topics
 	for _, topicID := range searchData.Topics {
-		if _, exists := uniqueTopics[topicID]; !exists {
-			uniqueTopics[topicID] = struct{}{}
-		}
+		uniqueTopics[topicID] = struct{}{}
 	}
 
 	// Break URI into segments and exclude the last segment
