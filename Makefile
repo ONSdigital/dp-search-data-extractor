@@ -66,6 +66,10 @@ test: ## Runs unit tests including checks for race conditions and returns covera
 test-component: ## Runs component test suite
 	go test -cover -race -coverpkg=github.com/ONSdigital/dp-search-data-extractor/... -component
 
+.PHONY: validate-specification
+validate-specification: ## Validates specification
+	asyncapi validate specification.yml
+
 .PHONY: help
 help: ## Show help page for list of make targets
 	@echo ''

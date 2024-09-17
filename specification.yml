@@ -1,0 +1,220 @@
+asyncapi: 3.0.0
+info:
+  title: dp-search-data-extractor
+  version: 1.3.0
+  description: |-
+    The *dp-search-data-extractor* allows you to prompt the service to extract data 
+    from an upstream data store, process it and prepare it for import to the search index.
+    Importing is done by a separate service, *dp-search-data-importer*.
+  license:
+    name: MIT
+    url: https://opensource.org/license/MIT
+defaultContentType: application/json
+channels:
+  content-updated:
+    messages:
+      content-updated:
+        $ref: '#/components/messages/content-updated'
+    description: This topic contains a message for each unique uri that has been updated or created. 
+  search-data-import:
+    messages:
+      search-data-import:
+        $ref: '#/components/messages/search-data-import'
+    description: This topic contains a message of processed search information, ready for import.
+operations:
+  content-updated:
+    action: receive
+    channel:
+      $ref: '#/channels/content-updated'
+    summary: Notify extractor that content has updated.
+    messages:
+      - $ref: '#/channels/content-updated/messages/content-updated'
+  search-data-import:
+    action: send
+    channel:
+      $ref: '#/channels/search-data-import'
+    summary: Send data for import by dp-search-data-importer
+    messages:
+      - $ref: '#/channels/search-data-import/messages/search-data-import'
+components:
+  messages:
+    content-updated:
+      name: content-updated
+      title: Content upstream has been updated
+      payload:
+        type: object
+        required:
+        - uri
+        - data_type
+        properties:
+          uri:
+            type: string
+            description: URI of the upstream content item
+            example: /economy/environmentalaccounts
+          data_type:
+            type: string
+            enum: 
+            - legacy
+            - datasets
+            description: |- 
+              This property defines which set of callbacks and transformations that are applied to message.
+              'legacy' refers to *zebedee*, whilst 'datasets' refers to the *dp-dataset-api*
+          collection_id:
+            type: string
+            description: Collection ID for upstream content item - Zebedee specific
+          job_id:
+            type: string
+            description: Job ID for use with reindex pipeline
+          search_index:
+            type: string
+            description: Specific search index ID for use with reindex pipeline
+          trace_id:
+            type: string
+            description: Trace ID for OTEL tracing
+    search-data-import:
+      name: search-data-import
+      title: Item has been processed ready for search import
+      payload:
+        type: object
+        required:
+        - uid
+        - uri
+        - title
+        properties:
+          uid:
+            type: string
+            description: Unique ID by which to index in search
+          uri:
+            type: string
+            description: URI of upstream content item
+          data_type:
+            type: string
+            description: Content type ID, used for aggregations
+            enum:
+            - api_dataset_landing_page
+            - article
+            - article_download
+            - bulletin
+            - compendium_chapter
+            - compendium_data
+            - compendium_landing_page
+            - dataset
+            - dataset_landing_page
+            - home_page
+            - home_page_census
+            - product_page
+            - reference_tables
+            - release
+            - static_adhoc
+            - static_article
+            - static_foi
+            - static_landing_page
+            - static_methodology
+            - static_methodology_download
+            - static_page
+            - static_qmi
+            - taxonomy_landing_page
+            - timeseries
+            - visualisation
+          job_id:
+            type: string
+            description: Job ID for use with reindex pipeline
+          search_index:
+            type: string
+            description: Specific search index ID for use with reindex pipeline
+          cdid:
+            type: string
+            description: CDID for content item, typically used with timeseries
+          dataset_id:
+            type: string
+            description: Dataset ID for content item
+          edition:
+            type: string
+          keywords:
+            type: array
+            items:
+              type: string
+          meta_description:
+            type: string
+          release_date:
+            type: string
+            format: date-time
+            description: Release date in an ISO 8601 format
+            example: "2026-02-12T07:00:00.000Z"
+          summary:
+            type: string
+            description: Summary text, typically used in search listings
+          title:
+            type: string
+            description: Title of the content item
+          topics:
+            type: array
+            description: Array of topic IDs taken from Topic API
+            items:
+              type: string
+          trace_id:
+            type: string
+            description: Trace ID for OTEL tracing
+          cancelled:
+            type: boolean
+            description: Shows if a release has been cancelled, only used with Release content type
+          finalised:
+            type: boolean
+            description: Shows if a release has been finalised, only used with Release content type
+          published:
+            type: boolean
+            description: Shows if a release has been published, only used with Release content type
+            tags:
+            - name: bum
+              description: hello there
+          language:
+            type: string
+          survey:
+            type: string
+          canonical_topic:
+            type: string
+          date_changes:
+            type: array
+            description: List of date changes, only used with Release content type
+            items:
+              type: object
+              properties:
+                change_notice:
+                  type: string
+                previous_date:
+                  type: string
+          provisional_date:
+            type: string
+            description: A provisional date string, only used with Release content type
+            example: October-November 2024
+          dimensions:
+            type: array
+            description: Array of dimensions, not currently used.
+            items:
+              type: object
+              properties:
+                key: 
+                  type: string
+                agg_key:
+                  type: string
+                name:
+                  type: string
+                label:
+                  type: string
+                raw_label:
+                  type: string
+          population_type:
+            type: array
+            description: Array of population types, not currently used.
+            items:
+              type: object
+              properties:
+                key:
+                  type: string
+                agg_key:
+                  type: string
+                name:
+                  type: string
+                label:
+                  type: string
+

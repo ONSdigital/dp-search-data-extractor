@@ -6,7 +6,7 @@ This service calls /publisheddata endpoint on [zebedee](https://github.com/ONSdi
 on [dataset API](https://github.com/ONSdigital/dp-dataset-api).
 
 This service listens to the `content-updated` kafka topic for events of type contentUpdatedEvent e.g.
-see [schemas](schema) package.
+see [schemas](schema) package. You can also read our [AsyncAPI specification](specification.yml).
 
 This service takes the uri, from the consumed event, and either calls ...
 
@@ -32,6 +32,12 @@ An example event can be created using the helper script, `make produce`.
 * Requires running…
     * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
 * No further dependencies other than those defined in `go.mod`
+
+To run `make validate-specification` you require Node v20.x and to install @asyncapi/cli:
+
+```sh
+   npm install -g @asyncapi/cli
+```
 
 ### Configuration
 
