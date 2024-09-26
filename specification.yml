@@ -50,15 +50,18 @@ components:
           uri:
             type: string
             description: URI of the upstream content item
+            format: uri
             example: /economy/environmentalaccounts
           data_type:
             type: string
             enum: 
             - legacy
             - datasets
+            - callback
             description: |- 
               This property defines which set of callbacks and transformations that are applied to message.
-              'legacy' refers to *zebedee*, whilst 'datasets' refers to the *dp-dataset-api*
+              'legacy' refers to *zebedee*, whilst 'datasets' refers to the *dp-dataset-api*.
+              'callback' refers to new services which will use the generic callback model
           collection_id:
             type: string
             description: Collection ID for upstream content item - Zebedee specific
@@ -71,6 +74,9 @@ components:
           trace_id:
             type: string
             description: Trace ID for OTEL tracing
+          service_id:
+            type: string
+            description: Used with the 'callback' type to identify which service to call back to
     search-data-import:
       name: search-data-import
       title: Item has been processed ready for search import
