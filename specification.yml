@@ -164,9 +164,6 @@ components:
           published:
             type: boolean
             description: Shows if a release has been published, only used with Release content type
-            tags:
-            - name: bum
-              description: hello there
           language:
             type: string
           survey:
