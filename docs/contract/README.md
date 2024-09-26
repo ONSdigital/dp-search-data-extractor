@@ -13,6 +13,8 @@ The endpoints specified will be paths that we will store for re-use. For example
 - /data (get one resource)
 - /publishedindex (get all resource uris)
 
+`content-updated` messages will need to use the `callback` data type, alongside providing a `service_id` (matching below).
+
 To add your service to the search index, you will need to contact the development team and provide them with:
 
 - get resource endpoint
