@@ -9,7 +9,7 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/MIT
-defaultContentType: application/json
+defaultContentType: avro/binary
 channels:
   content-updated:
     messages:
