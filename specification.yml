@@ -11,6 +11,11 @@ info:
     url: https://opensource.org/license/MIT
 defaultContentType: avro/binary
 channels:
+  search-content-updated:
+    messages:
+      search-content-updated:
+        $ref: '#/components/messages/search-content-updated'
+    description: This topic contains a message for each unique uri that has been updated or created. 
   content-updated:
     messages:
       content-updated:
@@ -22,6 +27,13 @@ channels:
         $ref: '#/components/messages/search-data-import'
     description: This topic contains a message of processed search information, ready for import.
 operations:
+  search-content-updated:
+    action: receive
+    channel:
+      $ref: '#/channels/search-content-updated'
+    summary: Notify extractor that content has updated with full metadata.
+    messages:
+      - $ref: '#/channels/search-content-updated/messages/search-content-updated'
   content-updated:
     action: receive
     channel:
@@ -43,13 +55,8 @@ components:
       title: >
         Content upstream has been updated. This is the topic for supplying full metadata. It may be
         prioritised in future.
-            uri:
-        type: string
-        description: URI of upstream content item
-        format: uri
       payload:
         $ref: './docs/contract/resource_metadata.yml'
-   
     content-updated:
       name: content-updated
       title: Content upstream has been updated

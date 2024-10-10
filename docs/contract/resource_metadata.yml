@@ -3,6 +3,10 @@ title: >
   a kafka message and as part of a REST API.
 type: object
 properties:
+  uri:
+    type: string
+    description: URI of upstream content item
+    format: uri
   content_type:
       type: string
       description: Content type ID, used for aggregations
