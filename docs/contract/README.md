@@ -39,7 +39,5 @@ When a resource has been created, issue an event to the topic `search-content-up
 
 ### Resource has been renamed
 
-When a resource has been renamed (the `uri` has changed), issue:
-
-- an event to the topic `search-content-deleted` with the old resource uri.
-- an event to the topic `search-content-updated` with the new resource uri and full metadata.
+When a resource has been renamed (the `uri` has changed), issue an event to the topic `search-content-updated` using the
+`uri_old` property to indicate the old uri to be deleted.

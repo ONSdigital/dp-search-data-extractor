@@ -7,6 +7,11 @@ properties:
     type: string
     description: URI of upstream content item
     format: uri
+  uri_old:
+    type: string
+    description: >
+      Optional old URI of upstream content item, this will cause the old item
+      to be removed from search.
   content_type:
       type: string
       description: Content type ID, used for aggregations
