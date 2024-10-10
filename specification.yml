@@ -38,6 +38,18 @@ operations:
       - $ref: '#/channels/search-data-import/messages/search-data-import'
 components:
   messages:
+    search-content-updated:
+      name: search-content-updated
+      title: >
+        Content upstream has been updated. This is the topic for supplying full metadata. It may be
+        prioritised in future.
+            uri:
+        type: string
+        description: URI of upstream content item
+        format: uri
+      payload:
+        $ref: './docs/contract/resource_metadata.yml'
+   
     content-updated:
       name: content-updated
       title: Content upstream has been updated

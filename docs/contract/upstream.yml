@@ -11,17 +11,27 @@ schemes:
 paths:
   /resource:
     get:
-      operationId: GetResource
-      summary: "Get Resource Endpoint"
-      description: "Endpoint for getting a specific resources metadata"
+      operationId: GetResources
+      summary: "Get Resources Endpoint"
+      description: "Endpoint for getting all resources that are wanted to be indexed in search"
       produces:
         - application/json
       parameters:
         - in: query
-          name: uri
-          description: "URI for content item"
-          type: string
-          required: true
+          name: limit
+          description: "The number of resources requested, defaulted to 10 and limited to 1000."
+          type: integer
+          required: false
+          default: 10
+        - in: query
+          name: offset
+          description: >
+            The offset into the complete ordered set of resources which satisfy the query, which 
+            specifies the first resource to return (starting at 0). Use this parameter as a pagination 
+            mechanism along with the limit parameter.
+          type: integer
+          required: false
+          default: 0
       responses:
         200:
           description: OK
@@ -31,140 +41,27 @@ paths:
           description: Bad Request
         500:
           description: Internal server error
-  /resourceuris:
-    get:
-      operationId: GetResourceURIs
-      summary: "Get all resource URIs endpoint"
-      description: "Endpoint for getting all resource URIs"
-      produces:
-        - application/json
-      parameters:
-        - in: query
-          name: limit
-          description: "The number of Resources requested, defaulted to 10 and limited to 1000."
-          type: integer
-          required: false
-          default: 10
-        - in: query
-          name: offset
-          description: "The offset into the complete ordered set of Resources which satisfy the query, which specifies the first Resource to return (starting at 0). Use this parameter as a pagination mechanism along with the limit parameter."
-          type: integer
-          required: false
-          default: 0
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/GetResourceURIsResponse"
-        400:
-          description: Bad Request
-        500:
-          description: Internal server error
 
 definitions:
-  GetResourceResponse:
+  GetResourcesResponse:
     type: object
     properties:
-      uri:
-        type: string
-        description: URI of upstream content item
-        format: uri
-      data_type:
-        type: string
-        description: Content type ID, used for aggregations
-        enum:
-        - api_dataset_landing_page
-        - article
-        - article_download
-        - bulletin
-        - compendium_chapter
-        - compendium_data
-        - compendium_landing_page
-        - dataset
-        - dataset_landing_page
-        - home_page
-        - home_page_census
-        - product_page
-        - reference_tables
-        - release
-        - static_adhoc
-        - static_article
-        - static_foi
-        - static_landing_page
-        - static_methodology
-        - static_methodology_download
-        - static_page
-        - static_qmi
-        - taxonomy_landing_page
-        - timeseries
-        - visualisation
-      cdid:
-        type: string
-        description: CDID for content item, typically used with timeseries
-      dataset_id:
-        type: string
-        description: Dataset ID for content item
-      edition:
-        type: string
-      meta_description:
-        type: string
-      release_date:
-        type: string
-        format: date-time
-        description: Release date in an ISO 8601 format
-        example: "2026-02-12T07:00:00.000Z"
-      summary:
-        type: string
-        description: Summary text, typically used in search listings
-      title:
-        type: string
-        description: Title of the content item
-      topics:
+      count:
+        type: integer
+        description: How many resources are present in the response
+      items: 
         type: array
-        description: Array of topic IDs taken from Topic API
-        items:
-          type: string
-      cancelled:
-        type: boolean
-        description: Shows if a release has been cancelled, only used with Release content type
-      finalised:
-        type: boolean
-        description: Shows if a release has been finalised, only used with Release content type
-      published:
-        type: boolean
-        description: Shows if a release has been published, only used with Release content type
-      language:
-        type: string
-      survey:
-        type: string
-      canonical_topic:
-        type: string
-      date_changes:
-        type: array
-        description: List of date changes, only used with Release content type
-        items:
-          type: object
-          properties:
-            change_notice:
-              type: string
-            previous_date:
-              type: string
-      provisional_date:
-        type: string
-        description: A provisional date string, only used with Release content type
-        example: October-November 2024
-    required:
-      - uri
-      - title
-      - data_type
-
-  GetResourceURIsResponse:
-    type: array
-    items:
-      type: object
-      properties:
-        uri:
-          type: string
-          format: uri
-      required:
-        - uri
+        description: Array containing results.
+        items: 
+          $ref: './resource_metadata.yml'
+      limit:
+        type: integer
+        description: Max number of items we're returning in this response.
+      offset:
+        type: integer
+        description: >
+          The number of documents into the full list that this particular response is starting at, 
+          this should default to 0 if not set.
+      total_count:
+        type: integer
+        description: How many resources are available in total
