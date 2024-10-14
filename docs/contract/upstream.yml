@@ -1,4 +1,4 @@
-swagger: "2.0"
+swagger: "3.0"
 info:
   description: ""
   version: "1.0.0"
@@ -53,7 +53,9 @@ definitions:
         type: array
         description: Array containing results.
         items: 
-          $ref: './resource_metadata.yml'
+          oneOf:
+            - $ref: './resource_metadata.yml#/components/payloads/StandardPayload'
+            - $ref: './resource_metadata.yml#/components/payloads/ReleasePayload'
       limit:
         type: integer
         description: Max number of items we're returning in this response.

@@ -56,7 +56,9 @@ components:
         Content upstream has been updated. This is the topic for supplying full metadata. It may be
         prioritised in future.
       payload:
-        $ref: './docs/contract/resource_metadata.yml'
+        oneOf:
+          - $ref: './docs/contract/resource_metadata.yml#/components/schemas/ReleasePayload'
+          - $ref: './docs/contract/resource_metadata.yml#/components/schemas/StandardPayload'
     content-updated:
       name: content-updated
       title: Content upstream has been updated
