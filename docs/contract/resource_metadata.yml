@@ -1,0 +1,118 @@
+components:
+  schemas:
+    StandardPayload:
+      title: Standard payload for search updates
+      description: Resource metadata for search updates, which should be supplied as both
+          a kafka message and as part of a REST API.
+      type: object
+      properties:
+        uri:
+          type: string
+          description: URI of upstream content item
+          format: uri
+        uri_old:
+          type: string
+          description: >
+            Optional old URI of upstream content item, this will cause the old item
+            to be removed from search.
+        content_type:
+            type: string
+            description: Content type ID, used for aggregations
+            enum:
+            - api_dataset_landing_page
+            - article
+            - article_download
+            - bulletin
+            - compendium_chapter
+            - compendium_data
+            - compendium_landing_page
+            - dataset
+            - dataset_landing_page
+            - home_page
+            - home_page_census
+            - product_page
+            - reference_tables
+            - release
+            - static_adhoc
+            - static_article
+            - static_foi
+            - static_landing_page
+            - static_methodology
+            - static_methodology_download
+            - static_page
+            - static_qmi
+            - taxonomy_landing_page
+            - timeseries
+            - visualisation
+        cdid:
+          type: string
+          description: CDID for content item, typically used with timeseries
+        dataset_id:
+          type: string
+          description: Dataset ID for content item
+        edition:
+          type: string
+        meta_description:
+          type: string
+        release_date:
+          type: string
+          format: date-time
+          description: Release date in an ISO 8601 format
+          example: "2026-02-12T07:00:00.000Z"
+        summary:
+          type: string
+          description: Summary text, typically used in search listings
+        title:
+          type: string
+          description: Title of the content item
+        topics:
+          type: array
+          description: Array of topic IDs taken from Topic API
+          items:
+            type: string
+        language:
+          type: string
+        survey:
+          type: string
+        canonical_topic:
+          type: string
+      required:
+        - uri
+        - title
+        - content_type
+    ReleasePayload:
+      title: Release payload for search updates
+      description: Resource metadata for search updates, which should be supplied as both
+          a kafka message and as part of a REST API. Only applies to the 'release' content_type
+      type: object
+      allOf: 
+          - $ref: '#/components/schemas/StandardPayload'
+      properties:
+        cancelled:
+          type: boolean
+          description: Shows if a release has been cancelled, only used with release data_type
+        finalised:
+          type: boolean
+          description: Shows if a release has been finalised, only used with release data_type
+        published:
+          type: boolean
+          description: Shows if a release has been published, only used with release data_type
+        date_changes:
+          type: array
+          description: List of date changes, only used with release data_type
+          items:
+            type: object
+            properties:
+              change_notice:
+                type: string
+              previous_date:
+                type: string
+        provisional_date:
+          type: string
+          description: A provisional date string, only used with release data_type
+          example: October-November 2024
+      required:
+        - uri
+        - title
+        - content_type
+
