@@ -57,8 +57,8 @@ components:
         prioritised in future.
       payload:
         oneOf:
-          - $ref: './docs/contract/resource_metadata.yml#/components/schemas/ReleasePayload'
-          - $ref: './docs/contract/resource_metadata.yml#/components/schemas/StandardPayload'
+          - $ref: 'https://github.com/ONSdigital/dis-search-upstream-stub/blob/develop/specification.yml#/components/schemas/ReleasePayload'
+          - $ref: 'https://github.com/ONSdigital/dis-search-upstream-stub/blob/develop/specification.yml#/components/schemas/StandardPayload'
     content-updated:
       name: content-updated
       title: Content upstream has been updated

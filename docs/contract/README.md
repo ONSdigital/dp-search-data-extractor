@@ -4,8 +4,8 @@ We expect upstream services to behave in a predictable way in order to reduce th
 
 To do this, they must provide the following services which are detailed in our specifications:
 
-- [get resources endpoint endpoint](./upstream.yml)
-- [content-updated kafka event](../../specification.yml)
+- [get resources endpoint endpoint](https://github.com/ONSdigital/dis-search-upstream-stub/blob/develop/specification.yml)
+- [content-updated kafka event](https://github.com/ONSdigital/dis-search-upstream-stub/blob/develop/specification.yml)
 - [content-deleted kafka event](https://github.com/ONSdigital/dp-search-data-importer/blob/develop/specification.yml)
 
 The endpoints specified will be paths that we will store for re-use. For example:
