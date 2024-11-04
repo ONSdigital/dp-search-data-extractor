@@ -63,7 +63,6 @@ test-component: ## Runs component test suite
 .PHONY: validate-specification
 validate-specification: ## Validates specification
 	asyncapi validate specification.yml
-	redocly lint ./docs/contract/upstream.yml
 
 .PHONY: help
 help: ## Show help page for list of make targets

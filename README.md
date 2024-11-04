@@ -37,7 +37,6 @@ To run `make validate-specification` you require Node v20.x and to install @asyn
 
 ```sh
    npm install -g @asyncapi/cli
-   npm install -g @redocly/cli
 ```
 
 ### Configuration
