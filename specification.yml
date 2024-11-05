@@ -57,8 +57,8 @@ components:
         prioritised in future.
       payload:
         oneOf:
-          - $ref: 'https://raw.githubusercontent.com/ONSdigital/dis-search-upstream-stub/refs/heads/develop/specification.yml#/components/schemas/ReleasePayload'
-          - $ref: 'https://raw.githubusercontent.com/ONSdigital/dis-search-upstream-stub/refs/heads/develop/specification.yml#/components/schemas/StandardPayload'
+          - $ref: 'https://raw.githubusercontent.com/ONSdigital/dis-search-upstream-stub/refs/heads/develop/docs/contract/resource_metadata.yml#/components/schemas/ReleasePayload'
+          - $ref: 'https://raw.githubusercontent.com/ONSdigital/dis-search-upstream-stub/refs/heads/develop/docs/contract/resource_metadata.yml#/components/schemas/StandardPayload'
     content-updated:
       name: content-updated
       title: Content upstream has been updated
