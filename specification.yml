@@ -60,7 +60,7 @@ components:
           - $ref: './docs/contract/resource_metadata.yml#/components/schemas/ReleasePayload'
           - $ref: './docs/contract/resource_metadata.yml#/components/schemas/StandardPayload'
     content-updated:
-      name: content-updated
+      name: content-updated 
       title: Content upstream has been updated
       payload:
         type: object
