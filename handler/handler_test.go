@@ -113,10 +113,48 @@ func TestHandle(t *testing.T) {
 				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
 			})
 
-			Convey("Then the expected event search data import event is producer", func() {
+			Convey("Then the expected event search data import event is produced", func() {
 				So(producerMock.SendCalls(), ShouldHaveLength, 1)
 				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
 				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
+			})
+		})
+	})
+
+	Convey("Given an event handler and kafka producer", t, func() {
+		cacheList, err := cache.GetMockCacheList(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get mock cache list: %v", err)
+		}
+		var zebedeeMock = &clientMock.ZebedeeClientMock{}
+		var producerMock = &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, producerMock}
+
+		Convey("When a legacy event containing an item we don't want to index", func() {
+
+			nonIndexedEvent := models.ContentPublished{
+				URI:          "/timeseries/current/previous/cx15",
+				DataType:     "legacy",
+				CollectionID: "testZebdeeCollectionID",
+			}
+
+			msg := createMessage(nonIndexedEvent)
+			err := h.Handle(ctx, testWorkerID, msg)
+
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then there is no request to zebedee", func() {
+				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
+			})
+
+			Convey("Then no search data import event is produced", func() {
+				So(producerMock.SendCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})

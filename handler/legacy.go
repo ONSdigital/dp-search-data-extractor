@@ -21,6 +21,16 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		return InvalidURIErr
 	}
 
+	failedCriteria := shouldNotBeIndexed(cpEvent)
+	if failedCriteria != "" {
+		log.Info(ctx, "not processing content as does not meet indexing criteria", log.Data{
+			"criteria":  failedCriteria,
+			"data_type": cpEvent.DataType,
+			"URI":       cpEvent.URI,
+		})
+		return nil
+	}
+
 	zebedeeContentPublished, err := h.ZebedeeCli.GetPublishedData(ctx, uri)
 	if err != nil {
 		log.Error(ctx, "failed to retrieve published data from zebedee", err)
@@ -65,6 +75,14 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	}
 
 	return nil
+}
+
+func shouldNotBeIndexed(cpEvent *models.ContentPublished) string {
+	if strings.Contains(cpEvent.URI, "/timeseries/") && strings.Contains(cpEvent.URI, "/previous/") {
+		return "Item is a previous timeseries"
+	}
+
+	return ""
 }
 
 // Auto tag search data topics based on the URI segments of the request

@@ -57,7 +57,7 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 		}
 	default:
 		log.Warn(ctx,
-			"data type not handles by data extractor",
+			"data type not handled by data extractor",
 			log.FormatErrors([]error{fmt.Errorf("unrecognised data type received")}),
 			log.Data{"data_type": e.DataType},
 		)

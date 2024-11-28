@@ -241,3 +241,27 @@ func TestTagSearchDataWithURITopics(t *testing.T) {
 		})
 	})
 }
+
+func TestShouldNotBeIndexed(t *testing.T) {
+	Convey("Given a zebedeeData item that should not be indexed", t, func() {
+		event := &models.ContentPublished{
+			URI:      "/timeseries/current/previous/v113",
+			DataType: "legacy",
+		}
+		Convey("When shouldNotBeIndexed is called it should return true", func() {
+			actual := shouldNotBeIndexed(event)
+			So(actual, ShouldNotEqual, "")
+		})
+	})
+
+	Convey("Given a zebedeeData item that should be indexed", t, func() {
+		event := &models.ContentPublished{
+			URI:      "/dataset/current/v113",
+			DataType: "legacy",
+		}
+		Convey("When shouldNotBeIndexed is called it should return false", func() {
+			actual := shouldNotBeIndexed(event)
+			So(actual, ShouldEqual, "")
+		})
+	})
+}
