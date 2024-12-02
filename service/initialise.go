@@ -53,7 +53,7 @@ var GetTopicClient = func(cfg *config.Config) topicCli.Clienter {
 }
 
 // GetKafkaConsumer returns a Kafka Consumer group
-var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
+var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IConsumerGroup, error) {
 	if cfg == nil {
 		return nil, errors.New("cannot create a kafka consumer without kafka config")
 	}
@@ -63,7 +63,7 @@ var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.ICons
 	}
 	cgConfig := &kafka.ConsumerGroupConfig{
 		BrokerAddrs:       cfg.Addr,
-		Topic:             cfg.ContentUpdatedTopic,
+		Topic:             topic,
 		GroupName:         cfg.ContentUpdatedGroup,
 		MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
 		KafkaVersion:      &cfg.Version,

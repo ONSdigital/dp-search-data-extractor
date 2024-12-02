@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
@@ -18,15 +20,16 @@ import (
 
 // Service contains all the configs, server and clients to run the event handler service
 type Service struct {
-	Cfg         *config.Config
-	Cache       cache.List
-	Server      HTTPServer
-	HealthCheck HealthChecker
-	Consumer    kafka.IConsumerGroup
-	Producer    kafka.IProducer
-	ZebedeeCli  clients.ZebedeeClient
-	DatasetCli  clients.DatasetClient
-	TopicCli    topicCli.Clienter
+	Cfg                      *config.Config
+	Cache                    cache.List
+	Server                   HTTPServer
+	HealthCheck              HealthChecker
+	SearchContentConsumer    kafka.IConsumerGroup
+	ContentPublishedConsumer kafka.IConsumerGroup
+	Producer                 kafka.IProducer
+	ZebedeeCli               clients.ZebedeeClient
+	DatasetCli               clients.DatasetClient
+	TopicCli                 topicCli.Clienter
 }
 
 func New() *Service {
@@ -41,18 +44,42 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 	}
 
 	svc.Cfg = cfg
-
-	if svc.Consumer, err = GetKafkaConsumer(ctx, cfg.Kafka); err != nil {
-		return fmt.Errorf("failed to create kafka consumer: %w", err)
-	}
+	svc.ZebedeeCli = GetZebedee(cfg)
+	svc.DatasetCli = GetDatasetClient(cfg)
+	svc.TopicCli = GetTopicClient(cfg)
 
 	if svc.Producer, err = GetKafkaProducer(ctx, cfg.Kafka); err != nil {
 		return fmt.Errorf("failed to create kafka producer: %w", err)
 	}
 
-	svc.ZebedeeCli = GetZebedee(cfg)
-	svc.DatasetCli = GetDatasetClient(cfg)
-	svc.TopicCli = GetTopicClient(cfg)
+	// Initialize Consumer for "content-published"
+	if svc.ContentPublishedConsumer, err = GetKafkaConsumer(ctx, cfg.Kafka, cfg.Kafka.ContentUpdatedTopic); err != nil {
+		return fmt.Errorf("failed to create content-published consumer: %w", err)
+	}
+
+	contentHandler := &handler.ContentPublished{
+		Cfg:        svc.Cfg,
+		ZebedeeCli: GetZebedee(cfg),
+		DatasetCli: GetDatasetClient(cfg),
+		Producer:   svc.Producer,
+		Cache:      svc.Cache,
+	}
+	if err = svc.ContentPublishedConsumer.RegisterHandler(ctx, contentHandler.Handle); err != nil {
+		return fmt.Errorf("could not register content-published handler: %w", err)
+	}
+
+	// Initialize Consumer for "search-content-updated"
+	if svc.SearchContentConsumer, err = GetKafkaConsumer(ctx, cfg.Kafka, cfg.Kafka.SearchContentTopic); err != nil {
+		return fmt.Errorf("failed to create search-content-updated consumer: %w", err)
+	}
+
+	searchContentHandler := &handler.SearchContentHandler{
+		Cfg:      svc.Cfg,
+		Producer: svc.Producer,
+	}
+	if err = svc.SearchContentConsumer.RegisterHandler(ctx, searchContentHandler.Handle); err != nil {
+		return fmt.Errorf("could not register search-content-updated handler: %w", err)
+	}
 
 	if svc.Cfg.EnableTopicTagging {
 		// Initialise caching
@@ -64,19 +91,6 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 
 		// Load cache with topics on startup
 		svc.Cache.Topic.AddUpdateFunc(svc.Cache.Topic.GetTopicCacheKey(), cachePrivate.UpdateTopicCache(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
-	}
-
-	h := handler.ContentPublished{
-		Cfg:        svc.Cfg,
-		ZebedeeCli: svc.ZebedeeCli,
-		DatasetCli: svc.DatasetCli,
-		Producer:   svc.Producer,
-		Cache:      svc.Cache,
-	}
-
-	err = svc.Consumer.RegisterHandler(ctx, h.Handle)
-	if err != nil {
-		return fmt.Errorf("could not register kafka handler: %w", err)
 	}
 
 	// Get HealthCheck
@@ -100,13 +114,17 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	log.Info(ctx, "starting service")
 
 	// Kafka error logging go-routine
-	svc.Consumer.LogErrors(ctx)
+	svc.ContentPublishedConsumer.LogErrors(ctx)
+	svc.SearchContentConsumer.LogErrors(ctx)
 	svc.Producer.LogErrors(ctx)
 
 	// If start/stop on health updates is disabled, start consuming as soon as possible
 	if !svc.Cfg.StopConsumingOnUnhealthy {
-		if err := svc.Consumer.Start(); err != nil {
-			return fmt.Errorf("consumer failed to start: %w", err)
+		if err := svc.ContentPublishedConsumer.Start(); err != nil {
+			return fmt.Errorf("content-publish consumer failed to start: %w", err)
+		}
+		if err := svc.SearchContentConsumer.Start(); err != nil {
+			return fmt.Errorf("search-content consumer failed to start: %w", err)
 		}
 	}
 
@@ -130,93 +148,75 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	return nil
 }
 
-// Close gracefully shuts the service down in the required order, with timeout
 func (svc *Service) Close(ctx context.Context) error {
-	timeout := svc.Cfg.GracefulShutdownTimeout
-	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	hasShutdownError := false
+	log.Info(ctx, "closing service gracefully")
 
+	shutdownCtx, cancel := context.WithTimeout(ctx, svc.Cfg.GracefulShutdownTimeout)
+	defer cancel()
+
+	var shutdownErrors []error
+	var wg sync.WaitGroup
+
+	// Define helper for shutting down a component
+	shutdownComponent := func(name string, shutdownFunc func() error) {
+		defer wg.Done()
+		if err := shutdownFunc(); err != nil {
+			log.Error(ctx, fmt.Sprintf("failed to close %s", name), err)
+			shutdownErrors = append(shutdownErrors, fmt.Errorf("%s: %w", name, err))
+		} else {
+			log.Info(ctx, fmt.Sprintf("closed %s", name))
+		}
+	}
+
+	// Shutdown consumers
+	wg.Add(2)
+	go shutdownComponent("content-published consumer", svc.ContentPublishedConsumer.StopAndWait)
+	go shutdownComponent("search-content consumer", svc.SearchContentConsumer.StopAndWait)
+
+	// Shutdown producer (wrap to provide context)
+	wg.Add(1)
+	go shutdownComponent("producer", func() error { return svc.Producer.Close(shutdownCtx) })
+
+	// Stop healthcheck
+	wg.Add(1)
 	go func() {
-		defer cancel()
-
-		// stop healthcheck, as it depends on everything else
-		if svc.HealthCheck != nil {
-			log.Info(ctx, "stopping health checker...")
-			svc.HealthCheck.Stop()
-			log.Info(ctx, "stopped health checker")
-		}
-
-		// stop cache updates
-		if svc.Cfg.EnableTopicTagging {
-			svc.Cache.Topic.Close()
-		}
-
-		// If kafka consumer exists, stop listening to it.
-		// This will automatically stop the event consumer loops and no more messages will be processed.
-		// The kafka consumer will be closed after the service shuts down.
-		//nolint
-		if svc.Consumer != nil {
-			log.Info(ctx, "stopping kafka consumer listener...")
-			if err := svc.Consumer.StopAndWait(); err != nil {
-				log.Error(ctx, "error stopping kafka consumer listener", err)
-				hasShutdownError = true
-			} else {
-				log.Info(ctx, "stopped kafka consumer listener")
-			}
-		}
-
-		// Shutdown the HTTP server
-		if svc.Server != nil {
-			log.Info(ctx, "shutting http server down...")
-			if err := svc.Server.Shutdown(ctx); err != nil {
-				log.Error(ctx, "failed to shutdown http server", err)
-				hasShutdownError = true
-			} else {
-				log.Info(ctx, "shut down http server")
-			}
-		}
-
-		// If kafka producer exists, close it.
-		//nolint
-		if svc.Producer != nil {
-			log.Info(ctx, "closing kafka producer")
-			if err := svc.Producer.Close(ctx); err != nil {
-				log.Error(ctx, "failed to close kafka producer", err)
-				hasShutdownError = true
-			} else {
-				log.Info(ctx, "closed kafka producer")
-			}
-		}
-
-		// If kafka consumer exists, close it.
-		//nolint
-		if svc.Consumer != nil {
-			log.Info(ctx, "closing kafka consumer")
-			if err := svc.Consumer.Close(ctx); err != nil {
-				log.Error(ctx, "failed to close kafka consumer", err)
-				hasShutdownError = true
-			} else {
-				log.Info(ctx, "closed kafka consumer")
-			}
-		}
+		defer wg.Done()
+		svc.HealthCheck.Stop()
+		log.Info(ctx, "stopped healthcheck")
 	}()
 
-	// wait for shutdown success (via cancel) or failure (timeout)
-	<-ctx.Done()
+	// Shutdown HTTP server (wrap to provide context)
+	wg.Add(1)
+	go shutdownComponent("HTTP server", func() error { return svc.Server.Shutdown(shutdownCtx) })
 
-	// timeout expired
+	// Wait for all components to shutdown
+	wg.Wait()
+
+	// Handle timeout
 	if ctx.Err() == context.DeadlineExceeded {
+		log.Error(ctx, "shutdown timed out", ctx.Err())
 		return fmt.Errorf("shutdown timed out: %w", ctx.Err())
 	}
 
-	// other error
-	if hasShutdownError {
-		return errors.New("failed to shutdown gracefully")
+	// Aggregate errors
+	if len(shutdownErrors) > 0 {
+		for _, err := range shutdownErrors {
+			log.Error(ctx, "shutdown error", err)
+		}
+		return fmt.Errorf("failed to shutdown gracefully: %v", joinErrors(shutdownErrors))
 	}
 
 	log.Info(ctx, "graceful shutdown was successful")
 	return nil
+}
+
+// Helper function to join multiple errors into a single error message
+func joinErrors(errs []error) string {
+	errorMessages := make([]string, len(errs))
+	for _, err := range errs {
+		errorMessages = append(errorMessages, err.Error())
+	}
+	return strings.Join(errorMessages, "; ")
 }
 
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
@@ -228,7 +228,13 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 		log.Error(ctx, "error adding check for ZebedeeClient", err)
 	}
 
-	_, err = svc.HealthCheck.AddAndGetCheck("Kafka consumer", svc.Consumer.Checker)
+	_, err = svc.HealthCheck.AddAndGetCheck("ContentPublished Kafka consumer", svc.ContentPublishedConsumer.Checker)
+	if err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for Kafka", err)
+	}
+
+	_, err = svc.HealthCheck.AddAndGetCheck("SearchContent Kafka consumer", svc.SearchContentConsumer.Checker)
 	if err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for Kafka", err)
@@ -251,7 +257,8 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 	}
 
 	if svc.Cfg.StopConsumingOnUnhealthy {
-		svc.HealthCheck.Subscribe(svc.Consumer, chkZebedee, chkDataset, chkProducer)
+		svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkDataset, chkProducer)
+		svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkDataset, chkProducer)
 	}
 
 	return nil
