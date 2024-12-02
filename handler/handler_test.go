@@ -135,7 +135,6 @@ func TestHandle(t *testing.T) {
 		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, producerMock}
 
 		Convey("When a legacy event containing an item we don't want to index", func() {
-
 			nonIndexedEvent := models.ContentPublished{
 				URI:          "/timeseries/current/previous/cx15",
 				DataType:     "legacy",
