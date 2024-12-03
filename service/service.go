@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
@@ -149,74 +148,115 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 }
 
 func (svc *Service) Close(ctx context.Context) error {
-	log.Info(ctx, "closing service gracefully")
+	timeout := svc.Cfg.GracefulShutdownTimeout
+	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	hasShutdownError := false
 
-	shutdownCtx, cancel := context.WithTimeout(ctx, svc.Cfg.GracefulShutdownTimeout)
-	defer cancel()
-
-	var shutdownErrors []error
-	var wg sync.WaitGroup
-
-	// Define helper for shutting down a component
-	shutdownComponent := func(name string, shutdownFunc func() error) {
-		defer wg.Done()
-		if err := shutdownFunc(); err != nil {
-			log.Error(ctx, fmt.Sprintf("failed to close %s", name), err)
-			shutdownErrors = append(shutdownErrors, fmt.Errorf("%s: %w", name, err))
-		} else {
-			log.Info(ctx, fmt.Sprintf("closed %s", name))
-		}
-	}
-
-	// Shutdown consumers
-	wg.Add(2)
-	go shutdownComponent("content-published consumer", svc.ContentPublishedConsumer.StopAndWait)
-	go shutdownComponent("search-content consumer", svc.SearchContentConsumer.StopAndWait)
-
-	// Shutdown producer (wrap to provide context)
-	wg.Add(1)
-	go shutdownComponent("producer", func() error { return svc.Producer.Close(shutdownCtx) })
-
-	// Stop healthcheck
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		svc.HealthCheck.Stop()
-		log.Info(ctx, "stopped healthcheck")
+		defer cancel()
+
+		// Stop health check, as it depends on everything else
+		if svc.HealthCheck != nil {
+			log.Info(ctx, "stopping health checker...")
+			svc.HealthCheck.Stop()
+			log.Info(ctx, "stopped health checker")
+		}
+
+		// Stop cache updates
+		if svc.Cfg.EnableTopicTagging {
+			svc.Cache.Topic.Close()
+		}
+
+		// Shutdown consumers and producer
+		if err := svc.shutdownConsumers(ctx); err != nil {
+			log.Error(ctx, "consumer shutdown errors", err)
+			hasShutdownError = true
+		}
+
+		if err := svc.closeProducer(ctx); err != nil {
+			log.Error(ctx, "producer shutdown error", err)
+			hasShutdownError = true
+		}
+
+		// Shutdown the HTTP server
+		if svc.Server != nil {
+			log.Info(ctx, "shutting http server down...")
+			if err := svc.Server.Shutdown(ctx); err != nil {
+				log.Error(ctx, "failed to shutdown http server", err)
+				hasShutdownError = true
+			} else {
+				log.Info(ctx, "shut down http server")
+			}
+		}
 	}()
 
-	// Shutdown HTTP server (wrap to provide context)
-	wg.Add(1)
-	go shutdownComponent("HTTP server", func() error { return svc.Server.Shutdown(shutdownCtx) })
+	// Wait for shutdown success (via cancel) or failure (timeout)
+	<-ctx.Done()
 
-	// Wait for all components to shutdown
-	wg.Wait()
-
-	// Handle timeout
+	// Timeout expired
 	if ctx.Err() == context.DeadlineExceeded {
-		log.Error(ctx, "shutdown timed out", ctx.Err())
 		return fmt.Errorf("shutdown timed out: %w", ctx.Err())
 	}
 
-	// Aggregate errors
-	if len(shutdownErrors) > 0 {
-		for _, err := range shutdownErrors {
-			log.Error(ctx, "shutdown error", err)
-		}
-		return fmt.Errorf("failed to shutdown gracefully: %v", joinErrors(shutdownErrors))
+	// Other error
+	if hasShutdownError {
+		return errors.New("failed to shutdown gracefully")
 	}
 
 	log.Info(ctx, "graceful shutdown was successful")
 	return nil
 }
 
-// Helper function to join multiple errors into a single error message
-func joinErrors(errs []error) string {
-	errorMessages := make([]string, len(errs))
-	for _, err := range errs {
-		errorMessages = append(errorMessages, err.Error())
+// shutdownConsumers stops and closes Kafka consumers
+func (svc *Service) shutdownConsumers(ctx context.Context) error {
+	var errMessages []string
+
+	stopAndCloseConsumer := func(consumer kafka.IConsumerGroup, name string) {
+		if consumer == nil {
+			return
+		}
+
+		log.Info(ctx, fmt.Sprintf("stopping %s kafka consumer listener...", name))
+		if err := consumer.StopAndWait(); err != nil {
+			log.Error(ctx, fmt.Sprintf("error stopping %s kafka consumer listener", name), err)
+			errMessages = append(errMessages, fmt.Sprintf("%s consumer stop error: %v", name, err))
+		} else {
+			log.Info(ctx, fmt.Sprintf("stopped %s kafka consumer listener", name))
+		}
+
+		log.Info(ctx, fmt.Sprintf("closing %s kafka consumer...", name))
+		if err := consumer.Close(ctx); err != nil {
+			log.Error(ctx, fmt.Sprintf("error closing %s kafka consumer", name), err)
+			errMessages = append(errMessages, fmt.Sprintf("%s consumer close error: %v", name, err))
+		} else {
+			log.Info(ctx, fmt.Sprintf("closed %s kafka consumer", name))
+		}
 	}
-	return strings.Join(errorMessages, "; ")
+
+	// Handle both consumers
+	stopAndCloseConsumer(svc.ContentPublishedConsumer, "content-published")
+	stopAndCloseConsumer(svc.SearchContentConsumer, "search-content")
+
+	// Aggregate errors, if any
+	if len(errMessages) > 0 {
+		return fmt.Errorf("consumer shutdown errors: %s", strings.Join(errMessages, "; "))
+	}
+	return nil
+}
+
+// closeProducer closes the Kafka producer
+func (svc *Service) closeProducer(ctx context.Context) error {
+	if svc.Producer == nil {
+		return nil
+	}
+
+	log.Info(ctx, "closing kafka producer...")
+	if err := svc.Producer.Close(ctx); err != nil {
+		return fmt.Errorf("failed to close kafka producer: %w", err)
+	}
+	log.Info(ctx, "closed kafka producer")
+	return nil
 }
 
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
