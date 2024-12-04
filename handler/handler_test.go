@@ -113,7 +113,7 @@ func TestHandle(t *testing.T) {
 				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
 			})
 
-			Convey("Then the expected event search data import event is produced", func() {
+			Convey("Then the expected search data import event is produced", func() {
 				So(producerMock.SendCalls(), ShouldHaveLength, 1)
 				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
 				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
@@ -211,7 +211,7 @@ func TestHandle(t *testing.T) {
 				So(datasetMock.GetVersionMetadataCalls()[0].Version, ShouldEqual, "version")
 			})
 
-			Convey("Then the expected event search data import event is producer", func() {
+			Convey("Then the expected search data import event is producer", func() {
 				So(producerMock.SendCalls(), ShouldHaveLength, 1)
 				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
 				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
