@@ -54,12 +54,10 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 			DatasetID:       "dataset123",
 			CDID:            "CDID456",
 			CanonicalTopic:  "Canonical Topic",
-			Release: models.Release{
-				Cancelled:       false,
-				Finalised:       true,
-				Published:       true,
-				ProvisionalDate: "2023-01-02",
-			},
+			Cancelled:       false,
+			Finalised:       true,
+			Published:       true,
+			ProvisionalDate: "2023-01-02",
 		}
 
 		var producerMock = &kafkatest.IProducerMock{

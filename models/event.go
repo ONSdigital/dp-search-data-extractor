@@ -80,14 +80,10 @@ type SearchContentUpdate struct {
 	Topics          []string `avro:"topics" json:"topics"`
 	URI             string   `avro:"uri" json:"uri"`
 	URIOld          string   `avro:"uri_old" json:"uri_old"`
-	Release         Release  `avro:"release" json:"release"`
-}
-
-// Release - These fields are only used for content_type=release
-type Release struct {
-	Cancelled       bool     `avro:"cancelled,omitempty" json:"cancelled,omitempty"`
-	Finalised       bool     `avro:"finalised,omitempty" json:"finalised,omitempty"`
-	Published       bool     `avro:"published,omitempty" json:"published,omitempty"`
-	DateChanges     []string `avro:"date_changes,omitempty" json:"date_changes,omitempty"`
-	ProvisionalDate string   `avro:"provisional_date,omitempty" json:"provisional_date,omitempty"`
+	// These fields are only used for content_type=release
+	Cancelled       bool                 `avro:"cancelled" json:"cancelled"`
+	DateChanges     []ReleaseDateDetails `avro:"date_changes" json:"date_changes"`
+	Finalised       bool                 `avro:"finalised" json:"finalised"`
+	ProvisionalDate string               `avro:"provisional_date" json:"provisional_date"`
+	Published       bool                 `avro:"published" json:"published"`
 }

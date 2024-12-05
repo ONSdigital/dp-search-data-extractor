@@ -83,18 +83,6 @@ var SearchDataImportEvent = &avro.Schema{
 	Definition: searchDataImport,
 }
 
-var releaseSchema = `{
-  "type": "record",
-  "name": "Release",
-  "fields": [
-    {"name": "cancelled", "type": "boolean", "default": false},
-    {"name": "finalised", "type": "boolean", "default": false},
-    {"name": "published", "type": "boolean", "default": false},
-    {"name": "date_changes", "type": {"type": "array", "items": "string"}, "default": []},
-    {"name": "provisional_date", "type": "string", "default": ""}
-  ]
-}`
-
 var searchContentUpdate = `{
   "type": "record",
   "name": "search-content-updated",
@@ -113,10 +101,18 @@ var searchContentUpdate = `{
     {"name": "topics", "type": {"type": "array", "items": "string"}, "default": []},
     {"name": "uri", "type": "string", "default": ""},
     {"name": "uri_old", "type": "string", "default": ""},
-    {
-      "name": "release",
-      "type": ` + releaseSchema + `
-    }
+    {"name": "cancelled", "type": "boolean", "default": false},
+    {"name": "finalised", "type": "boolean", "default": false},
+    {"name": "published", "type": "boolean", "default": false},
+    {"name": "date_changes", "type": { "type": "array", "items": {
+      "name": "ReleaseDateDetails",
+      "type": "record",
+      "fields": [
+        { "name":"change_notice", "type":"string" },
+        { "name":"previous_date", "type":"string" }
+      ] 
+    }}},
+    {"name": "provisional_date", "type": "string", "default": ""}
   ]
 }`
 

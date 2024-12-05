@@ -53,18 +53,16 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 		DatasetID:       resource.DatasetID,
 		CDID:            resource.CDID,
 		CanonicalTopic:  resource.CanonicalTopic,
-	}
-
-	if resource.ContentType == ReleaseDataType {
-		searchDataImport.Cancelled = resource.Release.Cancelled
-		searchDataImport.Finalised = resource.Release.Finalised
-		searchDataImport.Published = resource.Release.Published
-		searchDataImport.ProvisionalDate = resource.Release.ProvisionalDate
+		Cancelled:       resource.Cancelled,
+		Finalised:       resource.Finalised,
+		Published:       resource.Published,
+		ProvisionalDate: resource.ProvisionalDate,
+		DateChanges:     resource.DateChanges,
 	}
 
 	data, err := schema.SearchDataImportEvent.Marshal(searchDataImport)
 	if err != nil {
-		return fmt.Errorf("failed to marshal search-content-update event: %w", err)
+		return fmt.Errorf("failed to marshal search-data-import event: %w", err)
 	}
 
 	// Marshall Avro and sending message
