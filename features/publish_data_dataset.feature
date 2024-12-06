@@ -15,9 +15,14 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
 
     When the service starts
-    And this content-updated event is queued, to be consumed
-      | URI                                                            | DataType | CollectionID |
-      | /datasets/cphi01/editions/timeseries/versions/version/metadata | datasets | 123          |
+    And this "content-updated" event is queued, to be consumed
+    """
+    {
+        "URI": "/datasets/cphi01/editions/timeseries/versions/version/metadata",
+        "DataType":        "datasets",
+        "CollectionID":  "123"
+    }
+    """
 
     Then this search-data-import event is sent
     """
@@ -59,9 +64,14 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
 
     When the service starts
-    And this content-updated event is queued, to be consumed
-      | URI                                                                              | DataType | CollectionID |
-      | /datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata | datasets | 123          |
+    And this "content-updated" event is queued, to be consumed
+    """
+    {
+        "URI": "/datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata",
+        "DataType":  "datasets",
+        "CollectionID":  "123"
+    }
+    """
 
     Then this search-data-import event is sent
       """

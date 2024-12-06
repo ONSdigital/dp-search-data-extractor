@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
+	"github.com/ONSdigital/dp-kafka/v3/avro"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/google/go-cmp/cmp"
-	"github.com/rdumont/assistdog"
 )
+
+const ContentUpdatedTopic = "content-updated"
+const SearchContentUpdatedTopic = "search-content-updated"
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the service starts`, c.theServiceStarts)
@@ -22,7 +25,7 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^zebedee is unhealthy`, c.zebedeeIsUnhealthy)
 	ctx.Step(`^the following published data for uri "([^"]*)" is available in zebedee$`, c.theFollowingZebedeeResponseIsAvailable)
 	ctx.Step(`^the following metadata with dataset-id "([^"]*)", edition "([^"]*)" and version "([^"]*)" is available in dp-dataset-api$`, c.theFollowingDatasetMetadataResponseIsAvailable)
-	ctx.Step(`^this content-updated event is queued, to be consumed$`, c.thisContentUpdatedEventIsQueued)
+	ctx.Step(`^this "([^"]*)" event is queued, to be consumed$`, c.thisEventIsQueued)
 	ctx.Step(`^no search-data-import events are produced`, c.noEventsAreProduced)
 	ctx.Step(`^this search-data-import event is sent$`, c.thisSearchDataImportEventIsSent)
 }
@@ -97,20 +100,44 @@ func (c *Component) theFollowingDatasetMetadataResponseIsAvailable(id, edition, 
 	return nil
 }
 
-// thisContentUpdatedEventIsQueued produces a new ContentPublished event with the contents defined by the input
-func (c *Component) thisContentUpdatedEventIsQueued(table *godog.Table) error {
-	assist := assistdog.NewDefault()
-	assist.RegisterParser([]string{}, arrayParser)
-	r, err := assist.CreateSlice(&models.ContentPublished{}, table)
-	if err != nil {
-		return fmt.Errorf("failed to create slice from godog table: %w", err)
-	}
-	expected := r.([]*models.ContentPublished)
+// thisEventIsQueued produces a new event based on the passed topic with the contents defined by the input
+func (c *Component) thisEventIsQueued(eventTopic string, eventDocstring *godog.DocString) error {
+	var consumerSchema *avro.Schema
+	var event interface{}
 
-	log.Info(c.ctx, "event to queue for testing: ", log.Data{
-		"event": expected[0],
+	switch eventTopic {
+	case ContentUpdatedTopic:
+		consumerSchema = schema.ContentPublishedEvent
+		event = &models.ContentPublished{}
+	case SearchContentUpdatedTopic:
+		consumerSchema = schema.SearchDataImportEvent
+		event = &models.SearchContentUpdate{}
+	default:
+		return fmt.Errorf("unsupported topic: %s", eventTopic)
+	}
+
+	// Unmarshal the eventDocstring content directly into the appropriate event struct
+	if err := json.Unmarshal([]byte(eventDocstring.Content), event); err != nil {
+		return fmt.Errorf("failed to unmarshal docstring to event for topic %s: %w", eventTopic, err)
+	}
+
+	log.Info(c.ctx, "event to queue for testing", log.Data{
+		"event": event,
+		"topic": eventTopic,
 	})
-	if err := c.KafkaConsumer.QueueMessage(schema.ContentPublishedEvent, expected[0]); err != nil {
+
+	// Queue the event to the appropriate Kafka consumer
+	var consumer *kafkatest.Consumer
+	switch eventTopic {
+	case ContentUpdatedTopic:
+		consumer = c.ContentPublishedConsumer
+	case SearchContentUpdatedTopic:
+		consumer = c.SearchContentConsumer
+	default:
+		return fmt.Errorf("unsupported topic: %s", eventTopic)
+	}
+
+	if err := consumer.QueueMessage(consumerSchema, event); err != nil {
 		return fmt.Errorf("failed to queue event for testing: %w", err)
 	}
 
@@ -147,15 +174,15 @@ func (c *Component) noEventsAreProduced() error {
 	return c.KafkaProducer.WaitNoMessageSent(c.waitEventTimeout)
 }
 
-// we are passing the string array as [xxxx,yyyy,zzz]
-// this is required to support array being used in kafka messages
-func arrayParser(raw string) (interface{}, error) {
-	// remove the starting and trailing brackets
-	str := strings.Trim(raw, "[]")
-	if str == "" {
-		return []string{}, nil
-	}
-
-	strArray := strings.Split(str, ",")
-	return strArray, nil
-}
+//// we are passing the string array as [xxxx,yyyy,zzz]
+//// this is required to support array being used in kafka messages
+// func arrayParser(raw string) (interface{}, error) {
+//	// remove the starting and trailing brackets
+//	str := strings.Trim(raw, "[]")
+//	if str == "" {
+//		return []string{}, nil
+//	}
+//
+//	strArray := strings.Split(str, ",")
+//	return strArray, nil
+// }

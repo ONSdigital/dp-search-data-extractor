@@ -31,18 +31,19 @@ var (
 
 type Component struct {
 	componenttest.ErrorFeature
-	DatasetAPI       *httpfake.HTTPFake  // Dataset API mock at HTTP level
-	Zebedee          *httpfake.HTTPFake  // Zebedee mock at HTTP level
-	KafkaProducer    *kafkatest.Producer // Mock for service kafka producer
-	KafkaConsumer    *kafkatest.Consumer // Mock for service kafka consumer
-	errorChan        chan error
-	svc              *service.Service
-	cfg              *config.Config
-	wg               *sync.WaitGroup
-	signals          chan os.Signal
-	waitEventTimeout time.Duration
-	testETag         string
-	ctx              context.Context
+	DatasetAPI               *httpfake.HTTPFake  // Dataset API mock at HTTP level
+	Zebedee                  *httpfake.HTTPFake  // Zebedee mock at HTTP level
+	KafkaProducer            *kafkatest.Producer // Mock for service kafka producer
+	ContentPublishedConsumer *kafkatest.Consumer // Mock for service kafka consumer
+	SearchContentConsumer    *kafkatest.Consumer // Mock for service kafka consumer
+	errorChan                chan error
+	svc                      *service.Service
+	cfg                      *config.Config
+	wg                       *sync.WaitGroup
+	signals                  chan os.Signal
+	waitEventTimeout         time.Duration
+	testETag                 string
+	ctx                      context.Context
 }
 
 func NewComponent(_ *testing.T) *Component {
@@ -140,26 +141,52 @@ func (c *Component) Reset() error {
 	return nil
 }
 
-// GetKafkaConsumer creates a new kafkatest consumer and stores it to the caller Component struct
-// It returns the mock, so it can be used by the service under test.
-// If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaConsumer(_ context.Context, cfg *config.Kafka, topic string) (kafka.IConsumerGroup, error) {
+// GetKafkaConsumer creates a new kafkatest consumer based on the topic and stores it in the Component struct.
+// It returns the appropriate mock for the service under test.
+// If there is any error creating the mock, it is returned.
+func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IConsumerGroup, error) {
 	var err error
-	c.KafkaConsumer, err = kafkatest.NewConsumer(
-		c.ctx,
-		&kafka.ConsumerGroupConfig{
-			BrokerAddrs:       cfg.Addr,
-			Topic:             topic,
-			GroupName:         cfg.ContentUpdatedGroup,
-			MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-			KafkaVersion:      &cfg.Version,
-		},
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create kafkatest consumer: %w", err)
+
+	switch topic {
+	case cfg.ContentUpdatedTopic:
+		// Create a consumer for the "ContentPublished" topic
+		c.ContentPublishedConsumer, err = kafkatest.NewConsumer(
+			ctx,
+			&kafka.ConsumerGroupConfig{
+				BrokerAddrs:       cfg.Addr,
+				Topic:             topic,
+				GroupName:         cfg.ContentUpdatedGroup,
+				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+				KafkaVersion:      &cfg.Version,
+			},
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create ContentPublishedConsumer: %w", err)
+		}
+		return c.ContentPublishedConsumer.Mock, nil
+
+	case cfg.SearchContentTopic:
+		// Create a consumer for the "SearchContent" topic
+		c.SearchContentConsumer, err = kafkatest.NewConsumer(
+			ctx,
+			&kafka.ConsumerGroupConfig{
+				BrokerAddrs:       cfg.Addr,
+				Topic:             topic,
+				GroupName:         cfg.ContentUpdatedGroup,
+				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+				KafkaVersion:      &cfg.Version,
+			},
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create SearchContentConsumer: %w", err)
+		}
+		return c.SearchContentConsumer.Mock, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported topic: %s", topic)
 	}
-	return c.KafkaConsumer.Mock, nil
 }
 
 // GetKafkaProducer creates a new kafkatest producer and stores it to the caller Component struct

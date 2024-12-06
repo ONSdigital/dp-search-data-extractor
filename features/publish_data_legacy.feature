@@ -20,9 +20,14 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
 
     When the service starts
-    And this content-updated event is queued, to be consumed
-      | URI                | DataType             |   CollectionID  |
-      | some_uri           | legacy               |    123          |
+    And this "content-updated" event is queued, to be consumed
+    """
+    {
+        "URI": "some_uri",
+        "DataType":        "legacy",
+        "CollectionID":  "123"
+    }
+    """
 
     Then this search-data-import event is sent
     """
@@ -58,8 +63,13 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
 
     When the service starts
-    And this content-updated event is queued, to be consumed
-      | URI                | DataType             |   CollectionID  |
-      | some_uri           | legacy               |    123          |
+    And this "content-updated" event is queued, to be consumed
+    """
+    {
+        "URI": "some_uri",
+        "DataType":        "legacy",
+        "CollectionID":  "123"
+    }
+    """
 
     Then no search-data-import events are produced

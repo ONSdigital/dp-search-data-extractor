@@ -6,9 +6,14 @@ Feature: Search data extractor unhealthy
     And zebedee is healthy
 
     When the service starts
-    And this content-updated event is queued, to be consumed
-      | URI      | DataType | CollectionID |
-      | some_uri | legacy   | 123          |
+    And this "content-updated" event is queued, to be consumed
+    """
+    {
+        "URI": "some_uri",
+        "DataType":  "legacy",
+        "CollectionID":  "123"
+    }
+    """
 
     Then no search-data-import events are produced
 
@@ -18,8 +23,13 @@ Feature: Search data extractor unhealthy
     And zebedee is unhealthy
 
     When the service starts
-    And this content-updated event is queued, to be consumed
-      | URI      | DataType | CollectionID |
-      | some_uri | legacy   | 123          |
+    And this "content-updated" event is queued, to be consumed
+    """
+    {
+        "URI": "some_uri",
+        "DataType":        "legacy",
+        "CollectionID":  "123"
+    }
+    """
 
     Then no search-data-import events are produced
