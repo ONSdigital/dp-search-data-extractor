@@ -8,9 +8,9 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
     {
       "type": "legacy",
-      "URI": "some_uri",
+      "URI":  "some_uri",
       "description": {
-        "title": "title",
+        "title":     "title",
         "data_type": "legacy",
         "cdid":      "123",
         "datasetId": "456",
@@ -23,8 +23,8 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And this "content-updated" event is queued, to be consumed
     """
     {
-        "URI": "some_uri",
-        "DataType":        "legacy",
+        "URI":           "some_uri",
+        "DataType":      "legacy",
         "CollectionID":  "123"
     }
     """
@@ -52,7 +52,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
     {
       "type": "legacy",
-      "URI": "some_uri",
+      "URI":  "some_uri",
       "description": {
         "data_type": "legacy",
         "cdid":      "123",
@@ -66,8 +66,8 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And this "content-updated" event is queued, to be consumed
     """
     {
-        "URI": "some_uri",
-        "DataType":        "legacy",
+        "URI":           "some_uri",
+        "DataType":      "legacy",
         "CollectionID":  "123"
     }
     """

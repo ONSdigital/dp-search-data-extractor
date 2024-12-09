@@ -18,8 +18,8 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And this "content-updated" event is queued, to be consumed
     """
     {
-        "URI": "/datasets/cphi01/editions/timeseries/versions/version/metadata",
-        "DataType":        "datasets",
+        "URI":           "/datasets/cphi01/editions/timeseries/versions/version/metadata",
+        "DataType":      "datasets",
         "CollectionID":  "123"
     }
     """
@@ -67,9 +67,9 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And this "content-updated" event is queued, to be consumed
     """
     {
-        "URI": "/datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata",
-        "DataType":  "datasets",
-        "CollectionID":  "123"
+        "URI":          "/datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata",
+        "DataType":     "datasets",
+        "CollectionID": "123"
     }
     """
 
@@ -87,10 +87,10 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "Title":       "title",
         "Topics":      [],
         "PopulationType": {
-          "Key": "all-usual-residents-in-households",
+          "Key":    "all-usual-residents-in-households",
           "AggKey": "all-usual-residents-in-households###All usual residents in households",
-          "Name":  "UR_HH",
-          "Label": "All usual residents in households"
+          "Name":   "UR_HH",
+          "Label":  "All usual residents in households"
         },
         "Dimensions": [
           { "Key": "label-3", "AggKey": "label-3###label 3", "Name": "dim3.0,dim3.1", "Label": "label 3", "RawLabel": "label 3 (33 categories),label 3 (40 categories)"}
