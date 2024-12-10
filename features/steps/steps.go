@@ -110,7 +110,7 @@ func (c *Component) thisEventIsQueued(eventTopic string, eventDocstring *godog.D
 		consumerSchema = schema.ContentPublishedEvent
 		event = &models.ContentPublished{}
 	case SearchContentUpdatedTopic:
-		consumerSchema = schema.SearchDataImportEvent
+		consumerSchema = schema.SearchContentUpdateEvent
 		event = &models.SearchContentUpdate{}
 	default:
 		return fmt.Errorf("unsupported topic: %s", eventTopic)
@@ -126,7 +126,7 @@ func (c *Component) thisEventIsQueued(eventTopic string, eventDocstring *godog.D
 		"topic": eventTopic,
 	})
 
-	// Queue the event to the appropriate Kafka consumer
+	// Queue the marshaled event to the appropriate Kafka consumer
 	var consumer *kafkatest.Consumer
 	switch eventTopic {
 	case ContentUpdatedTopic:

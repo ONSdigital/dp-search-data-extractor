@@ -24,7 +24,12 @@ type SearchContentHandler struct {
 func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 	e := &models.SearchContentUpdate{}
 	if err := schema.SearchContentUpdateEvent.Unmarshal(msg.GetData(), e); err != nil {
-		return fmt.Errorf("failed to unmarshal event: %w", err)
+		return &Error{
+			err: fmt.Errorf("failed to unmarshal event: %w", err),
+			logData: map[string]interface{}{
+				"msg_data": string(msg.GetData()),
+			},
+		}
 	}
 
 	logData := log.Data{"event": e}
@@ -46,18 +51,21 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 		Summary:         resource.Summary,
 		Survey:          resource.Survey,
 		MetaDescription: resource.MetaDescription,
-		Topics:          resource.Topics,
 		ReleaseDate:     resource.ReleaseDate,
 		Language:        resource.Language,
 		Edition:         resource.Edition,
 		DatasetID:       resource.DatasetID,
 		CDID:            resource.CDID,
 		CanonicalTopic:  resource.CanonicalTopic,
-		Cancelled:       resource.Cancelled,
-		Finalised:       resource.Finalised,
-		Published:       resource.Published,
-		ProvisionalDate: resource.ProvisionalDate,
-		DateChanges:     resource.DateChanges,
+		Topics:          resource.Topics,
+	}
+
+	if resource.ContentType == ReleaseDataType {
+		searchDataImport.Cancelled = resource.Cancelled
+		searchDataImport.Finalised = resource.Finalised
+		searchDataImport.Published = resource.Published
+		searchDataImport.ProvisionalDate = resource.ProvisionalDate
+		searchDataImport.DateChanges = resource.DateChanges
 	}
 
 	data, err := schema.SearchDataImportEvent.Marshal(searchDataImport)

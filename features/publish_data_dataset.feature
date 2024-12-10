@@ -1,6 +1,6 @@
 Feature: Data extractor should listen to the relevant topic and publish extracted data for Dataset API datasets
 
-
+  @Dataset
   Scenario: When searching for the extracted dataset generic metadata I get the expected result
     Given dp-dataset-api is healthy
     And zebedee is healthy
@@ -40,7 +40,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       }
       """
 
-
+  @Dataset
   Scenario: "When searching for the extracted dataset cantabular-type metadata I get the expected result"
     Given dp-dataset-api is healthy
     And zebedee is healthy
