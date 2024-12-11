@@ -36,41 +36,45 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 				So(err.Error(), ShouldContainSubstring, "failed to unmarshal event")
 			})
 		})
-	})
 
-	Convey("Given a SearchContentHandler with a working producer", t, func() {
-		expectedEvent := &models.SearchContentUpdate{
-			URI:             "/some/uri",
-			URIOld:          "/some/old/uri",
-			Title:           "Test Title",
-			ContentType:     "article",
-			Summary:         "Test Summary",
-			Survey:          "Test Survey",
-			MetaDescription: "Test Meta Description",
-			Topics:          []string{"topic1", "topic2"},
-			ReleaseDate:     "2023-01-01",
-			Language:        "en",
-			Edition:         "Test Edition",
-			DatasetID:       "dataset123",
-			CDID:            "CDID456",
-			CanonicalTopic:  "Canonical Topic",
-			Cancelled:       false,
-			Finalised:       true,
-			Published:       true,
-			ProvisionalDate: "2023-01-02",
-		}
+		Convey("Given a SearchContentHandler with a working producer", func() {
+			var producerMock = &kafkatest.IProducerMock{
+				SendFunc: func(schema *avro.Schema, event interface{}) error {
+					return nil
+				},
+			}
 
-		var producerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
-				return nil
-			},
-		}
+			handler := &SearchContentHandler{
+				Producer: producerMock,
+			}
 
-		handler := &SearchContentHandler{
-			Producer: producerMock,
-		}
+			expectedEvent := &models.SearchContentUpdate{
+				URI:             "/some/uri",
+				URIOld:          "/some/old/uri",
+				Title:           "Test Title",
+				ContentType:     "release",
+				Summary:         "Test Summary",
+				Survey:          "Test Survey",
+				MetaDescription: "Test Meta Description",
+				Topics:          []string{"topic1", "topic2"},
+				ReleaseDate:     "2023-01-01",
+				Language:        "en",
+				Edition:         "Test Edition",
+				DatasetID:       "dataset123",
+				CDID:            "CDID456",
+				CanonicalTopic:  "Canonical Topic",
+				Cancelled:       false,
+				Finalised:       true,
+				Published:       true,
+				ProvisionalDate: "2023-01-02",
+				DateChanges: []models.ReleaseDateDetails{
+					{
+						ChangeNotice: "Notice 1",
+						Date:         "2023-01-01",
+					},
+				},
+			}
 
-		Convey("When a valid search-content-updated event is handled", func() {
 			msg := createSearchContentMessage(expectedEvent)
 			err := handler.Handle(ctx, 0, msg)
 
@@ -82,29 +86,57 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 				So(producerMock.SendCalls(), ShouldHaveLength, 1)
 				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
 
-				// Ensure Event is a []byte before unmarshalling
-				eventBytes, ok := producerMock.SendCalls()[0].Event.([]byte)
-				So(ok, ShouldBeTrue) // Assert the type conversion is successful
+				sentEvent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
+				So(ok, ShouldBeTrue) // Assert the event is of the correct type
 
-				var sentEvent models.SearchDataImport
-				err := schema.SearchDataImportEvent.Unmarshal(eventBytes, &sentEvent)
-				So(err, ShouldBeNil)
 				So(sentEvent.URI, ShouldEqual, expectedEvent.URI)
 				So(sentEvent.Title, ShouldEqual, expectedEvent.Title)
 				So(sentEvent.DataType, ShouldEqual, expectedEvent.ContentType)
+				So(sentEvent.Topics, ShouldResemble, expectedEvent.Topics)
+				So(sentEvent.DateChanges, ShouldResemble, expectedEvent.DateChanges)
+			})
+		})
+
+		Convey("When an event with nil slices is handled", func() {
+			expectedEvent := &models.SearchContentUpdate{
+				URI:         "/uri/with/nil",
+				Title:       "Nil Slices",
+				ContentType: "article",
+				Topics:      nil, // Intentionally nil
+				DateChanges: nil, // Intentionally nil
+			}
+
+			msg := createSearchContentMessage(expectedEvent)
+			err := handler.Handle(ctx, 0, msg)
+
+			Convey("Then no error is reported", func() {
+				So(err, ShouldBeNil)
 			})
 
-			Convey("When the producer fails to send the event", func() {
-				producerMock.SendFunc = func(schema *avro.Schema, event interface{}) error {
-					return errors.New("producer error")
-				}
+			Convey("And the empty slices are properly handled by the producer", func() {
+				sentEvent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
+				So(ok, ShouldBeTrue) // Assert the event is of the correct type
 
-				err := handler.Handle(ctx, 0, msg)
+				So(err, ShouldBeNil)
+				So(sentEvent.Topics, ShouldResemble, []string{})
+				So(sentEvent.DateChanges, ShouldBeNil) // Remains nil
+			})
+		})
 
-				Convey("Then the expected error is reported", func() {
-					So(err, ShouldNotBeNil)
-					So(err.Error(), ShouldContainSubstring, "failed to send search data import event")
-				})
+		Convey("When the producer fails to send the event", func() {
+			producerMock.SendFunc = func(schema *avro.Schema, event interface{}) error {
+				return errors.New("producer error")
+			}
+
+			expectedEvent := &models.SearchContentUpdate{
+				URI: "/some/uri",
+			}
+			msg := createSearchContentMessage(expectedEvent)
+			err := handler.Handle(ctx, 0, msg)
+
+			Convey("Then the expected error is reported", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "failed to send search data import event")
 			})
 		})
 	})

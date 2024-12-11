@@ -66,7 +66,7 @@ var searchDataImport = `{
         { "name": "label", "type": "string", "default": "" },
         { "name": "raw_label", "type": "string", "default": "" }
       ]
-    }}},
+    }}, "default": []},
     {"name": "population_type", "type": {
       "name": "PopulationType", "type": "record", "fields": [
         { "name": "key", "type": "string", "default": "" },
@@ -74,7 +74,7 @@ var searchDataImport = `{
         { "name": "name", "type": "string", "default": ""},
         { "name": "label", "type": "string", "default": ""}
       ]
-    }}
+    }, "default": {"key": "", "agg_key": "", "name": "", "label": ""}}
   ]
 }`
 
@@ -99,7 +99,6 @@ var searchContentUpdate = `{
     {"name": "survey", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},
     {"name": "topics", "type": {"type": "array", "items": "string"}, "default": []},
-    {"name": "keywords", "type": {"type": "array", "items": "string"}, "default": []},
     {"name": "uri", "type": "string", "default": ""},
     {"name": "uri_old", "type": "string", "default": ""},
     {"name": "cancelled", "type": "boolean", "default": false},

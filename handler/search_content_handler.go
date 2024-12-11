@@ -57,7 +57,12 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 		DatasetID:       resource.DatasetID,
 		CDID:            resource.CDID,
 		CanonicalTopic:  resource.CanonicalTopic,
-		Topics:          resource.Topics,
+		Topics:          []string{},
+	}
+
+	// Assign topics only if they're not nil
+	if resource.Topics != nil {
+		searchDataImport.Topics = resource.Topics
 	}
 
 	if resource.ContentType == ReleaseDataType {
@@ -68,13 +73,8 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 		searchDataImport.DateChanges = resource.DateChanges
 	}
 
-	data, err := schema.SearchDataImportEvent.Marshal(searchDataImport)
-	if err != nil {
-		return fmt.Errorf("failed to marshal search-data-import event: %w", err)
-	}
-
 	// Marshall Avro and sending message
-	if err := h.Producer.Send(schema.SearchDataImportEvent, data); err != nil {
+	if err := h.Producer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
