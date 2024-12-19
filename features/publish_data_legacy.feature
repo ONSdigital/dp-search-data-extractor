@@ -1,6 +1,6 @@
+@Legacy
 Feature: Data extractor should listen to the relevant topic and publish extracted data for legacy (Zebedee) datasets
 
-  @Legacy
   Scenario: When searching for the extracted legacy data I get the expected result
     Given dp-dataset-api is healthy
     And zebedee is healthy
@@ -18,7 +18,6 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       }
     }
     """
-
     When the service starts
     And this "content-updated" event is queued, to be consumed
     """
@@ -28,7 +27,6 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "CollectionID":  "123"
     }
     """
-
     Then this search-data-import event is sent
     """
     {
@@ -45,7 +43,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
 
-  @Legacy
+
   Scenario: When no title is present, an item is not added to search
     Given dp-dataset-api is healthy
     And zebedee is healthy
@@ -62,7 +60,6 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       }
     }
     """
-
     When the service starts
     And this "content-updated" event is queued, to be consumed
     """
@@ -72,5 +69,4 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "CollectionID":  "123"
     }
     """
-
     Then no search-data-import events are produced

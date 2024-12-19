@@ -170,7 +170,7 @@ func (svc *Service) Close(ctx context.Context) error {
 
 		// Shutdown consumers and producer
 		if err := svc.shutdownConsumers(ctx); err != nil {
-			log.Error(ctx, "consumer shutdown errors", err)
+			log.Error(ctx, "consumer shutdown error", err)
 			hasShutdownError = true
 		}
 
@@ -217,20 +217,20 @@ func (svc *Service) shutdownConsumers(ctx context.Context) error {
 			return
 		}
 
-		log.Info(ctx, fmt.Sprintf("stopping %s kafka consumer listener...", name))
+		log.Info(ctx, "stopping kafka consumer listener...", log.Data{"Consumer": name})
 		if err := consumer.StopAndWait(); err != nil {
-			log.Error(ctx, fmt.Sprintf("error stopping %s kafka consumer listener", name), err)
+			log.Error(ctx, "error stopping kafka consumer listener", err, log.Data{"Consumer": name})
 			errMessages = append(errMessages, fmt.Sprintf("%s consumer stop error: %v", name, err))
 		} else {
-			log.Info(ctx, fmt.Sprintf("stopped %s kafka consumer listener", name))
+			log.Info(ctx, "stopped kafka consumer listener", log.Data{"Consumer": name})
 		}
 
-		log.Info(ctx, fmt.Sprintf("closing %s kafka consumer...", name))
+		log.Info(ctx, "closing kafka consumer...", log.Data{"Consumer": name})
 		if err := consumer.Close(ctx); err != nil {
-			log.Error(ctx, fmt.Sprintf("error closing %s kafka consumer", name), err)
+			log.Error(ctx, "error closing kafka consumer", err, log.Data{"Consumer": name})
 			errMessages = append(errMessages, fmt.Sprintf("%s consumer close error: %v", name, err))
 		} else {
-			log.Info(ctx, fmt.Sprintf("closed %s kafka consumer", name))
+			log.Info(ctx, "closed kafka consumer", log.Data{"Consumer": name})
 		}
 	}
 
@@ -240,7 +240,7 @@ func (svc *Service) shutdownConsumers(ctx context.Context) error {
 
 	// Aggregate errors, if any
 	if len(errMessages) > 0 {
-		return fmt.Errorf("consumer shutdown errors: %s", strings.Join(errMessages, "; "))
+		return fmt.Errorf("consumer shutdown error: %s", strings.Join(errMessages, "; "))
 	}
 	return nil
 }

@@ -3,8 +3,6 @@ package steps
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/ONSdigital/dp-kafka/v3/avro"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
@@ -12,6 +10,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/google/go-cmp/cmp"
+	"net/http"
 )
 
 const ContentUpdatedTopic = "content-updated"
@@ -173,16 +172,3 @@ func (c *Component) thisSearchDataImportEventIsSent(eventDocstring *godog.DocStr
 func (c *Component) noEventsAreProduced() error {
 	return c.KafkaProducer.WaitNoMessageSent(c.waitEventTimeout)
 }
-
-//// we are passing the string array as [xxxx,yyyy,zzz]
-//// this is required to support array being used in kafka messages
-// func arrayParser(raw string) (interface{}, error) {
-//	// remove the starting and trailing brackets
-//	str := strings.Trim(raw, "[]")
-//	if str == "" {
-//		return []string{}, nil
-//	}
-//
-//	strArray := strings.Split(str, ",")
-//	return strArray, nil
-// }
