@@ -59,7 +59,7 @@ func RectifyKeywords(keywords []string, keywordsLimit int) []string {
 	rectifiedKeywords := make([]string, 0)
 
 	if keywordsLimit == 0 {
-		return []string{""}
+		return []string{}
 	}
 
 	for i := range keywords {

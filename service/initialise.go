@@ -14,6 +14,7 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	topicCli "github.com/ONSdigital/dp-topic-api/sdk"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // GetHTTPServer creates an HTTP Server with the provided bind address and router
@@ -39,6 +40,10 @@ var GetHealthCheck = func(cfg *config.Config, buildTime, gitCommit, version stri
 
 // GetZebedee gets the Zebedee Client
 var GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
+	if !cfg.EnableZebedeeCallbacks {
+		log.Info(context.Background(), "Zebedee callbacks are disabled, returning nil Zebedee client")
+		return nil
+	}
 	return zebedee.New(cfg.ZebedeeURL)
 }
 

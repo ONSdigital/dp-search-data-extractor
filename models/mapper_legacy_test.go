@@ -232,7 +232,7 @@ func TestRectifyKeywords_WithEightKeywordsAndZeroAsLimit(t *testing.T) {
 		Convey("When passed to rectify the keywords with default keywords limits", func() {
 			actual := models.RectifyKeywords(testKeywords, 0)
 			Convey("Then keywords should be rectified with empty keyword elements", func() {
-				expectedKeywords := []string{""}
+				expectedKeywords := []string{}
 				So(actual, ShouldResemble, expectedKeywords)
 			})
 		})

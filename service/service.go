@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	cachePrivate "github.com/ONSdigital/dp-search-data-extractor/cache/private"
@@ -44,7 +45,18 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 	}
 
 	svc.Cfg = cfg
-	svc.ZebedeeCli = GetZebedee(cfg)
+
+	if svc.Producer, err = GetKafkaProducer(ctx, cfg.Kafka); err != nil {
+		return fmt.Errorf("failed to create kafka producer: %w", err)
+	}
+
+	// Initialize Zebedee client only if enabled
+	if cfg.EnableZebedeeCallbacks {
+		svc.ZebedeeCli = GetZebedee(cfg)
+	} else {
+		svc.ZebedeeCli = nil
+		log.Info(ctx, "Zebedee callbacks are disabled")
+	}
 	svc.DatasetCli = GetDatasetClient(cfg)
 	svc.TopicCli = GetTopicClient(cfg)
 
@@ -160,6 +172,7 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	return nil
 }
 
+// Close gracefully shuts the service down in the required order, with timeout
 func (svc *Service) Close(ctx context.Context) error {
 	timeout := svc.Cfg.GracefulShutdownTimeout
 	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
@@ -275,10 +288,16 @@ func (svc *Service) closeProducer(ctx context.Context) error {
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 	hasErrors := false
 
-	chkZebedee, err := svc.HealthCheck.AddAndGetCheck("Zebedee client", svc.ZebedeeCli.Checker)
-	if err != nil {
-		hasErrors = true
-		log.Error(ctx, "error adding check for ZebedeeClient", err)
+	// Register Zebedee health check if callbacks are enabled
+	var chkZebedee *healthcheck.Check
+	if svc.Cfg.EnableZebedeeCallbacks {
+		chkZebedee, err = svc.HealthCheck.AddAndGetCheck("Zebedee client", svc.ZebedeeCli.Checker)
+		if err != nil {
+			hasErrors = true
+			log.Error(ctx, "error adding check for Zebedee client", err)
+		}
+	} else {
+		log.Info(ctx, "Zebedee callbacks are disabled, skipping Zebedee client health check registration")
 	}
 
 	_, err = svc.HealthCheck.AddAndGetCheck("ContentPublished Kafka consumer", svc.ContentPublishedConsumer.Checker)
@@ -309,9 +328,15 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 		return errors.New("Error(s) registering checkers for healthcheck")
 	}
 
+	// Subscribe health checks for consumer start/stop based on unhealthy components
 	if svc.Cfg.StopConsumingOnUnhealthy {
-		svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkDataset, chkProducer)
-		svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkDataset, chkProducer)
+		if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil {
+			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkDataset, chkProducer)
+			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkDataset, chkProducer)
+		} else {
+			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkDataset, chkProducer)
+			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkDataset, chkProducer)
+		}
 	}
 
 	return nil

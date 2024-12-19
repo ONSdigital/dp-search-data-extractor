@@ -18,13 +18,13 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-
-	ZebedeeURL               string `envconfig:"ZEBEDEE_URL"`
-	KeywordsLimit            int    `envconfig:"KEYWORDS_LIMITS"`
-	DatasetAPIURL            string `envconfig:"DATASET_API_URL"`
-	ServiceAuthToken         string `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
-	StopConsumingOnUnhealthy bool   `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
-	Kafka                    *Kafka
+	EnableZebedeeCallbacks     bool          `envconfig:"ENABLE_ZEBEDEE_CALLBACKS"`
+	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
+	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
+	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
+	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
+	StopConsumingOnUnhealthy   bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
+	Kafka                      *Kafka
 }
 
 // Kafka contains the config required to connect to Kafka
@@ -63,6 +63,7 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
+		EnableZebedeeCallbacks:     false,
 		ZebedeeURL:                 "http://localhost:8082",
 		KeywordsLimit:              -1,
 		TopicAPIURL:                "http://localhost:25300",
