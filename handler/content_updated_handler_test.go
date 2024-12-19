@@ -98,25 +98,53 @@ func TestHandle(t *testing.T) {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, producerMock}
 
-		Convey("When a legacy event containing a valid URI is handled", func() {
-			msg := createMessage(testZebedeeEvent)
-			err := h.Handle(ctx, testWorkerID, msg)
+		// Feature flag configuration
+		cfgWithZebedeeEnabled := &config.Config{EnableZebedeeCallbacks: true}
+		cfgWithZebedeeDisabled := &config.Config{EnableZebedeeCallbacks: false}
 
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
+		Convey("When the Zebedee callback feature flag is enabled", func() {
+			h := &ContentPublished{cfgWithZebedeeEnabled, *cacheList, zebedeeMock, nil, producerMock}
+
+			Convey("And a legacy event containing a valid URI is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then no error is reported", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("Then published data is obtained from zebedee", func() {
+					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
+					So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
+				})
+
+				Convey("Then the expected search data import event is produced", func() {
+					So(producerMock.SendCalls(), ShouldHaveLength, 1)
+					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+					So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
+				})
 			})
+		})
 
-			Convey("Then published data is obtained from zebedee", func() {
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
-				So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
-			})
+		Convey("When the Zebedee callback feature flag is disabled", func() {
+			h := &ContentPublished{cfgWithZebedeeDisabled, *cacheList, zebedeeMock, nil, producerMock}
 
-			Convey("Then the expected search data import event is produced", func() {
-				So(producerMock.SendCalls(), ShouldHaveLength, 1)
-				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
-				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
+			Convey("And a legacy event containing a valid URI is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then no error is reported", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("Then Zebedee is not called to get published data", func() {
+					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
+				})
+
+				Convey("Then the expected search data import event is still produced", func() {
+					So(producerMock.SendCalls(), ShouldHaveLength, 0)
+				})
 			})
 		})
 	})

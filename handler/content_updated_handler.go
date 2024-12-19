@@ -48,6 +48,10 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 
 	switch e.DataType {
 	case ZebedeeDataType:
+		if !h.Cfg.EnableZebedeeCallbacks {
+			log.Info(ctx, "zebedee callbacks are disabled, skipping event", log.Data{"data_type": e.DataType})
+			return nil
+		}
 		if err := h.handleZebedeeType(ctx, e); err != nil {
 			return err
 		}
