@@ -49,6 +49,10 @@ var GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
 
 // GetDatasetClient gets the Dataset API client
 var GetDatasetClient = func(cfg *config.Config) clients.DatasetClient {
+	if !cfg.EnableDatasetAPICallbacks {
+		log.Info(context.Background(), "Dataset API callbacks are disabled, returning nil Dataset client")
+		return nil
+	}
 	return dataset.NewAPIClient(cfg.DatasetAPIURL)
 }
 

@@ -45,6 +45,8 @@ func TestConfig(t *testing.T) {
 				So(cfg.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
 				So(cfg.TopicAPIURL, ShouldEqual, "http://localhost:25300")
 				So(cfg.ServiceAuthToken, ShouldEqual, "")
+				So(cfg.EnableZebedeeCallbacks, ShouldBeTrue)
+				So(cfg.EnableDatasetAPICallbacks, ShouldBeTrue)
 			})
 			Convey("Then a second call to config should return the same config", func() {
 				newCfg, newErr := Get()

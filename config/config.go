@@ -19,6 +19,7 @@ type Config struct {
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	EnableZebedeeCallbacks     bool          `envconfig:"ENABLE_ZEBEDEE_CALLBACKS"`
+	EnableDatasetAPICallbacks  bool          `envconfig:"ENABLE_DATASET_API_CALLBACKS"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit              int           `envconfig:"KEYWORDS_LIMITS"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
@@ -63,10 +64,11 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		EnableZebedeeCallbacks:     false,
+		EnableZebedeeCallbacks:     true,
 		ZebedeeURL:                 "http://localhost:8082",
 		KeywordsLimit:              -1,
 		TopicAPIURL:                "http://localhost:25300",
+		EnableDatasetAPICallbacks:  true,
 		DatasetAPIURL:              "http://localhost:22000",
 		ServiceAuthToken:           "",
 		StopConsumingOnUnhealthy:   true,
