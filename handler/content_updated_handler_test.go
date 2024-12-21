@@ -85,7 +85,13 @@ func TestHandle(t *testing.T) {
 		CanonicalTopic: "testTopic",
 	}
 
-	Convey("Given an event handler with a working zebedee client and kafka producer", t, func() {
+	// Feature flag configurations
+	cfgWithBothEnabled := &config.Config{EnableZebedeeCallbacks: true, EnableDatasetAPICallbacks: true}
+	cfgWithZebedeeOnly := &config.Config{EnableZebedeeCallbacks: true, EnableDatasetAPICallbacks: false}
+	cfgWithDatasetOnly := &config.Config{EnableZebedeeCallbacks: false, EnableDatasetAPICallbacks: true}
+	cfgWithBothDisabled := &config.Config{EnableZebedeeCallbacks: false, EnableDatasetAPICallbacks: false}
+
+	Convey("Given an event handler with feature flags for Zebedee and Dataset API", t, func() {
 		cacheList, err := cache.GetMockCacheList(ctx)
 		if err != nil {
 			t.Fatalf("Failed to get mock cache list: %v", err)
@@ -93,20 +99,19 @@ func TestHandle(t *testing.T) {
 		var zebedeeMock = &clientMock.ZebedeeClientMock{
 			GetPublishedDataFunc: getPublishDataFunc,
 		}
+		var datasetMock = &clientMock.DatasetClientMock{
+			GetVersionMetadataFunc: getVersionMetadataFunc,
+		}
 		var producerMock = &kafkatest.IProducerMock{
 			SendFunc: func(schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
 
-		// Feature flag configuration
-		cfgWithZebedeeEnabled := &config.Config{EnableZebedeeCallbacks: true}
-		cfgWithZebedeeDisabled := &config.Config{EnableZebedeeCallbacks: false}
+		Convey("When both feature flags are enabled", func() {
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, producerMock}
 
-		Convey("When the Zebedee callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithZebedeeEnabled, *cacheList, zebedeeMock, nil, producerMock}
-
-			Convey("And a legacy event containing a valid URI is handled", func() {
+			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
 				err := h.Handle(ctx, testWorkerID, msg)
 
@@ -114,7 +119,7 @@ func TestHandle(t *testing.T) {
 					So(err, ShouldBeNil)
 				})
 
-				Convey("Then published data is obtained from zebedee", func() {
+				Convey("Then published data is obtained from Zebedee", func() {
 					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
 					So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
 				})
@@ -125,147 +130,183 @@ func TestHandle(t *testing.T) {
 					So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
 				})
 			})
-		})
 
-		Convey("When the Zebedee callback feature flag is disabled", func() {
-			h := &ContentPublished{cfgWithZebedeeDisabled, *cacheList, zebedeeMock, nil, producerMock}
-
-			Convey("And a legacy event containing a valid URI is handled", func() {
-				msg := createMessage(testZebedeeEvent)
+			Convey("And a valid CMD dataset event is handled", func() {
+				msg := createMessage(testDatasetEvent)
 				err := h.Handle(ctx, testWorkerID, msg)
 
 				Convey("Then no error is reported", func() {
 					So(err, ShouldBeNil)
 				})
 
-				Convey("Then Zebedee is not called to get published data", func() {
+				Convey("Then version metadata details are obtained from Dataset API", func() {
+					So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 1)
+					So(datasetMock.GetVersionMetadataCalls()[0].DatasetID, ShouldEqual, "cphi01")
+					So(datasetMock.GetVersionMetadataCalls()[0].Edition, ShouldEqual, "timeseries")
+					So(datasetMock.GetVersionMetadataCalls()[0].Version, ShouldEqual, "version")
+				})
+
+				Convey("Then the expected search data import event is produced", func() {
+					So(producerMock.SendCalls(), ShouldHaveLength, 1)
+					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+					So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
+				})
+			})
+		})
+
+		Convey("When only the Zebedee callback feature flag is enabled", func() {
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, producerMock}
+
+			Convey("And a legacy Zebedee event is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then published data is obtained from Zebedee", func() {
+					So(err, ShouldBeNil)
+					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 1)
+				})
+			})
+
+			Convey("And a valid CMD dataset event is handled", func() {
+				msg := createMessage(testDatasetEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then Dataset API is not called", func() {
+					So(err, ShouldBeNil)
+					So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 0)
+				})
+			})
+		})
+
+		Convey("When only the Dataset API callback feature flag is enabled", func() {
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, producerMock}
+
+			Convey("And a legacy Zebedee event is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then Zebedee is not called", func() {
+					So(err, ShouldBeNil)
 					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
 				})
+			})
 
-				Convey("Then the expected search data import event is still produced", func() {
-					So(producerMock.SendCalls(), ShouldHaveLength, 0)
+			Convey("And a valid CMD dataset event is handled", func() {
+				msg := createMessage(testDatasetEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then Dataset API is called to get version metadata", func() {
+					So(err, ShouldBeNil)
+					So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 1)
 				})
 			})
 		})
-	})
 
-	Convey("Given an event handler and kafka producer", t, func() {
-		cacheList, err := cache.GetMockCacheList(ctx)
-		if err != nil {
-			t.Fatalf("Failed to get mock cache list: %v", err)
-		}
-		var zebedeeMock = &clientMock.ZebedeeClientMock{}
-		var producerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
-				return nil
-			},
-		}
-		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, producerMock}
+		Convey("When both feature flags are disabled", func() {
+			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, producerMock}
 
-		Convey("When a legacy event containing an item we don't want to index", func() {
-			nonIndexedEvent := models.ContentPublished{
-				URI:          "/timeseries/current/previous/cx15",
-				DataType:     "legacy",
-				CollectionID: "testZebdeeCollectionID",
+			Convey("And a legacy Zebedee event is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then Zebedee is not called", func() {
+					So(err, ShouldBeNil)
+					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
+				})
+			})
+
+			Convey("And a valid CMD dataset event is handled", func() {
+				msg := createMessage(testDatasetEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then Dataset API is not called", func() {
+					So(err, ShouldBeNil)
+					So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 0)
+				})
+			})
+		})
+
+		Convey("Given an event handler with a failing Zebedee client", func() {
+			cacheList, err := cache.GetMockCacheList(ctx)
+			if err != nil {
+				t.Fatalf("Failed to get mock cache list: %v", err)
 			}
+			var zebedeeMock = &clientMock.ZebedeeClientMock{
+				GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
+					return nil, errors.New("zebedee error")
+				},
+			}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil}
 
-			msg := createMessage(nonIndexedEvent)
-			err := h.Handle(ctx, testWorkerID, msg)
+			Convey("When a legacy Zebedee event is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
 
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
-			})
-
-			Convey("Then there is no request to zebedee", func() {
-				So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
-			})
-
-			Convey("Then no search data import event is produced", func() {
-				So(producerMock.SendCalls(), ShouldHaveLength, 0)
-			})
-		})
-	})
-
-	Convey("Given an event handler with a failing zebedee client", t, func() {
-		cacheList, err := cache.GetMockCacheList(ctx)
-		if err != nil {
-			t.Fatalf("Failed to get mock cache list: %v", err)
-		}
-		var zebedeeMock = &clientMock.ZebedeeClientMock{
-			GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
-				return nil, errors.New("zebedee error")
-			},
-		}
-		h := &ContentPublished{cfg, *cacheList, zebedeeMock, nil, nil}
-
-		Convey("When a legacy event containing a valid URI is handled", func() {
-			msg := createMessage(testZebedeeEvent)
-			err := h.Handle(ctx, testWorkerID, msg)
-
-			Convey("Then the expected error is reported", func() {
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "zebedee error")
+				Convey("Then the expected error is reported if Zebedee callback is enabled", func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldEqual, "zebedee error")
+				})
 			})
 		})
-	})
 
-	Convey("Given an event handler with a working dataset api client and kafka producer", t, func() {
-		cacheList, err := cache.GetMockCacheList(ctx)
-		if err != nil {
-			t.Fatalf("Failed to get mock cache list: %v", err)
-		}
-		var datasetMock = &clientMock.DatasetClientMock{
-			GetVersionMetadataFunc: getVersionMetadataFunc,
-		}
-		var producerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
-				return nil
-			},
-		}
-		h := &ContentPublished{cfg, *cacheList, nil, datasetMock, producerMock}
+		Convey("Given an event handler with a failing Dataset API client", func() {
+			cacheList, err := cache.GetMockCacheList(ctx)
+			if err != nil {
+				t.Fatalf("Failed to get mock cache list: %v", err)
+			}
+			var datasetMock = &clientMock.DatasetClientMock{
+				GetVersionMetadataFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, edition string, version string) (dataset.Metadata, error) {
+					return dataset.Metadata{}, errors.New("dataset api error")
+				},
+			}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil}
 
-		Convey("When a valid cmd dataset event is handled", func() {
-			msg := createMessage(testDatasetEvent)
-			err := h.Handle(ctx, testWorkerID, msg)
+			Convey("When a CMD dataset event is handled", func() {
+				msg := createMessage(testDatasetEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
 
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
-			})
-
-			Convey("Then version metadata details are obtained from dataset API", func() {
-				So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 1)
-				So(datasetMock.GetVersionMetadataCalls()[0].DatasetID, ShouldEqual, "cphi01")
-				So(datasetMock.GetVersionMetadataCalls()[0].Edition, ShouldEqual, "timeseries")
-				So(datasetMock.GetVersionMetadataCalls()[0].Version, ShouldEqual, "version")
-			})
-
-			Convey("Then the expected search data import event is producer", func() {
-				So(producerMock.SendCalls(), ShouldHaveLength, 1)
-				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
-				So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
+				Convey("Then the expected error is reported if Dataset API callback is enabled", func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldEqual, "dataset api error")
+				})
 			})
 		})
-	})
 
-	Convey("Given an event handler with a failing dataset api client", t, func() {
-		cacheList, err := cache.GetMockCacheList(ctx)
-		if err != nil {
-			t.Fatalf("Failed to get mock cache list: %v", err)
-		}
-		var datasetMock = &clientMock.DatasetClientMock{
-			GetVersionMetadataFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, edition string, version string) (dataset.Metadata, error) {
-				return dataset.Metadata{}, errors.New("dataset api error")
-			},
-		}
-		h := &ContentPublished{cfg, *cacheList, nil, datasetMock, nil}
+		Convey("Given an event handler with both clients failing", func() {
+			cacheList, err := cache.GetMockCacheList(ctx)
+			if err != nil {
+				t.Fatalf("Failed to get mock cache list: %v", err)
+			}
+			var zebedeeMock = &clientMock.ZebedeeClientMock{
+				GetPublishedDataFunc: func(ctx context.Context, uriString string) ([]byte, error) {
+					return nil, errors.New("zebedee error")
+				},
+			}
+			var datasetMock = &clientMock.DatasetClientMock{
+				GetVersionMetadataFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, collectionID string, datasetID string, edition string, version string) (dataset.Metadata, error) {
+					return dataset.Metadata{}, errors.New("dataset api error")
+				},
+			}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil}
 
-		Convey("When a valid cmd dataset event is handled", func() {
-			msg := createMessage(testDatasetEvent)
-			err := h.Handle(ctx, testWorkerID, msg)
+			Convey("When a legacy Zebedee event is handled", func() {
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
 
-			Convey("Then the expected error is reported", func() {
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "dataset api error")
+				Convey("Then the expected Zebedee error is reported", func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldEqual, "zebedee error")
+				})
+			})
+
+			Convey("When a CMD dataset event is handled", func() {
+				msg := createMessage(testDatasetEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then the expected Dataset API error is reported", func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldEqual, "dataset api error")
+				})
 			})
 		})
 	})

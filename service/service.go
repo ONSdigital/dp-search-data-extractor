@@ -57,7 +57,15 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		svc.ZebedeeCli = nil
 		log.Info(ctx, "Zebedee callbacks are disabled")
 	}
-	svc.DatasetCli = GetDatasetClient(cfg)
+
+	// Initialize Dataset client only if enabled
+	if cfg.EnableZebedeeCallbacks {
+		svc.DatasetCli = GetDatasetClient(cfg)
+	} else {
+		svc.DatasetCli = nil
+		log.Info(ctx, "Dataset callbacks are disabled")
+	}
+
 	svc.TopicCli = GetTopicClient(cfg)
 
 	if svc.Cfg.EnableTopicTagging {
@@ -286,20 +294,15 @@ func (svc *Service) closeProducer(ctx context.Context) error {
 }
 
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
-	hasErrors := false
+	var chkZebedee, chkDataset, chkProducer *healthcheck.Check
+	var hasErrors bool
 
-	// Register Zebedee health check if callbacks are enabled
-	var chkZebedee *healthcheck.Check
-	if svc.Cfg.EnableZebedeeCallbacks {
-		chkZebedee, err = svc.HealthCheck.AddAndGetCheck("Zebedee client", svc.ZebedeeCli.Checker)
-		if err != nil {
-			hasErrors = true
-			log.Error(ctx, "error adding check for Zebedee client", err)
-		}
-	} else {
-		log.Info(ctx, "Zebedee callbacks are disabled, skipping Zebedee client health check registration")
-	}
+	// Register health checks
+	chkZebedee, hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableZebedeeCallbacks, "Zebedee client", svc.ZebedeeCli.Checker, hasErrors)
+	chkDataset, hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableDatasetAPICallbacks, "DatasetAPI client", svc.DatasetCli.Checker, hasErrors)
+	chkProducer, hasErrors = svc.addHealthCheck(ctx, true, "Kafka producer", svc.Producer.Checker, hasErrors)
 
+	// Register Kafka consumers
 	_, err = svc.HealthCheck.AddAndGetCheck("ContentPublished Kafka consumer", svc.ContentPublishedConsumer.Checker)
 	if err != nil {
 		hasErrors = true
@@ -312,32 +315,39 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 		log.Error(ctx, "error adding check for Kafka", err)
 	}
 
-	chkProducer, err := svc.HealthCheck.AddAndGetCheck("Kafka producer", svc.Producer.Checker)
-	if err != nil {
-		hasErrors = true
-		log.Error(ctx, "error adding check for Kafka producer", err)
-	}
-
-	chkDataset, err := svc.HealthCheck.AddAndGetCheck("DatasetAPI client", svc.DatasetCli.Checker)
-	if err != nil {
-		hasErrors = true
-		log.Error(ctx, "error adding check for DatasetClient", err)
-	}
-
 	if hasErrors {
 		return errors.New("Error(s) registering checkers for healthcheck")
 	}
 
 	// Subscribe health checks for consumer start/stop based on unhealthy components
 	if svc.Cfg.StopConsumingOnUnhealthy {
-		if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil {
+		if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil && svc.Cfg.EnableDatasetAPICallbacks && chkDataset != nil {
 			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkDataset, chkProducer)
 			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkDataset, chkProducer)
-		} else {
+		} else if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil {
+			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkProducer)
+			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkProducer)
+		} else if svc.Cfg.EnableDatasetAPICallbacks && chkDataset != nil {
 			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkDataset, chkProducer)
 			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkDataset, chkProducer)
+		} else {
+			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkProducer)
+			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkProducer)
 		}
 	}
 
 	return nil
+}
+
+func (svc *Service) addHealthCheck(ctx context.Context, enabled bool, name string, checker healthcheck.Checker, hasErrors bool) (*healthcheck.Check, bool) {
+	if enabled {
+		check, err := svc.HealthCheck.AddAndGetCheck(name, checker)
+		if err != nil {
+			log.Error(ctx, "error adding check for "+name, err)
+			return nil, true
+		}
+		return check, hasErrors
+	}
+	log.Info(ctx, name+" is disabled, skipping health check registration")
+	return nil, hasErrors
 }

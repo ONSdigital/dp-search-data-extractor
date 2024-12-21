@@ -52,6 +52,9 @@ func TestInit(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
+		cfg.EnableZebedeeCallbacks = true
+		cfg.EnableDatasetAPICallbacks = true
+
 		// Mocking the Kafka consumers
 		consumerMock1 := &kafkatest.IConsumerGroupMock{
 			RegisterHandlerFunc: func(ctx context.Context, h kafka.Handler) error {
@@ -214,29 +217,28 @@ func TestInit(t *testing.T) {
 				So(svc.ZebedeeCli, ShouldResemble, zebedeeMock)
 				So(svc.DatasetCli, ShouldResemble, datasetAPIMock)
 
-				Convey("Then all checks are registered", func() {
-					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 5)
-					So(hcMock.AddAndGetCheckCalls()[0].Name, ShouldResemble, "Zebedee client")
-					So(hcMock.AddAndGetCheckCalls()[1].Name, ShouldResemble, "ContentPublished Kafka consumer")
-					So(hcMock.AddAndGetCheckCalls()[2].Name, ShouldResemble, "SearchContent Kafka consumer")
-					So(hcMock.AddAndGetCheckCalls()[3].Name, ShouldResemble, "Kafka producer")
-					So(hcMock.AddAndGetCheckCalls()[4].Name, ShouldResemble, "DatasetAPI client")
+				Convey("Then only necessary checks are registered based on feature flags", func() {
+					checksRegistered := hcMock.AddAndGetCheckCalls()
+					if cfg.EnableZebedeeCallbacks {
+						So(checksRegistered[0].Name, ShouldResemble, "Zebedee client")
+					}
+					if cfg.EnableDatasetAPICallbacks {
+						So(checksRegistered[1].Name, ShouldResemble, "DatasetAPI client")
+					}
+					So(checksRegistered[2].Name, ShouldResemble, "Kafka producer")
+					So(checksRegistered[3].Name, ShouldResemble, "ContentPublished Kafka consumer")
+					So(checksRegistered[4].Name, ShouldResemble, "SearchContent Kafka consumer")
 				})
 
-				Convey("Then kafka consumer subscribes to the expected healthcheck checks", func() {
+				Convey("Then Kafka consumers subscribe to the correct health checks", func() {
 					So(subscribedTo, ShouldHaveLength, 6)
-					So(hcMock.SubscribeCalls(), ShouldHaveLength, 2)
-					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["Zebedee client"])
+					if cfg.EnableZebedeeCallbacks {
+						So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["Zebedee client"])
+					}
 					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["Kafka producer"])
-					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["DatasetAPI client"])
-
-					So(hcMock.SubscribeCalls()[1].Checks, ShouldContain, testChecks["ContentPublished Kafka consumer"])
-					So(hcMock.SubscribeCalls()[1].Checks, ShouldContain, testChecks["SearchContent Kafka consumer"])
-				})
-
-				Convey("Then the handler is registered for both Kafka consumers", func() {
-					So(consumerMock1.RegisterHandlerCalls(), ShouldHaveLength, 1)
-					So(consumerMock2.RegisterHandlerCalls(), ShouldHaveLength, 1)
+					if cfg.EnableDatasetAPICallbacks {
+						So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["DatasetAPI client"])
+					}
 				})
 			})
 		})

@@ -56,6 +56,10 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 			return err
 		}
 	case DatasetDataType:
+		if !h.Cfg.EnableDatasetAPICallbacks {
+			log.Info(ctx, "Dataset API callbacks are disabled, skipping event", log.Data{"data_type": e.DataType})
+			return nil
+		}
 		if err := h.handleDatasetDataType(ctx, e); err != nil {
 			return err
 		}
