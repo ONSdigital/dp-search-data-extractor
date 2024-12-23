@@ -75,7 +75,9 @@ func (c *Component) initService(ctx context.Context) error {
 
 	cfg.HealthCheckInterval = time.Second
 	cfg.DatasetAPIURL = c.DatasetAPI.ResolveURL("")
+	cfg.EnableDatasetAPICallbacks = true
 	cfg.ZebedeeURL = c.Zebedee.ResolveURL("")
+	cfg.EnableZebedeeCallbacks = true
 
 	log.Info(ctx, "config used by component tests", log.Data{"cfg": cfg})
 
