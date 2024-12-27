@@ -55,7 +55,7 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		svc.ZebedeeCli = GetZebedee(cfg)
 	} else {
 		svc.ZebedeeCli = nil
-		log.Info(ctx, "Zebedee callbacks are disabled")
+		log.Info(ctx, "healthchecks skipped for zebedee as callbacks disabled")
 	}
 
 	// Initialize Dataset client only if enabled
@@ -63,7 +63,7 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		svc.DatasetCli = GetDatasetClient(cfg)
 	} else {
 		svc.DatasetCli = nil
-		log.Info(ctx, "Dataset callbacks are disabled")
+		log.Info(ctx, "healthchecks skipped for Dataset as callbacks disabled")
 	}
 
 	svc.TopicCli = GetTopicClient(cfg)

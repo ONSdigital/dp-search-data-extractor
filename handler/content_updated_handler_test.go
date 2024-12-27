@@ -171,9 +171,10 @@ func TestHandle(t *testing.T) {
 				msg := createMessage(testDatasetEvent)
 				err := h.Handle(ctx, testWorkerID, msg)
 
-				Convey("Then Dataset API is not called", func() {
-					So(err, ShouldBeNil)
+				Convey("Then the expected error is returned and Dataset API is not called", func() {
+					So(err, ShouldNotBeNil)
 					So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 0)
+					So(err.Error(), ShouldEqual, "event cannot be processed as dataset API callbacks are disabled")
 				})
 			})
 		})
@@ -185,9 +186,10 @@ func TestHandle(t *testing.T) {
 				msg := createMessage(testZebedeeEvent)
 				err := h.Handle(ctx, testWorkerID, msg)
 
-				Convey("Then Zebedee is not called", func() {
-					So(err, ShouldBeNil)
+				Convey("Then the expected error is returned and Zebedee is not called", func() {
+					So(err, ShouldNotBeNil)
 					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
+					So(err.Error(), ShouldEqual, "event cannot be processed as zebedee callbacks are disabled")
 				})
 			})
 
@@ -209,9 +211,10 @@ func TestHandle(t *testing.T) {
 				msg := createMessage(testZebedeeEvent)
 				err := h.Handle(ctx, testWorkerID, msg)
 
-				Convey("Then Zebedee is not called", func() {
-					So(err, ShouldBeNil)
+				Convey("Then the expected error is returned and Zebedee is not called", func() {
+					So(err, ShouldNotBeNil)
 					So(zebedeeMock.GetPublishedDataCalls(), ShouldHaveLength, 0)
+					So(err.Error(), ShouldEqual, "event cannot be processed as zebedee callbacks are disabled")
 				})
 			})
 
@@ -219,9 +222,10 @@ func TestHandle(t *testing.T) {
 				msg := createMessage(testDatasetEvent)
 				err := h.Handle(ctx, testWorkerID, msg)
 
-				Convey("Then Dataset API is not called", func() {
-					So(err, ShouldBeNil)
+				Convey("Then the expected error is returned and Dataset API is not called", func() {
+					So(err, ShouldNotBeNil)
 					So(datasetMock.GetVersionMetadataCalls(), ShouldHaveLength, 0)
+					So(err.Error(), ShouldEqual, "event cannot be processed as dataset API callbacks are disabled")
 				})
 			})
 		})

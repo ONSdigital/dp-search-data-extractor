@@ -41,7 +41,7 @@ var GetHealthCheck = func(cfg *config.Config, buildTime, gitCommit, version stri
 // GetZebedee gets the Zebedee Client
 var GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
 	if !cfg.EnableZebedeeCallbacks {
-		log.Info(context.Background(), "Zebedee callbacks are disabled, returning nil Zebedee client")
+		log.Info(context.Background(), "returning nil zebedee client as callbacks are disabled")
 		return nil
 	}
 	return zebedee.New(cfg.ZebedeeURL)
@@ -50,7 +50,7 @@ var GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
 // GetDatasetClient gets the Dataset API client
 var GetDatasetClient = func(cfg *config.Config) clients.DatasetClient {
 	if !cfg.EnableDatasetAPICallbacks {
-		log.Info(context.Background(), "Dataset API callbacks are disabled, returning nil Dataset client")
+		log.Info(context.Background(), "returning nil Dataset client as Dataset API callbacks are disabled")
 		return nil
 	}
 	return dataset.NewAPIClient(cfg.DatasetAPIURL)

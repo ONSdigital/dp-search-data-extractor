@@ -49,16 +49,18 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 	switch e.DataType {
 	case ZebedeeDataType:
 		if !h.Cfg.EnableZebedeeCallbacks {
-			log.Info(ctx, "zebedee callbacks are disabled, skipping event", log.Data{"data_type": e.DataType})
-			return nil
+			err := fmt.Errorf("event cannot be processed as zebedee callbacks are disabled")
+			log.Error(ctx, "failed event handling as zebedee callbacks are disabled.", err, log.Data{"data_type": e.DataType})
+			return err
 		}
 		if err := h.handleZebedeeType(ctx, e); err != nil {
 			return err
 		}
 	case DatasetDataType:
 		if !h.Cfg.EnableDatasetAPICallbacks {
-			log.Info(ctx, "Dataset API callbacks are disabled, skipping event", log.Data{"data_type": e.DataType})
-			return nil
+			err := fmt.Errorf("event cannot be processed as dataset API callbacks are disabled")
+			log.Error(ctx, "failed event handling as dataset API callbacks are disabled.", err, log.Data{"data_type": e.DataType})
+			return err
 		}
 		if err := h.handleDatasetDataType(ctx, e); err != nil {
 			return err
