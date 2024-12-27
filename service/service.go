@@ -37,6 +37,8 @@ func New() *Service {
 	return &Service{}
 }
 
+// Init initializes the Service by setting up essential components like Kafka producers, consumers, health checks, and caching.
+// It validates the provided configuration, initializes clients and consumers, registers health checks, and sets up an HTTP server for health endpoints.
 func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, gitCommit, version string) error {
 	var err error
 
@@ -88,6 +90,8 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 	return nil
 }
 
+// initClients initializes external service clients based on the service configuration.
+// It sets up clients for Zebedee, DatasetAPI, and Topic services if their corresponding flags are enabled.
 func (svc *Service) initClients(ctx context.Context) {
 	if svc.Cfg.EnableZebedeeCallbacks {
 		svc.ZebedeeCli = GetZebedee(svc.Cfg)
@@ -304,20 +308,32 @@ func (svc *Service) closeProducer(ctx context.Context) error {
 	return nil
 }
 
+// registerCheckers registers health checks for various service components such as Kafka consumers and clients.
+// It divides the registration process into three distinct steps:
+// 1. Client Checkers: Registers health checks for Zebedee and Dataset clients, as well as the Kafka producer.
+// 2. Consumer Checkers: Registers health checks for Kafka consumers (ContentPublished and SearchContent).
+// 3. Subscription: Subscribes consumers to health checks based on feature flags and component availability.
+// If any of the health checks fail during registration, the method returns an error.
 func (svc *Service) registerCheckers(ctx context.Context) error {
 	var hasErrors bool
 
+	// Step 1: Register client checkers
 	chkZebedee, chkDataset, chkProducer := svc.registerClientsCheckers(ctx, &hasErrors)
+
+	// Step 2: Register consumer checkers
 	svc.registerConsumerCheckers(ctx, &hasErrors)
 
 	if hasErrors {
 		return errors.New("Error(s) registering checkers for healthcheck")
 	}
 
+	// Step 3: Subscribe consumers to health checks
 	svc.subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer)
 	return nil
 }
 
+// registerClientsCheckers registers health checks for Zebedee, Dataset API clients, and the Kafka producer.
+// It returns the respective health check references and updates the hasErrors flag if any registration fails.
 func (svc *Service) registerClientsCheckers(ctx context.Context, hasErrors *bool) (zebedeeCheck, datasetCheck, producerCheck *healthcheck.Check) {
 	if svc.ZebedeeCli != nil {
 		zebedeeCheck, *hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableZebedeeCallbacks, "Zebedee client", svc.ZebedeeCli.Checker, *hasErrors)
@@ -330,6 +346,8 @@ func (svc *Service) registerClientsCheckers(ctx context.Context, hasErrors *bool
 	return zebedeeCheck, datasetCheck, producerCheck
 }
 
+// registerConsumerCheckers registers health checks for Kafka consumers, such as ContentPublished and SearchContent.
+// It updates the hasErrors flag if any health check registration fails.
 func (svc *Service) registerConsumerCheckers(ctx context.Context, hasErrors *bool) {
 	if svc.ContentPublishedConsumer != nil {
 		if _, err := svc.HealthCheck.AddAndGetCheck("ContentPublished Kafka consumer", svc.ContentPublishedConsumer.Checker); err != nil {
@@ -346,6 +364,8 @@ func (svc *Service) registerConsumerCheckers(ctx context.Context, hasErrors *boo
 	}
 }
 
+// subscribeToHealthCheck subscribes Kafka consumers to health checks for Zebedee, Dataset, and Kafka producer.
+// Subscriptions are made based on feature flags and component availability, ensuring that unhealthy components stop consumption.
 func (svc *Service) subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer *healthcheck.Check) {
 	if svc.Cfg.StopConsumingOnUnhealthy {
 		subscribers := []healthcheck.Subscriber{}
