@@ -54,6 +54,7 @@ func TestInit(t *testing.T) {
 
 		cfg.EnableZebedeeCallbacks = true
 		cfg.EnableDatasetAPICallbacks = true
+		cfg.EnableSearchContentUpdatedHandler = true
 
 		// Mocking the Kafka consumers
 		consumerMock1 := &kafkatest.IConsumerGroupMock{
@@ -71,8 +72,10 @@ func TestInit(t *testing.T) {
 		service.GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IConsumerGroup, error) {
 			if topic == "content-updated" {
 				return consumerMock1, nil
+			} else if topic == "search-content-updated" {
+				return consumerMock2, nil
 			}
-			return consumerMock2, nil
+			return nil, fmt.Errorf("unknown topic")
 		}
 
 		producerMock := &kafkatest.IProducerMock{}
@@ -201,6 +204,90 @@ func TestInit(t *testing.T) {
 				Convey("And all other checkers try to register", func() {
 					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 5)
 				})
+			})
+		})
+
+		Convey("Given one of the feature flags for content-published is disabled", func() {
+			cfg.EnableZebedeeCallbacks = true
+			cfg.EnableDatasetAPICallbacks = false
+			cfg.EnableSearchContentUpdatedHandler = true
+
+			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
+			So(err, ShouldBeNil)
+			So(svc.Cfg, ShouldResemble, cfg)
+			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ZebedeeCli, ShouldNotBeNil)
+			So(svc.DatasetCli, ShouldBeNil)
+			So(svc.ContentPublishedConsumer, ShouldNotBeNil)
+			So(svc.SearchContentConsumer, ShouldNotBeNil)
+
+			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+				subscribed := hcMock.AddAndGetCheckCalls()
+				So(subscribed, ShouldHaveLength, 4)
+			})
+		})
+
+		Convey("Given both of the feature flags for content-published is disabled", func() {
+			cfg.EnableZebedeeCallbacks = false
+			cfg.EnableDatasetAPICallbacks = false
+			cfg.EnableSearchContentUpdatedHandler = true
+
+			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
+			So(err, ShouldBeNil)
+			So(svc.Cfg, ShouldResemble, cfg)
+			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ZebedeeCli, ShouldBeNil)
+			So(svc.DatasetCli, ShouldBeNil)
+			So(svc.ContentPublishedConsumer, ShouldBeNil)
+			So(svc.SearchContentConsumer, ShouldNotBeNil)
+
+			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+				subscribed := hcMock.AddAndGetCheckCalls()
+				So(subscribed, ShouldHaveLength, 2)
+			})
+		})
+
+		Convey("Given only the feature flags for search-content-updated is disabled", func() {
+			cfg.EnableZebedeeCallbacks = true
+			cfg.EnableDatasetAPICallbacks = true
+			cfg.EnableSearchContentUpdatedHandler = false
+
+			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
+			So(err, ShouldBeNil)
+			So(svc.Cfg, ShouldResemble, cfg)
+			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ZebedeeCli, ShouldNotBeNil)
+			So(svc.DatasetCli, ShouldNotBeNil)
+			So(svc.ContentPublishedConsumer, ShouldNotBeNil)
+			So(svc.SearchContentConsumer, ShouldBeNil)
+
+			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+				subscribed := hcMock.AddAndGetCheckCalls()
+				So(subscribed, ShouldHaveLength, 4)
+			})
+		})
+
+		Convey("Given all consumer feature flags are disabled", func() {
+			cfg.EnableZebedeeCallbacks = false
+			cfg.EnableDatasetAPICallbacks = false
+			cfg.EnableSearchContentUpdatedHandler = false
+
+			service.GetHealthCheck = func(cfg *config.Config, buildTime, gitCommit, version string) (service.HealthChecker, error) {
+				return nil, errHealthcheck
+			}
+
+			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
+			So(err, ShouldNotBeNil)
+			So(svc.Cfg, ShouldResemble, cfg)
+			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ZebedeeCli, ShouldBeNil)
+			So(svc.DatasetCli, ShouldBeNil)
+			So(svc.ContentPublishedConsumer, ShouldBeNil)
+			So(svc.SearchContentConsumer, ShouldBeNil)
+
+			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+				subscribed := hcMock.SubscribeCalls()
+				So(subscribed, ShouldHaveLength, 0)
 			})
 		})
 

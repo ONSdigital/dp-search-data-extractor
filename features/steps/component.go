@@ -78,6 +78,7 @@ func (c *Component) initService(ctx context.Context) error {
 	cfg.EnableDatasetAPICallbacks = true
 	cfg.ZebedeeURL = c.Zebedee.ResolveURL("")
 	cfg.EnableZebedeeCallbacks = true
+	cfg.EnableSearchContentUpdatedHandler = true
 
 	log.Info(ctx, "config used by component tests", log.Data{"cfg": cfg})
 

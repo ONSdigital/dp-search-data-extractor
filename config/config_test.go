@@ -47,6 +47,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.ServiceAuthToken, ShouldEqual, "")
 				So(cfg.EnableZebedeeCallbacks, ShouldBeFalse)
 				So(cfg.EnableDatasetAPICallbacks, ShouldBeFalse)
+				So(cfg.EnableSearchContentUpdatedHandler, ShouldBeFalse)
 			})
 			Convey("Then a second call to config should return the same config", func() {
 				newCfg, newErr := Get()

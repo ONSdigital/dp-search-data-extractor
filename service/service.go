@@ -50,23 +50,7 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		return fmt.Errorf("failed to create kafka producer: %w", err)
 	}
 
-	// Initialize Zebedee client only if enabled
-	if cfg.EnableZebedeeCallbacks {
-		svc.ZebedeeCli = GetZebedee(cfg)
-	} else {
-		svc.ZebedeeCli = nil
-		log.Info(ctx, "healthchecks skipped for zebedee as callbacks disabled")
-	}
-
-	// Initialize Dataset client only if enabled
-	if cfg.EnableZebedeeCallbacks {
-		svc.DatasetCli = GetDatasetClient(cfg)
-	} else {
-		svc.DatasetCli = nil
-		log.Info(ctx, "healthchecks skipped for Dataset as callbacks disabled")
-	}
-
-	svc.TopicCli = GetTopicClient(cfg)
+	svc.initClients(ctx)
 
 	if svc.Cfg.EnableTopicTagging {
 		// Initialise caching
@@ -84,33 +68,8 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		return fmt.Errorf("failed to create kafka producer: %w", err)
 	}
 
-	// Initialize Consumer for "content-published"
-	if svc.ContentPublishedConsumer, err = GetKafkaConsumer(ctx, cfg.Kafka, cfg.Kafka.ContentUpdatedTopic); err != nil {
-		return fmt.Errorf("failed to create content-published consumer: %w", err)
-	}
-
-	contentHandler := &handler.ContentPublished{
-		Cfg:        svc.Cfg,
-		ZebedeeCli: GetZebedee(cfg),
-		DatasetCli: GetDatasetClient(cfg),
-		Producer:   svc.Producer,
-		Cache:      svc.Cache,
-	}
-	if err = svc.ContentPublishedConsumer.RegisterHandler(ctx, contentHandler.Handle); err != nil {
-		return fmt.Errorf("could not register content-published handler: %w", err)
-	}
-
-	// Initialize Consumer for "search-content-updated"
-	if svc.SearchContentConsumer, err = GetKafkaConsumer(ctx, cfg.Kafka, cfg.Kafka.SearchContentTopic); err != nil {
-		return fmt.Errorf("failed to create search-content-updated consumer: %w", err)
-	}
-
-	searchContentHandler := &handler.SearchContentHandler{
-		Cfg:      svc.Cfg,
-		Producer: svc.Producer,
-	}
-	if err = svc.SearchContentConsumer.RegisterHandler(ctx, searchContentHandler.Handle); err != nil {
-		return fmt.Errorf("could not register search-content-updated handler: %w", err)
+	if err := svc.initConsumers(ctx); err != nil {
+		return err
 	}
 
 	// Get HealthCheck
@@ -126,6 +85,58 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 	r.StrictSlash(true).Path("/health").HandlerFunc(svc.HealthCheck.Handler)
 	svc.Server = GetHTTPServer(cfg.BindAddr, r)
 
+	return nil
+}
+
+func (svc *Service) initClients(ctx context.Context) {
+	if svc.Cfg.EnableZebedeeCallbacks {
+		svc.ZebedeeCli = GetZebedee(svc.Cfg)
+	} else {
+		log.Info(ctx, "healthchecks skipped for zebedee as callbacks disabled")
+	}
+
+	if svc.Cfg.EnableDatasetAPICallbacks {
+		svc.DatasetCli = GetDatasetClient(svc.Cfg)
+	} else {
+		log.Info(ctx, "healthchecks skipped for Dataset as callbacks disabled")
+	}
+
+	svc.TopicCli = GetTopicClient(svc.Cfg)
+}
+
+func (svc *Service) initConsumers(ctx context.Context) error {
+	var err error
+
+	if svc.Cfg.EnableZebedeeCallbacks || svc.Cfg.EnableDatasetAPICallbacks {
+		if svc.ContentPublishedConsumer, err = GetKafkaConsumer(ctx, svc.Cfg.Kafka, svc.Cfg.Kafka.ContentUpdatedTopic); err != nil {
+			return fmt.Errorf("failed to create content-published consumer: %w", err)
+		}
+		contentHandler := &handler.ContentPublished{
+			Cfg:        svc.Cfg,
+			ZebedeeCli: svc.ZebedeeCli,
+			DatasetCli: svc.DatasetCli,
+			Producer:   svc.Producer,
+			Cache:      svc.Cache,
+		}
+		if err = svc.ContentPublishedConsumer.RegisterHandler(ctx, contentHandler.Handle); err != nil {
+			return fmt.Errorf("could not register content-published handler: %w", err)
+		}
+		log.Info(ctx, "content-published consumer and handler registered")
+	}
+
+	if svc.Cfg.EnableSearchContentUpdatedHandler {
+		if svc.SearchContentConsumer, err = GetKafkaConsumer(ctx, svc.Cfg.Kafka, svc.Cfg.Kafka.SearchContentTopic); err != nil {
+			return fmt.Errorf("failed to create search-content-updated consumer: %w", err)
+		}
+		searchContentHandler := &handler.SearchContentHandler{
+			Cfg:      svc.Cfg,
+			Producer: svc.Producer,
+		}
+		if err = svc.SearchContentConsumer.RegisterHandler(ctx, searchContentHandler.Handle); err != nil {
+			return fmt.Errorf("could not register search-content-updated handler: %w", err)
+		}
+		log.Info(ctx, "search-content-updated consumer and handler registered")
+	}
 	return nil
 }
 
@@ -293,50 +304,70 @@ func (svc *Service) closeProducer(ctx context.Context) error {
 	return nil
 }
 
-func (svc *Service) registerCheckers(ctx context.Context) (err error) {
-	var chkZebedee, chkDataset, chkProducer *healthcheck.Check
+func (svc *Service) registerCheckers(ctx context.Context) error {
 	var hasErrors bool
 
-	// Register health checks
-	chkZebedee, hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableZebedeeCallbacks, "Zebedee client", svc.ZebedeeCli.Checker, hasErrors)
-	chkDataset, hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableDatasetAPICallbacks, "DatasetAPI client", svc.DatasetCli.Checker, hasErrors)
-	chkProducer, hasErrors = svc.addHealthCheck(ctx, true, "Kafka producer", svc.Producer.Checker, hasErrors)
-
-	// Register Kafka consumers
-	_, err = svc.HealthCheck.AddAndGetCheck("ContentPublished Kafka consumer", svc.ContentPublishedConsumer.Checker)
-	if err != nil {
-		hasErrors = true
-		log.Error(ctx, "error adding check for Kafka", err)
-	}
-
-	_, err = svc.HealthCheck.AddAndGetCheck("SearchContent Kafka consumer", svc.SearchContentConsumer.Checker)
-	if err != nil {
-		hasErrors = true
-		log.Error(ctx, "error adding check for Kafka", err)
-	}
+	chkZebedee, chkDataset, chkProducer := svc.registerClientsCheckers(ctx, &hasErrors)
+	svc.registerConsumerCheckers(ctx, &hasErrors)
 
 	if hasErrors {
 		return errors.New("Error(s) registering checkers for healthcheck")
 	}
 
-	// Subscribe health checks for consumer start/stop based on unhealthy components
-	if svc.Cfg.StopConsumingOnUnhealthy {
-		if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil && svc.Cfg.EnableDatasetAPICallbacks && chkDataset != nil {
-			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkDataset, chkProducer)
-			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkDataset, chkProducer)
-		} else if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil {
-			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkZebedee, chkProducer)
-			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkZebedee, chkProducer)
-		} else if svc.Cfg.EnableDatasetAPICallbacks && chkDataset != nil {
-			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkDataset, chkProducer)
-			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkDataset, chkProducer)
-		} else {
-			svc.HealthCheck.Subscribe(svc.ContentPublishedConsumer, chkProducer)
-			svc.HealthCheck.Subscribe(svc.SearchContentConsumer, chkProducer)
+	svc.subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer)
+	return nil
+}
+
+func (svc *Service) registerClientsCheckers(ctx context.Context, hasErrors *bool) (zebedeeCheck, datasetCheck, producerCheck *healthcheck.Check) {
+	if svc.ZebedeeCli != nil {
+		zebedeeCheck, *hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableZebedeeCallbacks, "Zebedee client", svc.ZebedeeCli.Checker, *hasErrors)
+	}
+	if svc.DatasetCli != nil {
+		datasetCheck, *hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableDatasetAPICallbacks, "DatasetAPI client", svc.DatasetCli.Checker, *hasErrors)
+	}
+	producerCheck, *hasErrors = svc.addHealthCheck(ctx, true, "Kafka producer", svc.Producer.Checker, *hasErrors)
+
+	return zebedeeCheck, datasetCheck, producerCheck
+}
+
+func (svc *Service) registerConsumerCheckers(ctx context.Context, hasErrors *bool) {
+	if svc.ContentPublishedConsumer != nil {
+		if _, err := svc.HealthCheck.AddAndGetCheck("ContentPublished Kafka consumer", svc.ContentPublishedConsumer.Checker); err != nil {
+			*hasErrors = true
+			log.Error(ctx, "error adding check for ContentPublished Kafka consumer", err)
 		}
 	}
 
-	return nil
+	if svc.SearchContentConsumer != nil {
+		if _, err := svc.HealthCheck.AddAndGetCheck("SearchContent Kafka consumer", svc.SearchContentConsumer.Checker); err != nil {
+			*hasErrors = true
+			log.Error(ctx, "error adding check for SearchContent Kafka consumer", err)
+		}
+	}
+}
+
+func (svc *Service) subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer *healthcheck.Check) {
+	if svc.Cfg.StopConsumingOnUnhealthy {
+		subscribers := []healthcheck.Subscriber{}
+		checks := []*healthcheck.Check{chkProducer}
+
+		if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil {
+			checks = append(checks, chkZebedee)
+		}
+		if svc.Cfg.EnableDatasetAPICallbacks && chkDataset != nil {
+			checks = append(checks, chkDataset)
+		}
+		if svc.ContentPublishedConsumer != nil {
+			subscribers = append(subscribers, svc.ContentPublishedConsumer)
+		}
+		if svc.SearchContentConsumer != nil {
+			subscribers = append(subscribers, svc.SearchContentConsumer)
+		}
+
+		for _, sub := range subscribers {
+			svc.HealthCheck.Subscribe(sub, checks...)
+		}
+	}
 }
 
 func (svc *Service) addHealthCheck(ctx context.Context, enabled bool, name string, checker healthcheck.Checker, hasErrors bool) (*healthcheck.Check, bool) {
@@ -344,10 +375,11 @@ func (svc *Service) addHealthCheck(ctx context.Context, enabled bool, name strin
 		check, err := svc.HealthCheck.AddAndGetCheck(name, checker)
 		if err != nil {
 			log.Error(ctx, "error adding check for "+name, err)
-			return nil, true
+			hasErrors = true
+			return nil, hasErrors
 		}
 		return check, hasErrors
 	}
-	log.Info(ctx, name+" is disabled, skipping health check registration")
+	log.Info(ctx, "skipping health check registration as "+name+" is disabled")
 	return nil, hasErrors
 }
