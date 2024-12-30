@@ -93,16 +93,16 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 // initClients initializes external service clients based on the service configuration.
 // It sets up clients for Zebedee, DatasetAPI, and Topic services if their corresponding flags are enabled.
 func (svc *Service) initClients(ctx context.Context) {
-	if svc.Cfg.EnableZebedeeCallbacks {
+	if svc.Cfg != nil && svc.Cfg.EnableZebedeeCallbacks {
 		svc.ZebedeeCli = GetZebedee(svc.Cfg)
 	} else {
-		log.Info(ctx, "healthchecks skipped for zebedee as callbacks disabled")
+		log.Info(ctx, "zebedee client not initialised as callbacks disabled")
 	}
 
-	if svc.Cfg.EnableDatasetAPICallbacks {
+	if svc.Cfg != nil && svc.Cfg.EnableDatasetAPICallbacks {
 		svc.DatasetCli = GetDatasetClient(svc.Cfg)
 	} else {
-		log.Info(ctx, "healthchecks skipped for Dataset as callbacks disabled")
+		log.Info(ctx, "Dataset client not initialised as callbacks disabled")
 	}
 
 	svc.TopicCli = GetTopicClient(svc.Cfg)
@@ -111,7 +111,7 @@ func (svc *Service) initClients(ctx context.Context) {
 func (svc *Service) initConsumers(ctx context.Context) error {
 	var err error
 
-	if svc.Cfg.EnableZebedeeCallbacks || svc.Cfg.EnableDatasetAPICallbacks {
+	if svc.Cfg != nil && (svc.Cfg.EnableZebedeeCallbacks || svc.Cfg.EnableDatasetAPICallbacks) {
 		if svc.ContentPublishedConsumer, err = GetKafkaConsumer(ctx, svc.Cfg.Kafka, svc.Cfg.Kafka.ContentUpdatedTopic); err != nil {
 			return fmt.Errorf("failed to create content-published consumer: %w", err)
 		}
@@ -128,7 +128,7 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 		log.Info(ctx, "content-published consumer and handler registered")
 	}
 
-	if svc.Cfg.EnableSearchContentUpdatedHandler {
+	if svc.Cfg != nil && svc.Cfg.EnableSearchContentUpdatedHandler {
 		if svc.SearchContentConsumer, err = GetKafkaConsumer(ctx, svc.Cfg.Kafka, svc.Cfg.Kafka.SearchContentTopic); err != nil {
 			return fmt.Errorf("failed to create search-content-updated consumer: %w", err)
 		}
