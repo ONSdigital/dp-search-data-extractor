@@ -50,6 +50,10 @@ func NewTopicCache(ctx context.Context, updateInterval *time.Duration) (*TopicCa
 
 // GetData returns the topic cache requested by key and returns an empty topic if not found, not of the cache interface type or nil.
 func (tc *TopicCache) GetData(ctx context.Context, key string) (*Topic, error) {
+	if tc.Cache == nil {
+		log.Error(ctx, "topic cache not initialized", nil)
+		return nil, errors.New("topic cache not initialized")
+	}
 	topicCacheInterface, ok := tc.Cache.Get(key)
 	if !ok {
 		err := fmt.Errorf("cached topic data with key %s not found", key)

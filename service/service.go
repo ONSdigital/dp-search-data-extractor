@@ -117,6 +117,11 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	svc.SearchContentConsumer.LogErrors(ctx)
 	svc.Producer.LogErrors(ctx)
 
+	// Start cache updates
+	if svc.Cfg.EnableTopicTagging {
+		go svc.Cache.Topic.StartUpdates(ctx, svcErrors)
+	}
+
 	// If start/stop on health updates is disabled, start consuming as soon as possible
 	if !svc.Cfg.StopConsumingOnUnhealthy {
 		if err := svc.ContentPublishedConsumer.Start(); err != nil {
@@ -125,11 +130,6 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 		if err := svc.SearchContentConsumer.Start(); err != nil {
 			return fmt.Errorf("search-content consumer failed to start: %w", err)
 		}
-	}
-
-	// Start cache updates
-	if svc.Cfg.EnableTopicTagging {
-		go svc.Cache.Topic.StartUpdates(ctx, svcErrors)
 	}
 
 	// Always start healthcheck.
