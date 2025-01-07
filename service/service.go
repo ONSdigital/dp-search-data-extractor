@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
@@ -47,6 +48,18 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 	svc.DatasetCli = GetDatasetClient(cfg)
 	svc.TopicCli = GetTopicClient(cfg)
 
+	if svc.Cfg.EnableTopicTagging {
+		// Initialise caching
+		svc.Cache.Topic, err = cache.NewTopicCache(ctx, &svc.Cfg.TopicCacheUpdateInterval)
+		if err != nil {
+			log.Error(ctx, "failed to create topic cache", err)
+			return err
+		}
+
+		// Load cache with topics on startup
+		svc.Cache.Topic.AddUpdateFunc(svc.Cache.Topic.GetTopicCacheKey(), cachePrivate.UpdateTopicCache(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
+	}
+
 	if svc.Producer, err = GetKafkaProducer(ctx, cfg.Kafka); err != nil {
 		return fmt.Errorf("failed to create kafka producer: %w", err)
 	}
@@ -80,18 +93,6 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		return fmt.Errorf("could not register search-content-updated handler: %w", err)
 	}
 
-	if svc.Cfg.EnableTopicTagging {
-		// Initialise caching
-		svc.Cache.Topic, err = cache.NewTopicCache(ctx, &svc.Cfg.TopicCacheUpdateInterval)
-		if err != nil {
-			log.Error(ctx, "failed to create topic cache", err)
-			return err
-		}
-
-		// Load cache with topics on startup
-		svc.Cache.Topic.AddUpdateFunc(svc.Cache.Topic.GetTopicCacheKey(), cachePrivate.UpdateTopicCache(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
-	}
-
 	// Get HealthCheck
 	if svc.HealthCheck, err = GetHealthCheck(cfg, buildTime, gitCommit, version); err != nil {
 		return fmt.Errorf("could not instantiate healthcheck: %w", err)
@@ -119,7 +120,19 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 
 	// Start cache updates
 	if svc.Cfg.EnableTopicTagging {
-		go svc.Cache.Topic.StartUpdates(ctx, svcErrors)
+		// FIXME This code starts a goroutine with no control to stop it gracefully later. Also it does the initial
+		// cache population concurrently so it causes a race condition for the handler which later relies on it.
+		// To fix it will require a change to the underlying library but in the meantime we can work around the race
+		// condition by synchronously updating the cache content first.
+		err := svc.Cache.Topic.UpdateContent(ctx)
+		if err != nil {
+			return fmt.Errorf("topic cache failed to initialise: %w", err)
+		}
+
+		go func() {
+			time.Sleep(svc.Cfg.TopicCacheUpdateInterval) // to prevent immediate re-update of cache content
+			svc.Cache.Topic.StartUpdates(ctx, svcErrors)
+		}()
 	}
 
 	// If start/stop on health updates is disabled, start consuming as soon as possible
