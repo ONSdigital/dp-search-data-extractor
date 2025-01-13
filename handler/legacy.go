@@ -99,8 +99,10 @@ func tagSearchDataWithURITopics(ctx context.Context, searchData models.SearchDat
 	uriSegments := strings.Split(searchData.URI, "/")
 
 	// Add topics based on URI segments
+	parentSlug := ""
 	for _, segment := range uriSegments {
-		AddTopicWithParents(ctx, segment, topicCache, uniqueTopics)
+		AddTopicWithParents(ctx, segment, parentSlug, topicCache, uniqueTopics)
+		parentSlug = segment // Update parentSlug for the next iteration
 	}
 
 	// Convert set to slice
@@ -114,13 +116,18 @@ func tagSearchDataWithURITopics(ctx context.Context, searchData models.SearchDat
 
 // AddTopicWithParents adds a topic and its parents to the uniqueTopics map if they don't already exist.
 // It recursively adds parent topics until it reaches the root topic.
-func AddTopicWithParents(ctx context.Context, slug string, topicCache *cache.TopicCache, uniqueTopics map[string]struct{}) {
+func AddTopicWithParents(ctx context.Context, slug, parentSlug string, topicCache *cache.TopicCache, uniqueTopics map[string]struct{}) {
 	if topic, _ := topicCache.GetTopic(ctx, slug); topic != nil {
-		if _, exists := uniqueTopics[topic.ID]; !exists {
-			uniqueTopics[topic.ID] = struct{}{}
-			if topic.ParentSlug != "" {
-				AddTopicWithParents(ctx, topic.ParentSlug, topicCache, uniqueTopics)
+		// Find the topic by matching both slug and parentSlug
+		if topic.Slug == slug && topic.ParentSlug == parentSlug {
+			if _, alreadyProcessed := uniqueTopics[topic.ID]; !alreadyProcessed {
+				uniqueTopics[topic.ID] = struct{}{}
+				if topic.ParentSlug != "" {
+					// Recursively add the parent topic
+					AddTopicWithParents(ctx, topic.ParentSlug, "", topicCache, uniqueTopics)
+				}
 			}
+			return // Stop processing once the correct topic is found and added
 		}
 	}
 }
