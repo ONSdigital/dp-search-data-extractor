@@ -207,7 +207,7 @@ func TestInit(t *testing.T) {
 			})
 		})
 
-		Convey("Given one of the feature flags for content-published is disabled", func() {
+		Convey("Given one of the feature flags for content-published is disabled and the flag for search-content-updated is enabled", func() {
 			cfg.EnableZebedeeCallbacks = true
 			cfg.EnableDatasetAPICallbacks = false
 			cfg.EnableSearchContentUpdatedHandler = true
@@ -221,13 +221,13 @@ func TestInit(t *testing.T) {
 			So(svc.ContentPublishedConsumer, ShouldNotBeNil)
 			So(svc.SearchContentConsumer, ShouldNotBeNil)
 
-			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+			Convey("Then only necessary checks are registered based on feature flags", func() {
 				subscribed := hcMock.AddAndGetCheckCalls()
 				So(subscribed, ShouldHaveLength, 4)
 			})
 		})
 
-		Convey("Given both of the feature flags for content-published is disabled", func() {
+		Convey("Given both of feature flags for content-published are disabled and the flag for search-content-updated is enabled", func() {
 			cfg.EnableZebedeeCallbacks = false
 			cfg.EnableDatasetAPICallbacks = false
 			cfg.EnableSearchContentUpdatedHandler = true
@@ -241,13 +241,13 @@ func TestInit(t *testing.T) {
 			So(svc.ContentPublishedConsumer, ShouldBeNil)
 			So(svc.SearchContentConsumer, ShouldNotBeNil)
 
-			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+			Convey("Then only necessary checks are registered based on feature flags", func() {
 				subscribed := hcMock.AddAndGetCheckCalls()
 				So(subscribed, ShouldHaveLength, 2)
 			})
 		})
 
-		Convey("Given only the feature flags for search-content-updated is disabled", func() {
+		Convey("Given only the feature flag for search-content-updated is disabled and both flags for content-published are enabled", func() {
 			cfg.EnableZebedeeCallbacks = true
 			cfg.EnableDatasetAPICallbacks = true
 			cfg.EnableSearchContentUpdatedHandler = false
@@ -261,7 +261,7 @@ func TestInit(t *testing.T) {
 			So(svc.ContentPublishedConsumer, ShouldNotBeNil)
 			So(svc.SearchContentConsumer, ShouldBeNil)
 
-			Convey("Then no subscribers are added when all feature flags are disabled", func() {
+			Convey("Then only necessary checks are registered based on feature flags", func() {
 				subscribed := hcMock.AddAndGetCheckCalls()
 				So(subscribed, ShouldHaveLength, 4)
 			})
@@ -305,16 +305,19 @@ func TestInit(t *testing.T) {
 				So(svc.DatasetCli, ShouldResemble, datasetAPIMock)
 
 				Convey("Then only necessary checks are registered based on feature flags", func() {
-					checksRegistered := hcMock.AddAndGetCheckCalls()
+					registeredChecks := make(map[string]bool)
+					for _, check := range hcMock.AddAndGetCheckCalls() {
+						registeredChecks[check.Name] = true
+					}
 					if cfg.EnableZebedeeCallbacks {
-						So(checksRegistered[0].Name, ShouldResemble, "Zebedee client")
+						So(registeredChecks["Zebedee client"], ShouldBeTrue)
 					}
 					if cfg.EnableDatasetAPICallbacks {
-						So(checksRegistered[1].Name, ShouldResemble, "DatasetAPI client")
+						So(registeredChecks["DatasetAPI client"], ShouldBeTrue)
 					}
-					So(checksRegistered[2].Name, ShouldResemble, "Kafka producer")
-					So(checksRegistered[3].Name, ShouldResemble, "ContentPublished Kafka consumer")
-					So(checksRegistered[4].Name, ShouldResemble, "SearchContent Kafka consumer")
+					So(registeredChecks["Kafka producer"], ShouldBeTrue)
+					So(registeredChecks["ContentPublished Kafka consumer"], ShouldBeTrue)
+					So(registeredChecks["SearchContent Kafka consumer"], ShouldBeTrue)
 				})
 
 				Convey("Then Kafka consumers subscribe to the correct health checks", func() {

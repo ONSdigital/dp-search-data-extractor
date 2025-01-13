@@ -317,8 +317,8 @@ func (svc *Service) closeProducer(ctx context.Context) error {
 func (svc *Service) registerCheckers(ctx context.Context) error {
 	var hasErrors bool
 
-	// Step 1: Register client checkers
-	chkZebedee, chkDataset, chkProducer := svc.registerClientsCheckers(ctx, &hasErrors)
+	// Step 1: Register client and producer checkers
+	chkZebedee, chkDataset, chkProducer := svc.registerClientAndProducerCheckers(ctx, &hasErrors)
 
 	// Step 2: Register consumer checkers
 	svc.registerConsumerCheckers(ctx, &hasErrors)
@@ -332,9 +332,9 @@ func (svc *Service) registerCheckers(ctx context.Context) error {
 	return nil
 }
 
-// registerClientsCheckers registers health checks for Zebedee, Dataset API clients, and the Kafka producer.
+// registerClientAndProducerCheckers registers health checks for Zebedee, Dataset API clients, and the Kafka producer.
 // It returns the respective health check references and updates the hasErrors flag if any registration fails.
-func (svc *Service) registerClientsCheckers(ctx context.Context, hasErrors *bool) (zebedeeCheck, datasetCheck, producerCheck *healthcheck.Check) {
+func (svc *Service) registerClientAndProducerCheckers(ctx context.Context, hasErrors *bool) (zebedeeCheck, datasetCheck, producerCheck *healthcheck.Check) {
 	if svc.ZebedeeCli != nil {
 		zebedeeCheck, *hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableZebedeeCallbacks, "Zebedee client", svc.ZebedeeCli.Checker, *hasErrors)
 	}
@@ -364,8 +364,10 @@ func (svc *Service) registerConsumerCheckers(ctx context.Context, hasErrors *boo
 	}
 }
 
-// subscribeToHealthCheck subscribes Kafka consumers to health checks for Zebedee, Dataset, and Kafka producer.
-// Subscriptions are made based on feature flags and component availability, ensuring that unhealthy components stop consumption.
+// subscribeToHealthCheck handles the subscription process of Kafka consumers to relevant health checks.
+// It evaluates the configuration settings and component availability to ensure that only healthy
+// components participate in message consumption. If a component becomes unhealthy and stop-consume
+// behavior is enabled, the corresponding consumer is halted.
 func (svc *Service) subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer *healthcheck.Check) {
 	if svc.Cfg.StopConsumingOnUnhealthy {
 		subscribers := []healthcheck.Subscriber{}
@@ -400,6 +402,9 @@ func (svc *Service) addHealthCheck(ctx context.Context, enabled bool, name strin
 		}
 		return check, hasErrors
 	}
-	log.Info(ctx, "skipping health check registration as "+name+" is disabled")
+	log.Info(ctx, "skipping health check registration as configuration is disabled", log.Data{
+		"name":    name,
+		"enabled": enabled,
+	})
 	return nil, hasErrors
 }
