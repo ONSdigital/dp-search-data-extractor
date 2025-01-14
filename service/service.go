@@ -152,7 +152,7 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	log.Info(ctx, "starting service")
 
-	// Kafka error logging go-routine
+	// Kafka error logging go-routine based on feature-flags
 	svc.Producer.LogErrors(ctx)
 	if svc.Cfg != nil && (svc.Cfg.EnableZebedeeCallbacks || svc.Cfg.EnableDatasetAPICallbacks) {
 		svc.ContentPublishedConsumer.LogErrors(ctx)
