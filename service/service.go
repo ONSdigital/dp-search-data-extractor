@@ -153,9 +153,13 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	log.Info(ctx, "starting service")
 
 	// Kafka error logging go-routine
-	svc.ContentPublishedConsumer.LogErrors(ctx)
-	svc.SearchContentConsumer.LogErrors(ctx)
 	svc.Producer.LogErrors(ctx)
+	if svc.Cfg != nil && (svc.Cfg.EnableZebedeeCallbacks || svc.Cfg.EnableDatasetAPICallbacks) {
+		svc.ContentPublishedConsumer.LogErrors(ctx)
+	}
+	if svc.Cfg != nil && svc.Cfg.EnableSearchContentUpdatedHandler {
+		svc.SearchContentConsumer.LogErrors(ctx)
+	}
 
 	// Start cache updates
 	if svc.Cfg.EnableTopicTagging {
