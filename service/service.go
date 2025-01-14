@@ -159,19 +159,27 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 
 	// Start cache updates
 	if svc.Cfg.EnableTopicTagging {
-		// FIXME This code starts a goroutine with no control to stop it gracefully later. Also it does the initial
-		// cache population concurrently so it causes a race condition for the handler which later relies on it.
-		// To fix it will require a change to the underlying library but in the meantime we can work around the race
-		// condition by synchronously updating the cache content first.
+		// Synchronously update the cache content first to avoid race conditions
 		err := svc.Cache.Topic.UpdateContent(ctx)
 		if err != nil {
 			return fmt.Errorf("topic cache failed to initialise: %w", err)
 		}
 
-		go func() {
-			time.Sleep(svc.Cfg.TopicCacheUpdateInterval) // to prevent immediate re-update of cache content
+		// Use a child context to manage the lifecycle of the background update goroutine
+		updateCtx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		go func(ctx context.Context) {
+			// Delay to prevent immediate re-update
+			select {
+			case <-time.After(svc.Cfg.TopicCacheUpdateInterval):
+			case <-ctx.Done():
+				return
+			}
+
+			// Start periodic updates
 			svc.Cache.Topic.StartUpdates(ctx, svcErrors)
-		}()
+		}(updateCtx)
 	}
 
 	// If start/stop on health updates is disabled, start consuming as soon as possible
