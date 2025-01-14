@@ -105,7 +105,11 @@ func (svc *Service) initClients(ctx context.Context) {
 		log.Info(ctx, "Dataset client not initialised as callbacks disabled")
 	}
 
-	svc.TopicCli = GetTopicClient(svc.Cfg)
+	if svc.Cfg != nil && svc.Cfg.EnableTopicTagging {
+		svc.TopicCli = GetTopicClient(svc.Cfg)
+	} else {
+		log.Info(ctx, "Topic client not initialised as tagging disabled")
+	}
 }
 
 func (svc *Service) initConsumers(ctx context.Context) error {
