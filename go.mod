@@ -4,11 +4,11 @@ go 1.24
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0
-	github.com/ONSdigital/dp-cache v0.4.0
+	github.com/ONSdigital/dp-cache v0.5.0
 	github.com/ONSdigital/dp-component-test v0.20.0
 	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-kafka/v3 v3.10.0
-	github.com/ONSdigital/dp-net/v3 v3.2.1
+	github.com/ONSdigital/dp-net/v3 v3.3.0
 	github.com/ONSdigital/dp-topic-api v0.26.0
 	github.com/ONSdigital/log.go/v2 v2.4.5
 	github.com/cucumber/godog v0.15.0
@@ -24,7 +24,7 @@ require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.1 // indirect
 	github.com/ONSdigital/dp-net/v2 v2.22.0 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
-	github.com/chromedp/cdproto v0.0.0-20250403032234-65de8f5d025b // indirect
+	github.com/chromedp/cdproto v0.0.0-20250420205042-3f8c33ccbdec // indirect
 	github.com/chromedp/chromedp v0.13.6 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
@@ -35,7 +35,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250223041408-d3c622f1b874 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect

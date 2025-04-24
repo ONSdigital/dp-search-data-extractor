@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
@@ -163,27 +162,18 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 
 	// Start cache updates
 	if svc.Cfg.EnableTopicTagging {
-		// Synchronously update the cache content first to avoid race conditions
-		err := svc.Cache.Topic.UpdateContent(ctx)
-		if err != nil {
-			return fmt.Errorf("topic cache failed to initialise: %w", err)
-		}
+		// Start periodic updates using StartAndManageUpdates
+		go func() {
+			errorChannel := make(chan error)
 
-		// Use a child context to manage the lifecycle of the background update goroutine
-		updateCtx, cancel := context.WithCancel(ctx)
-		defer cancel()
+			// Start and manage updates (handles both synchronous and periodic updates)
+			svc.Cache.Topic.StartAndManageUpdates(ctx, errorChannel)
 
-		go func(ctx context.Context) {
-			// Delay to prevent immediate re-update
-			select {
-			case <-time.After(svc.Cfg.TopicCacheUpdateInterval):
-			case <-ctx.Done():
-				return
+			// Handle any errors from periodic updates
+			for err := range errorChannel {
+				log.Error(ctx, "periodic cache update failed", err)
 			}
-
-			// Start periodic updates
-			svc.Cache.Topic.StartUpdates(ctx, svcErrors)
-		}(updateCtx)
+		}()
 	}
 
 	// If start/stop on health updates is disabled, start consuming as soon as possible
