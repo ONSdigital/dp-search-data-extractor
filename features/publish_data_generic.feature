@@ -19,6 +19,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
     Then this search-data-import event is sent
     """
     {
+      "UID":         "/some/uri",
       "URI":         "/some/uri",
       "Title":       "title",
       "Edition":     "something",
@@ -49,6 +50,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
     Then this search-data-import event is sent
     """
     {
+      "UID":         "/some/uri",
       "URI":         "/some/uri",
       "Title":       "title",
       "Edition":     "something",

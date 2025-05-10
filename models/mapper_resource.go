@@ -3,6 +3,7 @@ package models
 // MapResourceToSearchDataImport Performs default mapping of a SearchContentUpdate struct to a SearchDataImport struct.
 func MapResourceToSearchDataImport(resource SearchContentUpdate) SearchDataImport {
 	searchDataImport := SearchDataImport{
+		UID:             resource.URI,
 		URI:             resource.URI,
 		Title:           resource.Title,
 		DataType:        resource.ContentType,

@@ -58,6 +58,7 @@ func TestMapResourceToSearchDataImport(t *testing.T) {
 		Convey("Then all expected fields are mapped to a SearchDataImport model", func() {
 			searchDataImport := MapResourceToSearchDataImport(searchContentUpdate)
 			So(searchDataImport, ShouldResemble, SearchDataImport{
+				UID:             testURI,
 				URI:             testURI,
 				Edition:         testEdition,
 				DataType:        testContentTypeRelease,
