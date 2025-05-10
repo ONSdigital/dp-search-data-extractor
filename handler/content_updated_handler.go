@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
@@ -43,8 +44,14 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 		}
 	}
 
-	logData := log.Data{"event": e}
-	log.Info(ctx, "event received", logData)
+	unixTimeStamp := time.Now().UnixNano()
+
+	logData := log.Data{
+		"event":     e,
+		"timeStamp": unixTimeStamp,
+		"topic":     "content-updated",
+	}
+	log.Info(ctx, "content published event received", logData)
 
 	switch e.DataType {
 	case ZebedeeDataType:

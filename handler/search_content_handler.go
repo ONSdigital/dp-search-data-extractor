@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
@@ -32,7 +33,13 @@ func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Mess
 		}
 	}
 
-	logData := log.Data{"event": e}
+	unixTimeStamp := time.Now().UnixNano()
+
+	logData := log.Data{
+		"event":     e,
+		"timeStamp": unixTimeStamp,
+		"topic":     "search-content-updated",
+	}
 	log.Info(ctx, "search content event received", logData)
 
 	if err := h.sendSearchDataImported(ctx, *e); err != nil {
