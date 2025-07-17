@@ -165,7 +165,7 @@ func (c *Component) thisSearchDataImportEventIsSent(eventDocstring *godog.DocStr
 		return fmt.Errorf("-got +expected)\n%s\n", diff)
 	}
 
-	return c.ErrorFeature.StepError()
+	return c.StepError()
 }
 
 // noEventsAreProduced waits on the service's kafka producer

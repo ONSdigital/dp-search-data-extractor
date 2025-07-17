@@ -54,7 +54,7 @@ func (tc *TopicCache) GetData(ctx context.Context, key string) (*Topic, error) {
 		log.Error(ctx, "topic cache not initialised", nil)
 		return nil, errors.New("topic cache not initialised")
 	}
-	topicCacheInterface, ok := tc.Cache.Get(key)
+	topicCacheInterface, ok := tc.Get(key)
 	if !ok {
 		err := fmt.Errorf("cached topic data with key %s not found", key)
 		log.Error(ctx, "failed to get cached topic data", err)
@@ -80,7 +80,7 @@ func (tc *TopicCache) GetData(ctx context.Context, key string) (*Topic, error) {
 // AddUpdateFunc adds an update function to the topic cache for a topic with the `title` passed to the function
 // This update function will then be triggered once or at every fixed interval as per the prior setup of the TopicCache
 func (tc *TopicCache) AddUpdateFunc(title string, updateFunc func() *Topic) {
-	tc.Cache.UpdateFuncs[title] = func() (interface{}, error) {
+	tc.UpdateFuncs[title] = func() (interface{}, error) {
 		// error handling is done within the updateFunc
 		return updateFunc(), nil
 	}
