@@ -42,8 +42,16 @@ func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Mess
 	}
 	log.Info(ctx, "search content event received", logData)
 
+	// Always send new imported event
 	if err := h.sendSearchDataImported(ctx, *e); err != nil {
 		return err
+	}
+
+	// If old URI exists, send delete event for old URI
+	if e.URIOld != "" {
+		if err := h.sendSearchContentDeleted(ctx, e.URIOld); err != nil {
+			return err
+		}
 	}
 
 	log.Info(ctx, "search content event successfully handled", logData)
@@ -60,5 +68,19 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 	}
 
 	log.Info(ctx, "search-data-imported event sent", log.Data{"uri": searchDataImport.URI})
+	return nil
+}
+
+func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, uri string) error {
+	deleteEvent := models.SearchContentDeleted{
+		URI: uri,
+	}
+
+	if err := h.Producer.Send(schema.SearchContentDeletedEvent, deleteEvent); err != nil {
+		log.Error(ctx, "error while attempting to send SearchContentDeleted event", err)
+		return fmt.Errorf("failed to send search content deleted event: %w", err)
+	}
+
+	log.Info(ctx, "search-content-deleted event sent", log.Data{"uri": uri})
 	return nil
 }

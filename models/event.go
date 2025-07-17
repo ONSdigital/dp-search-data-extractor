@@ -87,3 +87,8 @@ type SearchContentUpdate struct {
 	ProvisionalDate string               `avro:"provisional_date"`
 	Published       bool                 `avro:"published"`
 }
+
+// SearchContentDeleted represents event data for search-content-deleted
+type SearchContentDeleted struct {
+	URI string `avro:"uri"`
+}

@@ -48,52 +48,81 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 				Producer: producerMock,
 			}
 
-			expectedEvent := &models.SearchContentUpdate{
-				URI:             "/some/uri",
-				URIOld:          "/some/old/uri",
-				Title:           "Test Title",
-				ContentType:     "release",
-				Summary:         "Test Summary",
-				Survey:          "Test Survey",
-				MetaDescription: "Test Meta Description",
-				Topics:          []string{"topic1", "topic2"},
-				ReleaseDate:     "2023-01-01",
-				Language:        "en",
-				Edition:         "Test Edition",
-				DatasetID:       "dataset123",
-				CDID:            "CDID456",
-				CanonicalTopic:  "Canonical Topic",
-				Cancelled:       false,
-				Finalised:       true,
-				Published:       true,
-				ProvisionalDate: "2023-01-02",
-				DateChanges: []models.ReleaseDateDetails{
-					{
-						ChangeNotice: "Notice 1",
-						Date:         "2023-01-01",
-					},
-				},
-			}
+			Convey("When an event without uri_old is handled", func() {
+				expectedEvent := &models.SearchContentUpdate{
+					URI:         "/uri/without/old",
+					Title:       "No Old URI",
+					ContentType: "article",
+				}
 
-			msg := createSearchContentMessage(expectedEvent)
-			err := handler.Handle(ctx, 0, msg)
+				msg := createSearchContentMessage(expectedEvent)
+				err := handler.Handle(ctx, 0, msg)
 
-			Convey("Then no error is reported", func() {
-				So(err, ShouldBeNil)
+				Convey("Then no error is reported", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("And only the search-data-imported event is sent", func() {
+					So(producerMock.SendCalls(), ShouldHaveLength, 1)
+					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+				})
 			})
 
-			Convey("And the expected event is sent to the producer", func() {
-				So(producerMock.SendCalls(), ShouldHaveLength, 1)
-				So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+			Convey("When an event with uri_old is handled", func() {
+				expectedEvent := &models.SearchContentUpdate{
+					URI:             "/some/uri",
+					URIOld:          "/some/old/uri",
+					Title:           "Test Title",
+					ContentType:     "release",
+					Summary:         "Test Summary",
+					Survey:          "Test Survey",
+					MetaDescription: "Test Meta Description",
+					Topics:          []string{"topic1", "topic2"},
+					ReleaseDate:     "2023-01-01",
+					Language:        "en",
+					Edition:         "Test Edition",
+					DatasetID:       "dataset123",
+					CDID:            "CDID456",
+					CanonicalTopic:  "Canonical Topic",
+					Cancelled:       false,
+					Finalised:       true,
+					Published:       true,
+					ProvisionalDate: "2023-01-02",
+					DateChanges: []models.ReleaseDateDetails{
+						{
+							ChangeNotice: "Notice 1",
+							Date:         "2023-01-01",
+						},
+					},
+				}
 
-				sentEvent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
-				So(ok, ShouldBeTrue) // Assert the event is of the correct type
+				msg := createSearchContentMessage(expectedEvent)
+				err := handler.Handle(ctx, 0, msg)
 
-				So(sentEvent.URI, ShouldEqual, expectedEvent.URI)
-				So(sentEvent.Title, ShouldEqual, expectedEvent.Title)
-				So(sentEvent.DataType, ShouldEqual, expectedEvent.ContentType)
-				So(sentEvent.Topics, ShouldResemble, expectedEvent.Topics)
-				So(sentEvent.DateChanges, ShouldResemble, expectedEvent.DateChanges)
+				Convey("Then no error is reported", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("And the expected search-data-imported events are sent to the producer", func() {
+					So(producerMock.SendCalls(), ShouldHaveLength, 2) // Expecting two events: one for import and one for delete
+					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+
+					// Check the first event: search-data-imported
+					sentEvent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
+					So(ok, ShouldBeTrue) // Assert the event is of the correct type
+					So(sentEvent.URI, ShouldEqual, expectedEvent.URI)
+					So(sentEvent.Title, ShouldEqual, expectedEvent.Title)
+					So(sentEvent.DataType, ShouldEqual, expectedEvent.ContentType)
+					So(sentEvent.Topics, ShouldResemble, expectedEvent.Topics)
+					So(sentEvent.DateChanges, ShouldResemble, expectedEvent.DateChanges)
+
+					// Check the second event: search-content-deleted
+					So(producerMock.SendCalls()[1].Schema, ShouldEqual, schema.SearchContentDeletedEvent)
+
+					deleteEvent, ok := producerMock.SendCalls()[1].Event.(models.SearchContentDeleted)
+					So(ok, ShouldBeTrue) // Assert the delete event is of the correct type
+					So(deleteEvent.URI, ShouldEqual, expectedEvent.URIOld)
+				})
 			})
 		})
 

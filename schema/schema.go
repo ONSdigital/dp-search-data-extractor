@@ -120,3 +120,15 @@ var searchContentUpdate = `{
 var SearchContentUpdateEvent = &avro.Schema{
 	Definition: searchContentUpdate,
 }
+
+var searchContentDelete = `{
+  "type": "record",
+  "name": "search-content-deleted",
+  "fields": [
+    {"name": "uri", "type": "string", "default": ""}
+	]
+}`
+
+var SearchContentDeletedEvent = &avro.Schema{
+	Definition: searchContentDelete,
+}

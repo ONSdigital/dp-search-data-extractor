@@ -70,12 +70,14 @@ func TestInit(t *testing.T) {
 
 		// Mocking the Kafka consumer retrieval function to return both consumers
 		service.GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IConsumerGroup, error) {
-			if topic == "content-updated" {
+			switch topic {
+			case "content-updated":
 				return consumerMock1, nil
-			} else if topic == "search-content-updated" {
+			case "search-content-updated":
 				return consumerMock2, nil
+			default:
+				return nil, fmt.Errorf("unknown topic: %s", topic)
 			}
-			return nil, fmt.Errorf("unknown topic")
 		}
 
 		producerMock := &kafkatest.IProducerMock{}
