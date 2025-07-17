@@ -79,9 +79,6 @@ func TestUpdateTopicCache(t *testing.T) {
 		mockClient := &mockTopic.ClienterMock{
 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
-					Count:        2,
-					Offset:       0,
-					Limit:        50,
 					TotalCount:   2,
 					PrivateItems: &[]models.TopicResponse{testEconomyRootTopicPrivate, testBusinessRootTopicPrivate},
 				}, nil
@@ -141,9 +138,6 @@ func TestUpdateTopicCache(t *testing.T) {
 		Convey("And given root topics exist and have subtopics with duplicate topics", func() {
 			mockClient.GetRootTopicsPrivateFunc = func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
-					Count:        2,
-					Offset:       0,
-					Limit:        50,
 					TotalCount:   2,
 					PrivateItems: &[]models.TopicResponse{testEconomyRootTopicPrivate, testBusinessRootTopicPrivate, testEconomyRootTopicPrivate, testBusinessRootTopicPrivate},
 				}, nil
@@ -165,9 +159,6 @@ func TestUpdateTopicCache(t *testing.T) {
 		Convey("And given root topics exist and private items that have subtopics that can end up in a recursive loop", func() {
 			mockClient.GetRootTopicsPrivateFunc = func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
-					Count:        2,
-					Offset:       0,
-					Limit:        50,
 					TotalCount:   2,
 					PrivateItems: &[]models.TopicResponse{testEconomyRootTopicPrivate, testEconomyRootTopicPrivate2, testBusinessRootTopicPrivate2},
 				}, nil
@@ -209,9 +200,6 @@ func TestUpdateTopicCache(t *testing.T) {
 		mockClient := &mockTopic.ClienterMock{
 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
-					Count:        1,
-					Offset:       0,
-					Limit:        50,
 					TotalCount:   1,
 					PrivateItems: nil,
 				}, nil
@@ -239,9 +227,6 @@ func TestUpdateTopicCache(t *testing.T) {
 		mockClient := &mockTopic.ClienterMock{
 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, topicCliErr.Error) {
 				return &models.PrivateSubtopics{
-					Count:        0,
-					Offset:       0,
-					Limit:        50,
 					TotalCount:   0,
 					PrivateItems: &[]models.TopicResponse{},
 				}, nil
