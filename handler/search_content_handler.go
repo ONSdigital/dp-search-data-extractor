@@ -49,7 +49,7 @@ func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Mess
 
 	// If old URI exists, send delete event for old URI
 	if e.URIOld != "" {
-		if err := h.sendSearchContentDeleted(ctx, e.URIOld); err != nil {
+		if err := h.sendSearchContentDeleted(ctx, *e); err != nil {
 			return err
 		}
 	}
@@ -71,16 +71,14 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 	return nil
 }
 
-func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, uri string) error {
-	deleteEvent := models.SearchContentDeleted{
-		URI: uri,
-	}
+func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, resource models.SearchContentUpdate) error {
+	deleteEvent := models.MapResourceToSearchContentDelete(resource)
 
 	if err := h.Producer.Send(schema.SearchContentDeletedEvent, deleteEvent); err != nil {
 		log.Error(ctx, "error while attempting to send SearchContentDeleted event", err)
 		return fmt.Errorf("failed to send search content deleted event: %w", err)
 	}
 
-	log.Info(ctx, "search-content-deleted event sent", log.Data{"uri": uri})
+	log.Info(ctx, "search-content-deleted event sent", log.Data{"uri": resource.URI})
 	return nil
 }

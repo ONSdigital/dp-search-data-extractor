@@ -17,6 +17,8 @@ func MapResourceToSearchDataImport(resource SearchContentUpdate) SearchDataImpor
 		CDID:            resource.CDID,
 		CanonicalTopic:  resource.CanonicalTopic,
 		Topics:          []string{},
+		TraceID:         resource.TraceID,
+		SearchIndex:     resource.SearchIndex,
 	}
 
 	// Assign topics only if they're not nil
@@ -32,4 +34,14 @@ func MapResourceToSearchDataImport(resource SearchContentUpdate) SearchDataImpor
 		searchDataImport.DateChanges = resource.DateChanges
 	}
 	return searchDataImport
+}
+
+// MapResourceToSearchContentDelete Performs default mapping of a SearchContentUpdate struct to a SearchContentDeleted struct.
+func MapResourceToSearchContentDelete(resource SearchContentUpdate) SearchContentDeleted {
+	searchContentDeleted := SearchContentDeleted{
+		URI:         resource.URIOld,
+		TraceID:     resource.TraceID,
+		SearchIndex: resource.SearchIndex,
+	}
+	return searchContentDeleted
 }

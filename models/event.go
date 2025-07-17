@@ -76,8 +76,10 @@ type SearchContentUpdate struct {
 	ReleaseDate     string   `avro:"release_date"`
 	Summary         string   `avro:"summary"`
 	Survey          string   `avro:"survey"`
+	SearchIndex     string   `avro:"search_index"`
 	Title           string   `avro:"title"`
 	Topics          []string `avro:"topics"`
+	TraceID         string   `avro:"trace_id"`
 	URI             string   `avro:"uri"`
 	URIOld          string   `avro:"uri_old"`
 	// These fields are only used for content_type=release
@@ -90,5 +92,7 @@ type SearchContentUpdate struct {
 
 // SearchContentDeleted represents event data for search-content-deleted
 type SearchContentDeleted struct {
-	URI string `avro:"uri"`
+	URI         string `avro:"uri"`
+	SearchIndex string `avro:"search_index"`
+	TraceID     string `avro:"trace_id"`
 }

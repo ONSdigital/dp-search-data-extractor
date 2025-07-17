@@ -28,6 +28,8 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^this "([^"]*)" event is queued, to be consumed$`, c.thisEventIsQueued)
 	ctx.Step(`^no search-data-import events are produced`, c.noEventsAreProduced)
 	ctx.Step(`^this search-data-import event is sent$`, c.thisSearchDataImportEventIsSent)
+	ctx.Step(`^this search-content-deleted event is sent$`, c.thisSearchContentDeletedEventIsSent)
+	ctx.Step(`^no search-content-deleted events are produced$`, c.noSearchContentDeletedEventsAreProduced)
 }
 
 // theServiceStarts starts the service under test in a new go-routine
@@ -168,8 +170,49 @@ func (c *Component) thisSearchDataImportEventIsSent(eventDocstring *godog.DocStr
 	return c.StepError()
 }
 
+// thisSearchContentDeletedEventIsSent checks that the expected deleted event is sent to Kafka
+func (c *Component) thisSearchContentDeletedEventIsSent(eventDocstring *godog.DocString) error {
+	event := &models.SearchContentDeleted{}
+	if err := json.Unmarshal([]byte(eventDocstring.Content), event); err != nil {
+		return fmt.Errorf("failed to unmarshal docstring to search content deleted event: %w", err)
+	}
+	expected := []*models.SearchContentDeleted{event}
+
+	var got []*models.SearchContentDeleted
+	var e = &models.SearchContentDeleted{}
+	if err := c.KafkaProducer.WaitForMessageSent(schema.SearchContentDeletedEvent, e, c.waitEventTimeout); err != nil {
+		return fmt.Errorf("failed to expect sent message: %w", err)
+	}
+	got = append(got, e)
+
+	if diff := cmp.Diff(got, expected); diff != "" {
+		return fmt.Errorf("-got +expected: %s", diff)
+	}
+
+	return c.StepError()
+}
+
 // noEventsAreProduced waits on the service's kafka producer
 // and validates that nothing is sent, within a time window of duration waitEventTimeout
 func (c *Component) noEventsAreProduced() error {
 	return c.KafkaProducer.WaitNoMessageSent(c.waitEventTimeout)
+}
+
+func (c *Component) noSearchContentDeletedEventsAreProduced() error {
+	// Create a dummy struct to decode into
+	var deletedEvent models.SearchContentDeleted
+
+	err := c.KafkaProducer.WaitForMessageSent(schema.SearchContentDeletedEvent, &deletedEvent, c.waitEventTimeout)
+
+	if err != nil && err.Error() == "timeout while waiting for kafka message being produced" {
+		return nil
+	}
+
+	// A message was produced and (likely) decoded successfully
+	if err == nil {
+		return fmt.Errorf("unexpected search-content-deleted event was sent: %+v", deletedEvent)
+	}
+
+	// Some other error occurred (e.g., decode failure)
+	return fmt.Errorf("unexpected error while checking for search-content-deleted: %w", err)
 }
