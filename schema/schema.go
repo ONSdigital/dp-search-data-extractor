@@ -95,12 +95,12 @@ var searchContentUpdate = `{
     {"name": "language", "type": "string", "default": ""},
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
-	{"name": "search_index", "type": "string", "default": ""},
+    {"name": "search_index", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
     {"name": "survey", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},
     {"name": "topics", "type": {"type": "array", "items": "string"}, "default": []},
-	{"name": "trace_id", "type": "string", "default": ""},
+    {"name": "trace_id", "type": "string", "default": ""},
     {"name": "uri", "type": "string", "default": ""},
     {"name": "uri_old", "type": "string", "default": ""},
     {"name": "cancelled", "type": "boolean", "default": false},
@@ -128,8 +128,8 @@ var searchContentDelete = `{
   "name": "search-content-deleted",
   "fields": [
     {"name": "uri", "type": "string", "default": ""},
-	{"name": "search_index", "type": "string", "default": ""},
-	{"name": "trace_id", "type": "string", "default": ""}
+    {"name": "search_index", "type": "string", "default": ""},
+    {"name": "trace_id", "type": "string", "default": ""}
  ]
 }`
 

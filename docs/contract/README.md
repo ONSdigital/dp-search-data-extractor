@@ -31,7 +31,7 @@ When a resource has been updated, issue an event to the topic `search-content-up
 
 ### Resource has been deleted
 
-When a resource has been updated, issue an event to the topic `search-content-deleted` with your resource's uri.
+When a resource has been deleted, issue an event to the topic `search-content-deleted` with your resource's uri.
 
 ### Resource has been created
 

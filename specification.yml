@@ -26,6 +26,12 @@ channels:
       search-data-import:
         $ref: '#/components/messages/search-data-import'
     description: This topic contains a message of processed search information, ready for import.
+  search-content-deleted:
+    messages:
+      search-content-deleted:
+        $ref: '#/components/messages/search-content-deleted'
+    description: >
+      This topic contains a message for each unique URI that has been deleted and should be removed from the search index.
 operations:
   search-content-updated:
     action: receive
@@ -48,6 +54,13 @@ operations:
     summary: Send data for import by dp-search-data-importer
     messages:
       - $ref: '#/channels/search-data-import/messages/search-data-import'
+  search-content-deleted:
+    action: send
+    channel:
+      $ref: '#/channels/search-content-deleted'
+    summary: Notify downstream systems that a piece of content has been deleted and should be removed from the search index.
+    messages:
+      - $ref: '#/channels/search-content-deleted/messages/search-content-deleted'
 components:
   messages:
     search-content-updated:
@@ -241,4 +254,25 @@ components:
                   type: string
                 label:
                   type: string
+    search-content-deleted:
+      name: search-content-deleted
+      title: A content item has been deleted and should be removed from the search index
+      payload:
+        type: object
+        required:
+          - uri
+          - search_index
+        properties:
+          uri:
+            type: string
+            format: uri
+            description: The URI of the deleted content item
+            example: /economy/environmentalaccounts
+          search_index:
+            type: string
+            description: The search index from which the item should be deleted
+          trace_id:
+            type: string
+            description: Trace ID for OTEL tracing
+
 
