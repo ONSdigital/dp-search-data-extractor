@@ -34,7 +34,8 @@ type Kafka struct {
 	ContentUpdatedGroup       string   `envconfig:"KAFKA_CONTENT_UPDATED_GROUP"`
 	ContentUpdatedTopic       string   `envconfig:"KAFKA_CONTENT_UPDATED_TOPIC"`
 	SearchContentTopic        string   `envconfig:"KAFKA_SEARCH_CONTENT_UPDATED_TOPIC"`
-	ProducerTopic             string   `envconfig:"KAFKA_PRODUCER_TOPIC"`
+	SearchDataImportedTopic   string   `envconfig:"KAFKA_SEARCH_IMPORT_PRODUCER_TOPIC"`
+	SearchContentDeletedTopic string   `envconfig:"KAFKA_SEARCH_DELETED_PRODUCER_TOPIC"`
 	Addr                      []string `envconfig:"KAFKA_ADDR"`
 	Version                   string   `envconfig:"KAFKA_VERSION"`
 	OffsetOldest              bool     `envconfig:"KAFKA_OFFSET_OLDEST"`
@@ -78,7 +79,8 @@ func Get() (*Config, error) {
 			ContentUpdatedGroup:       "dp-search-data-extractor",
 			ContentUpdatedTopic:       "content-updated",
 			SearchContentTopic:        "search-content-updated",
-			ProducerTopic:             "search-data-import",
+			SearchDataImportedTopic:   "search-data-import",
+			SearchContentDeletedTopic: "search-content-deleted",
 			Addr:                      []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 			Version:                   "1.0.2",
 			OffsetOldest:              true,

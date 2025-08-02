@@ -22,7 +22,8 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 		}
 
 		handler := &SearchContentHandler{
-			Producer: producerMock,
+			ImportProducer: producerMock,
+			DeleteProducer: producerMock,
 		}
 
 		Convey("When an event with invalid data is handled", func() {
@@ -45,7 +46,8 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 			}
 
 			handler := &SearchContentHandler{
-				Producer: producerMock,
+				ImportProducer: producerMock,
+				DeleteProducer: producerMock,
 			}
 
 			Convey("When an event without uri_old is handled", func() {

@@ -17,8 +17,9 @@ const (
 )
 
 type SearchContentHandler struct {
-	Cfg      *config.Config
-	Producer kafka.IProducer
+	Cfg            *config.Config
+	ImportProducer kafka.IProducer
+	DeleteProducer kafka.IProducer
 }
 
 // Handle processes the search-content-updated event and generates messages.
@@ -62,7 +63,7 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 	searchDataImport := models.MapResourceToSearchDataImport(resource)
 
 	// Marshall Avro and sending message
-	if err := h.Producer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
+	if err := h.ImportProducer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
@@ -74,7 +75,7 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, resource models.SearchContentUpdate) error {
 	deleteEvent := models.MapResourceToSearchContentDelete(resource)
 
-	if err := h.Producer.Send(schema.SearchContentDeletedEvent, deleteEvent); err != nil {
+	if err := h.DeleteProducer.Send(schema.SearchContentDeletedEvent, deleteEvent); err != nil {
 		log.Error(ctx, "error while attempting to send SearchContentDeleted event", err)
 		return fmt.Errorf("failed to send search content deleted event: %w", err)
 	}

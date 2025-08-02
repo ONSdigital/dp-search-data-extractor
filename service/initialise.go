@@ -90,13 +90,13 @@ var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic string
 }
 
 // GetKafkaProducer creates a Kafka producer and sets the producder flag to true
-var GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+var GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IProducer, error) {
 	if cfg == nil {
 		return nil, errors.New("cannot create a kafka producer without kafka config")
 	}
 	pConfig := &kafka.ProducerConfig{
 		BrokerAddrs:       cfg.Addr,
-		Topic:             cfg.ProducerTopic,
+		Topic:             topic,
 		MinBrokersHealthy: &cfg.ProducerMinBrokersHealthy,
 		KafkaVersion:      &cfg.Version,
 		MaxMessageBytes:   &cfg.MaxBytes,

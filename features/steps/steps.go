@@ -157,7 +157,7 @@ func (c *Component) thisSearchDataImportEventIsSent(eventDocstring *godog.DocStr
 
 	var got []*models.SearchDataImport
 	var e = &models.SearchDataImport{}
-	if err := c.KafkaProducer.WaitForMessageSent(schema.SearchDataImportEvent, e, c.waitEventTimeout); err != nil {
+	if err := c.ImportProducer.WaitForMessageSent(schema.SearchDataImportEvent, e, c.waitEventTimeout); err != nil {
 		return fmt.Errorf("failed to expect sent message: %w", err)
 	}
 	got = append(got, e)
@@ -180,7 +180,7 @@ func (c *Component) thisSearchContentDeletedEventIsSent(eventDocstring *godog.Do
 
 	var got []*models.SearchContentDeleted
 	var e = &models.SearchContentDeleted{}
-	if err := c.KafkaProducer.WaitForMessageSent(schema.SearchContentDeletedEvent, e, c.waitEventTimeout); err != nil {
+	if err := c.DeleteProducer.WaitForMessageSent(schema.SearchContentDeletedEvent, e, c.waitEventTimeout); err != nil {
 		return fmt.Errorf("failed to expect sent message: %w", err)
 	}
 	got = append(got, e)
@@ -195,14 +195,14 @@ func (c *Component) thisSearchContentDeletedEventIsSent(eventDocstring *godog.Do
 // noEventsAreProduced waits on the service's kafka producer
 // and validates that nothing is sent, within a time window of duration waitEventTimeout
 func (c *Component) noEventsAreProduced() error {
-	return c.KafkaProducer.WaitNoMessageSent(c.waitEventTimeout)
+	return c.ImportProducer.WaitNoMessageSent(c.waitEventTimeout)
 }
 
 func (c *Component) noSearchContentDeletedEventsAreProduced() error {
 	// Create a dummy struct to decode into
 	var deletedEvent models.SearchContentDeleted
 
-	err := c.KafkaProducer.WaitForMessageSent(schema.SearchContentDeletedEvent, &deletedEvent, c.waitEventTimeout)
+	err := c.DeleteProducer.WaitForMessageSent(schema.SearchContentDeletedEvent, &deletedEvent, c.waitEventTimeout)
 
 	if err != nil && err.Error() == "timeout while waiting for kafka message being produced" {
 		return nil

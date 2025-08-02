@@ -33,7 +33,8 @@ type Component struct {
 	componenttest.ErrorFeature
 	DatasetAPI               *httpfake.HTTPFake  // Dataset API mock at HTTP level
 	Zebedee                  *httpfake.HTTPFake  // Zebedee mock at HTTP level
-	KafkaProducer            *kafkatest.Producer // Mock for service kafka producer
+	ImportProducer           *kafkatest.Producer // mock for search-data-imported
+	DeleteProducer           *kafkatest.Producer // mock for search-content-deleted
 	ContentPublishedConsumer *kafkatest.Consumer // Mock for service kafka consumer
 	SearchContentConsumer    *kafkatest.Consumer // Mock for service kafka consumer
 	errorChan                chan error
@@ -195,20 +196,43 @@ func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka, top
 // GetKafkaProducer creates a new kafkatest producer and stores it to the caller Component struct
 // It returns the mock, so it can be used by the service under test.
 // If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaProducer(_ context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+func (c *Component) GetKafkaProducer(_ context.Context, cfg *config.Kafka, topic string) (kafka.IProducer, error) {
 	var err error
-	c.KafkaProducer, err = kafkatest.NewProducer(
-		c.ctx,
-		&kafka.ProducerConfig{
-			BrokerAddrs:       cfg.Addr,
-			Topic:             cfg.ProducerTopic,
-			MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-			KafkaVersion:      &cfg.Version,
-		},
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create kafkatest producer: %w", err)
+
+	switch topic {
+	case cfg.SearchDataImportedTopic:
+		c.ImportProducer, err = kafkatest.NewProducer(
+			c.ctx,
+			&kafka.ProducerConfig{
+				BrokerAddrs:       cfg.Addr,
+				Topic:             topic,
+				MinBrokersHealthy: &cfg.ProducerMinBrokersHealthy,
+				KafkaVersion:      &cfg.Version,
+			},
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create import kafkatest producer: %w", err)
+		}
+		return c.ImportProducer.Mock, nil
+
+	case cfg.SearchContentDeletedTopic:
+		c.DeleteProducer, err = kafkatest.NewProducer(
+			c.ctx,
+			&kafka.ProducerConfig{
+				BrokerAddrs:       cfg.Addr,
+				Topic:             topic,
+				MinBrokersHealthy: &cfg.ProducerMinBrokersHealthy,
+				KafkaVersion:      &cfg.Version,
+			},
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create delete kafkatest producer: %w", err)
+		}
+		return c.DeleteProducer.Mock, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported topic: %s", topic)
 	}
-	return c.KafkaProducer.Mock, nil
 }

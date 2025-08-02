@@ -26,7 +26,8 @@ type Service struct {
 	HealthCheck              HealthChecker
 	SearchContentConsumer    kafka.IConsumerGroup
 	ContentPublishedConsumer kafka.IConsumerGroup
-	Producer                 kafka.IProducer
+	ImportProducer           kafka.IProducer
+	DeleteProducer           kafka.IProducer
 	ZebedeeCli               clients.ZebedeeClient
 	DatasetCli               clients.DatasetClient
 	TopicCli                 topicCli.Clienter
@@ -47,10 +48,6 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 
 	svc.Cfg = cfg
 
-	if svc.Producer, err = GetKafkaProducer(ctx, cfg.Kafka); err != nil {
-		return fmt.Errorf("failed to create kafka producer: %w", err)
-	}
-
 	svc.initClients(ctx)
 
 	if svc.Cfg.EnableTopicTagging {
@@ -65,8 +62,12 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		svc.Cache.Topic.AddUpdateFunc(svc.Cache.Topic.GetTopicCacheKey(), cachePrivate.UpdateTopicCache(ctx, svc.Cfg.ServiceAuthToken, svc.TopicCli))
 	}
 
-	if svc.Producer, err = GetKafkaProducer(ctx, cfg.Kafka); err != nil {
-		return fmt.Errorf("failed to create kafka producer: %w", err)
+	if svc.ImportProducer, err = GetKafkaProducer(ctx, cfg.Kafka, cfg.Kafka.SearchDataImportedTopic); err != nil {
+		return fmt.Errorf("failed to create import kafka producer: %w", err)
+	}
+
+	if svc.DeleteProducer, err = GetKafkaProducer(ctx, cfg.Kafka, cfg.Kafka.SearchContentDeletedTopic); err != nil {
+		return fmt.Errorf("failed to create delete kafka producer: %w", err)
 	}
 
 	if err := svc.initConsumers(ctx); err != nil {
@@ -122,7 +123,7 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 			Cfg:        svc.Cfg,
 			ZebedeeCli: svc.ZebedeeCli,
 			DatasetCli: svc.DatasetCli,
-			Producer:   svc.Producer,
+			Producer:   svc.ImportProducer,
 			Cache:      svc.Cache,
 		}
 		if err = svc.ContentPublishedConsumer.RegisterHandler(ctx, contentHandler.Handle); err != nil {
@@ -136,8 +137,9 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 			return fmt.Errorf("failed to create search-content-updated consumer: %w", err)
 		}
 		searchContentHandler := &handler.SearchContentHandler{
-			Cfg:      svc.Cfg,
-			Producer: svc.Producer,
+			Cfg:            svc.Cfg,
+			ImportProducer: svc.ImportProducer,
+			DeleteProducer: svc.DeleteProducer,
 		}
 		if err = svc.SearchContentConsumer.RegisterHandler(ctx, searchContentHandler.Handle); err != nil {
 			return fmt.Errorf("could not register search-content-updated handler: %w", err)
@@ -152,7 +154,13 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	log.Info(ctx, "starting service")
 
 	// Kafka error logging go-routine based on feature-flags
-	svc.Producer.LogErrors(ctx)
+	if svc.ImportProducer != nil {
+		svc.ImportProducer.LogErrors(ctx)
+	}
+	if svc.DeleteProducer != nil {
+		svc.DeleteProducer.LogErrors(ctx)
+	}
+
 	if svc.Cfg != nil && (svc.Cfg.EnableZebedeeCallbacks || svc.Cfg.EnableDatasetAPICallbacks) {
 		svc.ContentPublishedConsumer.LogErrors(ctx)
 	}
@@ -229,7 +237,7 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		if err := svc.closeProducer(ctx); err != nil {
+		if err := svc.closeKafkaProducers(ctx); err != nil {
 			log.Error(ctx, "producer shutdown error", err)
 			hasShutdownError = true
 		}
@@ -300,17 +308,24 @@ func (svc *Service) shutdownConsumers(ctx context.Context) error {
 	return nil
 }
 
-// closeProducer closes the Kafka producer
-func (svc *Service) closeProducer(ctx context.Context) error {
-	if svc.Producer == nil {
-		return nil
+// closeKafkaProducers closes the Kafka producers
+func (svc *Service) closeKafkaProducers(ctx context.Context) error {
+	var errs []error
+	closeOne := func(p kafka.IProducer, name string) {
+		if p == nil {
+			return
+		}
+		log.Info(ctx, "closing kafka producer...", log.Data{"producer": name})
+		if err := p.Close(ctx); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", name, err))
+		}
+		log.Info(ctx, "closed kafka producer", log.Data{"producer": name})
 	}
-
-	log.Info(ctx, "closing kafka producer...")
-	if err := svc.Producer.Close(ctx); err != nil {
-		return fmt.Errorf("failed to close kafka producer: %w", err)
+	closeOne(svc.ImportProducer, "import")
+	closeOne(svc.DeleteProducer, "delete")
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to close producers: %v", errs)
 	}
-	log.Info(ctx, "closed kafka producer")
 	return nil
 }
 
@@ -324,7 +339,7 @@ func (svc *Service) registerCheckers(ctx context.Context) error {
 	var hasErrors bool
 
 	// Step 1: Register client and producer checkers
-	chkZebedee, chkDataset, chkProducer := svc.registerClientAndProducerCheckers(ctx, &hasErrors)
+	chkZebedee, chkDataset, chkImportProd, chkDeleteProd := svc.registerClientAndProducerCheckers(ctx, &hasErrors)
 
 	// Step 2: Register consumer checkers
 	svc.registerConsumerCheckers(ctx, &hasErrors)
@@ -334,22 +349,27 @@ func (svc *Service) registerCheckers(ctx context.Context) error {
 	}
 
 	// Step 3: Subscribe consumers to health checks
-	svc.subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer)
+	svc.subscribeToHealthCheck(chkZebedee, chkDataset, chkImportProd, chkDeleteProd)
 	return nil
 }
 
-// registerClientAndProducerCheckers registers health checks for Zebedee, Dataset API clients, and the Kafka producer.
+// registerClientAndProducerCheckers registers health checks for Zebedee, Dataset API clients, and the Kafka producers.
 // It returns the respective health check references and updates the hasErrors flag if any registration fails.
-func (svc *Service) registerClientAndProducerCheckers(ctx context.Context, hasErrors *bool) (zebedeeCheck, datasetCheck, producerCheck *healthcheck.Check) {
+func (svc *Service) registerClientAndProducerCheckers(ctx context.Context, hasErrors *bool) (zebedeeCheck, datasetCheck, importProducerCheck, deleteProducerCheck *healthcheck.Check) {
 	if svc.ZebedeeCli != nil {
 		zebedeeCheck, *hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableZebedeeCallbacks, "Zebedee client", svc.ZebedeeCli.Checker, *hasErrors)
 	}
 	if svc.DatasetCli != nil {
 		datasetCheck, *hasErrors = svc.addHealthCheck(ctx, svc.Cfg.EnableDatasetAPICallbacks, "DatasetAPI client", svc.DatasetCli.Checker, *hasErrors)
 	}
-	producerCheck, *hasErrors = svc.addHealthCheck(ctx, true, "Kafka producer", svc.Producer.Checker, *hasErrors)
 
-	return zebedeeCheck, datasetCheck, producerCheck
+	if svc.ImportProducer != nil {
+		importProducerCheck, *hasErrors = svc.addHealthCheck(ctx, true, "ContentImport Kafka producer", svc.ImportProducer.Checker, *hasErrors)
+	}
+	if svc.DeleteProducer != nil {
+		deleteProducerCheck, *hasErrors = svc.addHealthCheck(ctx, true, "ContentDelete Kafka producer", svc.DeleteProducer.Checker, *hasErrors)
+	}
+	return zebedeeCheck, datasetCheck, importProducerCheck, deleteProducerCheck
 }
 
 // registerConsumerCheckers registers health checks for Kafka consumers, such as ContentPublished and SearchContent.
@@ -374,16 +394,22 @@ func (svc *Service) registerConsumerCheckers(ctx context.Context, hasErrors *boo
 // It evaluates the configuration settings and component availability to ensure that only healthy
 // components participate in message consumption. If a component becomes unhealthy and stop-consume
 // behavior is enabled, the corresponding consumer is halted.
-func (svc *Service) subscribeToHealthCheck(chkZebedee, chkDataset, chkProducer *healthcheck.Check) {
+func (svc *Service) subscribeToHealthCheck(chkZebedee, chkDataset, chkImportProd, chkDeleteProd *healthcheck.Check) {
 	if svc.Cfg.StopConsumingOnUnhealthy {
 		subscribers := []healthcheck.Subscriber{}
-		checks := []*healthcheck.Check{chkProducer}
+		checks := []*healthcheck.Check{}
 
 		if svc.Cfg.EnableZebedeeCallbacks && chkZebedee != nil {
 			checks = append(checks, chkZebedee)
 		}
 		if svc.Cfg.EnableDatasetAPICallbacks && chkDataset != nil {
 			checks = append(checks, chkDataset)
+		}
+		if svc.ImportProducer != nil {
+			checks = append(checks, chkImportProd)
+		}
+		if svc.DeleteProducer != nil {
+			checks = append(checks, chkDeleteProd)
 		}
 		if svc.ContentPublishedConsumer != nil {
 			subscribers = append(subscribers, svc.ContentPublishedConsumer)

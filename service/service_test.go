@@ -81,7 +81,7 @@ func TestInit(t *testing.T) {
 		}
 
 		producerMock := &kafkatest.IProducerMock{}
-		service.GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+		service.GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IProducer, error) {
 			return producerMock, nil
 		}
 
@@ -158,7 +158,7 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("Given that initialising Kafka producer returns an error", func() {
-			service.GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka) (kafka.IProducer, error) {
+			service.GetKafkaProducer = func(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IProducer, error) {
 				return nil, errKafkaProducer
 			}
 
@@ -204,7 +204,7 @@ func TestInit(t *testing.T) {
 				So(svc.SearchContentConsumer, ShouldResemble, consumerMock2)
 
 				Convey("And all other checkers try to register", func() {
-					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 5)
+					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 6)
 				})
 			})
 		})
@@ -217,7 +217,8 @@ func TestInit(t *testing.T) {
 			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
 			So(err, ShouldBeNil)
 			So(svc.Cfg, ShouldResemble, cfg)
-			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ImportProducer, ShouldResemble, producerMock)
+			So(svc.DeleteProducer, ShouldResemble, producerMock)
 			So(svc.ZebedeeCli, ShouldNotBeNil)
 			So(svc.DatasetCli, ShouldBeNil)
 			So(svc.ContentPublishedConsumer, ShouldNotBeNil)
@@ -225,7 +226,7 @@ func TestInit(t *testing.T) {
 
 			Convey("Then only necessary checks are registered based on feature flags", func() {
 				subscribed := hcMock.AddAndGetCheckCalls()
-				So(subscribed, ShouldHaveLength, 4)
+				So(subscribed, ShouldHaveLength, 5)
 			})
 		})
 
@@ -237,7 +238,8 @@ func TestInit(t *testing.T) {
 			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
 			So(err, ShouldBeNil)
 			So(svc.Cfg, ShouldResemble, cfg)
-			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ImportProducer, ShouldResemble, producerMock)
+			So(svc.DeleteProducer, ShouldResemble, producerMock)
 			So(svc.ZebedeeCli, ShouldBeNil)
 			So(svc.DatasetCli, ShouldBeNil)
 			So(svc.ContentPublishedConsumer, ShouldBeNil)
@@ -245,7 +247,7 @@ func TestInit(t *testing.T) {
 
 			Convey("Then only necessary checks are registered based on feature flags", func() {
 				subscribed := hcMock.AddAndGetCheckCalls()
-				So(subscribed, ShouldHaveLength, 2)
+				So(subscribed, ShouldHaveLength, 3)
 			})
 		})
 
@@ -257,7 +259,8 @@ func TestInit(t *testing.T) {
 			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
 			So(err, ShouldBeNil)
 			So(svc.Cfg, ShouldResemble, cfg)
-			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ImportProducer, ShouldResemble, producerMock)
+			So(svc.DeleteProducer, ShouldResemble, producerMock)
 			So(svc.ZebedeeCli, ShouldNotBeNil)
 			So(svc.DatasetCli, ShouldNotBeNil)
 			So(svc.ContentPublishedConsumer, ShouldNotBeNil)
@@ -265,7 +268,7 @@ func TestInit(t *testing.T) {
 
 			Convey("Then only necessary checks are registered based on feature flags", func() {
 				subscribed := hcMock.AddAndGetCheckCalls()
-				So(subscribed, ShouldHaveLength, 4)
+				So(subscribed, ShouldHaveLength, 5)
 			})
 		})
 
@@ -281,7 +284,8 @@ func TestInit(t *testing.T) {
 			err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
 			So(err, ShouldNotBeNil)
 			So(svc.Cfg, ShouldResemble, cfg)
-			So(svc.Producer, ShouldResemble, producerMock)
+			So(svc.ImportProducer, ShouldResemble, producerMock)
+			So(svc.DeleteProducer, ShouldResemble, producerMock)
 			So(svc.ZebedeeCli, ShouldBeNil)
 			So(svc.DatasetCli, ShouldBeNil)
 			So(svc.ContentPublishedConsumer, ShouldBeNil)
@@ -302,7 +306,8 @@ func TestInit(t *testing.T) {
 				So(svc.HealthCheck, ShouldResemble, hcMock)
 				So(svc.ContentPublishedConsumer, ShouldResemble, consumerMock1)
 				So(svc.SearchContentConsumer, ShouldResemble, consumerMock2)
-				So(svc.Producer, ShouldResemble, producerMock)
+				So(svc.ImportProducer, ShouldResemble, producerMock)
+				So(svc.DeleteProducer, ShouldResemble, producerMock)
 				So(svc.ZebedeeCli, ShouldResemble, zebedeeMock)
 				So(svc.DatasetCli, ShouldResemble, datasetAPIMock)
 
@@ -317,17 +322,19 @@ func TestInit(t *testing.T) {
 					if cfg.EnableDatasetAPICallbacks {
 						So(registeredChecks["DatasetAPI client"], ShouldBeTrue)
 					}
-					So(registeredChecks["Kafka producer"], ShouldBeTrue)
+					So(registeredChecks["ContentImport Kafka producer"], ShouldBeTrue)
+					So(registeredChecks["ContentDelete Kafka producer"], ShouldBeTrue)
 					So(registeredChecks["ContentPublished Kafka consumer"], ShouldBeTrue)
 					So(registeredChecks["SearchContent Kafka consumer"], ShouldBeTrue)
 				})
 
 				Convey("Then Kafka consumers subscribe to the correct health checks", func() {
-					So(subscribedTo, ShouldHaveLength, 6)
+					So(subscribedTo, ShouldHaveLength, 8)
 					if cfg.EnableZebedeeCallbacks {
 						So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["Zebedee client"])
 					}
-					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["Kafka producer"])
+					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["ContentImport Kafka producer"])
+					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["ContentDelete Kafka producer"])
 					if cfg.EnableDatasetAPICallbacks {
 						So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["DatasetAPI client"])
 					}
@@ -366,7 +373,8 @@ func TestStart(t *testing.T) {
 			HealthCheck:              hcMock,
 			ContentPublishedConsumer: consumerMock1,
 			SearchContentConsumer:    consumerMock2,
-			Producer:                 producerMock,
+			ImportProducer:           producerMock,
+			DeleteProducer:           producerMock,
 		}
 
 		Convey("When a service with a successful HTTP server is started", func() {
@@ -501,7 +509,8 @@ func TestClose(t *testing.T) {
 			HealthCheck:              hcMock,
 			ContentPublishedConsumer: consumerMock1,
 			SearchContentConsumer:    consumerMock2,
-			Producer:                 producerMock,
+			ImportProducer:           producerMock,
+			DeleteProducer:           producerMock,
 		}
 
 		Convey("And all mocks can successfully close, if done in the right order", func() {
