@@ -78,8 +78,9 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 }
 
 func shouldNotBeIndexed(cpEvent *models.ContentPublished) string {
-	if strings.Contains(cpEvent.URI, "/timeseries/") && strings.Contains(cpEvent.URI, "/previous/") {
-		return "Item is a previous timeseries"
+	// Exclude previous versions of any release/timeseries (e.g., v1, v2, etc.)
+	if strings.Contains(cpEvent.URI, "/previous/") {
+		return "Item is a previous version"
 	}
 
 	return ""
