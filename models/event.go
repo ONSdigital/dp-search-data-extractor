@@ -92,7 +92,8 @@ type SearchContentUpdate struct {
 
 // SearchContentDeleted represents event data for search-content-deleted
 type SearchContentDeleted struct {
-	URI         string `avro:"uri"`
-	SearchIndex string `avro:"search_index"`
-	TraceID     string `avro:"trace_id"`
+	URI          string `avro:"uri"`
+	CollectionID string `avro:"collection_id"`
+	SearchIndex  string `avro:"search_index"`
+	TraceID      string `avro:"trace_id"`
 }
