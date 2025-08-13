@@ -14,6 +14,7 @@ import (
 
 const (
 	ReleaseDataType = "release"
+	SearchIndex     = "ons"
 )
 
 type SearchContentHandler struct {
@@ -42,6 +43,9 @@ func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Mess
 		"topic":     "search-content-updated",
 	}
 	log.Info(ctx, "search content event received", logData)
+
+	// Ensure index is set to "ons"
+	e.SearchIndex = SearchIndex
 
 	// Always send new imported event
 	if err := h.sendSearchDataImported(ctx, *e); err != nil {
@@ -80,6 +84,6 @@ func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, res
 		return fmt.Errorf("failed to send search content deleted event: %w", err)
 	}
 
-	log.Info(ctx, "search-content-deleted event sent", log.Data{"uri": resource.URI})
+	log.Info(ctx, "search-content-deleted event sent", log.Data{"uri": resource.URI, "uri_old": resource.URIOld, "event": deleteEvent})
 	return nil
 }
