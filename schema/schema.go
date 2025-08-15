@@ -34,19 +34,19 @@ var searchDataImport = `{
     {"name": "cdid", "type": "string", "default": ""},
     {"name": "dataset_id", "type": "string", "default": ""},
     {"name": "edition", "type": "string", "default": ""},
-    {"name": "keywords", "type": {"type":"array","items":"string"}, "default": []},
+    {"name": "keywords", "type": {"type":"array","items":"string"}},
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},
-    {"name": "topics", "type": {"type":"array","items":"string"}, "default": []},
+    {"name": "topics", "type": {"type":"array","items":"string"}},
     {"name": "trace_id", "type": "string", "default": ""},
     {"name": "cancelled", "type": "boolean", "default": false},
     {"name": "finalised", "type": "boolean", "default": false},
     {"name": "published", "type": "boolean", "default": false},
     {"name": "language", "type": "string", "default": ""},
-    {"name": "survey",   "type": "string", "default": ""},
-    {"name": "canonical_topic",   "type": "string", "default": ""},
+    {"name": "survey", "type": "string", "default": ""},
+    {"name": "canonical_topic", "type": "string", "default": ""},
     {"name": "date_changes", "type": {"type":"array","items":{
       "name": "ReleaseDateDetails",
       "type" : "record",
@@ -66,7 +66,7 @@ var searchDataImport = `{
         { "name": "label", "type": "string", "default": "" },
         { "name": "raw_label", "type": "string", "default": "" }
       ]
-    }}, "default": []},
+    }}},
     {"name": "population_type", "type": {
       "name": "PopulationType", "type": "record", "fields": [
         { "name": "key", "type": "string", "default": "" },
@@ -74,7 +74,7 @@ var searchDataImport = `{
         { "name": "name", "type": "string", "default": ""},
         { "name": "label", "type": "string", "default": ""}
       ]
-    }, "default": {"key": "", "agg_key": "", "name": "", "label": ""}}
+    }}
   ]
 }`
 
@@ -128,6 +128,7 @@ var searchContentDelete = `{
   "name": "search-content-deleted",
   "fields": [
     {"name": "uri", "type": "string", "default": ""},
+    {"name": "collection_id", "type": "string", "default": ""},
     {"name": "search_index", "type": "string", "default": ""},
     {"name": "trace_id", "type": "string", "default": ""}
  ]

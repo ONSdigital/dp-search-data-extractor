@@ -80,6 +80,6 @@ func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, res
 		return fmt.Errorf("failed to send search content deleted event: %w", err)
 	}
 
-	log.Info(ctx, "search-content-deleted event sent", log.Data{"uri": resource.URI})
+	log.Info(ctx, "search-content-deleted event sent", log.Data{"event": deleteEvent})
 	return nil
 }

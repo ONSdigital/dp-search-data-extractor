@@ -14,6 +14,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "Title":         "title",
       "Edition":       "something",
       "ContentType":   "release",
+      "SearchIndex":   "ons",
       "CDID":          "123",
       "DatasetID":     "456"
     }
@@ -26,6 +27,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "Title":       "title",
       "Edition":     "something",
       "DataType":    "release",
+      "SearchIndex": "ons",
       "CDID":        "123",
       "DatasetID":   "456",
       "Keywords":    [],
@@ -42,6 +44,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "Title":         "title",
       "Edition":       "something",
       "ContentType":   "article",
+      "SearchIndex":   "ons",
       "CDID":          "123",
       "DatasetID":     "456"
     }
@@ -54,6 +57,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "Title":       "title",
       "Edition":     "something",
       "DataType":    "article",
+      "SearchIndex": "ons",
       "CDID":        "123",
       "DatasetID":   "456",
       "Keywords":    [],

@@ -74,9 +74,9 @@ type SearchContentUpdate struct {
 	Language        string   `avro:"language"`
 	MetaDescription string   `avro:"meta_description"`
 	ReleaseDate     string   `avro:"release_date"`
+	SearchIndex     string   `avro:"search_index"`
 	Summary         string   `avro:"summary"`
 	Survey          string   `avro:"survey"`
-	SearchIndex     string   `avro:"search_index"`
 	Title           string   `avro:"title"`
 	Topics          []string `avro:"topics"`
 	TraceID         string   `avro:"trace_id"`
@@ -84,15 +84,16 @@ type SearchContentUpdate struct {
 	URIOld          string   `avro:"uri_old"`
 	// These fields are only used for content_type=release
 	Cancelled       bool                 `avro:"cancelled"`
-	DateChanges     []ReleaseDateDetails `avro:"date_changes"`
 	Finalised       bool                 `avro:"finalised"`
-	ProvisionalDate string               `avro:"provisional_date"`
 	Published       bool                 `avro:"published"`
+	DateChanges     []ReleaseDateDetails `avro:"date_changes"`
+	ProvisionalDate string               `avro:"provisional_date"`
 }
 
 // SearchContentDeleted represents event data for search-content-deleted
 type SearchContentDeleted struct {
-	URI         string `avro:"uri"`
-	SearchIndex string `avro:"search_index"`
-	TraceID     string `avro:"trace_id"`
+	URI          string `avro:"uri"`
+	CollectionID string `avro:"collection_id"`
+	SearchIndex  string `avro:"search_index"`
+	TraceID      string `avro:"trace_id"`
 }
