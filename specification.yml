@@ -102,9 +102,6 @@ components:
           job_id:
             type: string
             description: Job ID for use with reindex pipeline
-          search_index:
-            type: string
-            description: Specific search index ID for use with reindex pipeline
           trace_id:
             type: string
             description: Trace ID for OTEL tracing
