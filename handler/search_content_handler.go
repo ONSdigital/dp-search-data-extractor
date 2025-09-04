@@ -61,6 +61,7 @@ func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Mess
 
 func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resource models.SearchContentUpdate) error {
 	searchDataImport := models.MapResourceToSearchDataImport(resource)
+	searchDataImport.SearchIndex = "ons"
 
 	// Marshall Avro and sending message
 	if err := h.ImportProducer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
@@ -74,6 +75,7 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 
 func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, resource models.SearchContentUpdate) error {
 	deleteEvent := models.MapResourceToSearchContentDelete(resource)
+	deleteEvent.SearchIndex = "ons"
 
 	if err := h.DeleteProducer.Send(schema.SearchContentDeletedEvent, deleteEvent); err != nil {
 		log.Error(ctx, "error while attempting to send SearchContentDeleted event", err)

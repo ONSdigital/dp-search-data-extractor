@@ -55,7 +55,6 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 					URI:         "/uri/without/old",
 					Title:       "No Old URI",
 					ContentType: "article",
-					SearchIndex: "ons",
 					TraceID:     "trace1234",
 				}
 
@@ -98,8 +97,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 							Date:         "2023-01-01",
 						},
 					},
-					SearchIndex: "ons",
-					TraceID:     "trace1234",
+					TraceID: "trace1234",
 				}
 
 				msg := createSearchContentMessage(expectedEvent)

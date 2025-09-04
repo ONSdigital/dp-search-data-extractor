@@ -95,7 +95,6 @@ var searchContentUpdate = `{
     {"name": "language", "type": "string", "default": ""},
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
-    {"name": "search_index", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
     {"name": "survey", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},

@@ -39,7 +39,7 @@ type SearchDataImport struct {
 	Dimensions      []Dimension          `avro:"dimensions"`
 }
 
-// ReleaseDateChange represent a date change of a release
+// ReleaseDateDetails represents a date change of a release
 type ReleaseDateDetails struct {
 	ChangeNotice string `avro:"change_notice"`
 	Date         string `avro:"previous_date"`
@@ -74,7 +74,6 @@ type SearchContentUpdate struct {
 	Language        string   `avro:"language"`
 	MetaDescription string   `avro:"meta_description"`
 	ReleaseDate     string   `avro:"release_date"`
-	SearchIndex     string   `avro:"search_index"`
 	Summary         string   `avro:"summary"`
 	Survey          string   `avro:"survey"`
 	Title           string   `avro:"title"`
