@@ -55,7 +55,7 @@ func (h *ContentPublished) handleDatasetDataType(ctx context.Context, cpEvent *m
 	}
 
 	// Marshall Avro and sending message
-	if err := h.Producer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
+	if err := h.ImportProducer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
 		log.Error(ctx, "error while attempting to send DatasetAPIImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}

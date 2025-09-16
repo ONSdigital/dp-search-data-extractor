@@ -60,16 +60,40 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		return nil
 	}
 
+	// Check if migrationLink is present and content type is NOT an editorial series
+	if zebedeeData.Description.MigrationLink != "" &&
+		!isEditorialSeries(zebedeeData.DataType) {
+		log.Info(ctx, "migrationLink detected, sending search-content-deleted event", log.Data{
+			"URI":           zebedeeData.URI,
+			"DataType":      zebedeeData.DataType,
+			"MigrationLink": zebedeeData.Description.MigrationLink,
+		})
+
+		deleteEvent := models.SearchContentDeleted{
+			URI:          zebedeeData.URI,
+			CollectionID: cpEvent.CollectionID,
+			SearchIndex:  OnsSearchIndex,
+			TraceID:      cpEvent.TraceID,
+		}
+
+		if err := h.DeleteProducer.Send(schema.SearchContentDeletedEvent, &deleteEvent); err != nil {
+			log.Error(ctx, "failed to send search-content-deleted event", err)
+			return fmt.Errorf("failed to send search-content-deleted event: %w", err)
+		}
+
+		return nil
+	}
+
 	// Map data returned by Zebedee to the kafka Event structure
 	searchData := models.MapZebedeeDataToSearchDataImport(zebedeeData, h.Cfg.KeywordsLimit)
 	searchData.TraceID = cpEvent.TraceID
 	searchData.JobID = cpEvent.JobID
-	searchData.SearchIndex = getIndexName(cpEvent.SearchIndex)
+	searchData.SearchIndex = OnsSearchIndex
 	if h.Cfg.EnableTopicTagging {
 		searchData = tagSearchDataWithURITopics(ctx, searchData, h.Cache.Topic)
 	}
 
-	if err := h.Producer.Send(schema.SearchDataImportEvent, &searchData); err != nil {
+	if err := h.ImportProducer.Send(schema.SearchDataImportEvent, &searchData); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
@@ -159,4 +183,13 @@ func extractDatasetURI(editionURI string) (string, error) {
 	datasetURI := strings.Join(slicedURI, "/")
 
 	return datasetURI, nil
+}
+
+func isEditorialSeries(contentType string) bool {
+	editorialSeries := map[string]bool{
+		"bulletin":                true,
+		"article":                 true,
+		"compendium_landing_page": true,
+	}
+	return editorialSeries[contentType]
 }

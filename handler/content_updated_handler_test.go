@@ -102,14 +102,19 @@ func TestHandle(t *testing.T) {
 		var datasetMock = &clientMock.DatasetClientMock{
 			GetVersionMetadataFunc: getVersionMetadataFunc,
 		}
-		var producerMock = &kafkatest.IProducerMock{
+		var importProducerMock = &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+		var deleteProducerMock = &kafkatest.IProducerMock{
 			SendFunc: func(schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
 
 		Convey("When both feature flags are enabled", func() {
-			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, producerMock}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -124,10 +129,64 @@ func TestHandle(t *testing.T) {
 					So(zebedeeMock.GetPublishedDataCalls()[0].UriString, ShouldEqual, testZebedeeEvent.URI)
 				})
 
+				Convey("Then no search-content-deleted event is produced", func() {
+					So(deleteProducerMock.SendCalls(), ShouldHaveLength, 0)
+				})
+
 				Convey("Then the expected search data import event is produced", func() {
-					So(producerMock.SendCalls(), ShouldHaveLength, 1)
-					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
-					So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
+					So(importProducerMock.SendCalls(), ShouldHaveLength, 1)
+					So(importProducerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+					So(importProducerMock.SendCalls()[0].Event, ShouldResemble, expectedZebedeeProducedEvent)
+				})
+			})
+
+			Convey("And a legacy Zebedee event with migrationLink is handled", func() {
+				// Mock Zebedee response with migrationLink
+				zebedeeMock.GetPublishedDataFunc = func(ctx context.Context, uriString string) ([]byte, error) {
+					response := fmt.Sprintf(`{"description": {"cdid":"testCDID","edition": %q,"title": %q,"migrationLink": "/migrated/content"},"type": "not_editorial","URI": %q}`, testEdition, testTitle, testZebedeeURI)
+					return []byte(response), nil
+				}
+
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then no error is reported", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("Then a search-content-deleted event is produced", func() {
+					So(deleteProducerMock.SendCalls(), ShouldHaveLength, 1)
+					So(deleteProducerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchContentDeletedEvent)
+					deleteEvent := deleteProducerMock.SendCalls()[0].Event.(*models.SearchContentDeleted)
+					So(deleteEvent.URI, ShouldEqual, testZebedeeURI)
+				})
+
+				Convey("Then no search-data-import event is produced", func() {
+					So(importProducerMock.SendCalls(), ShouldHaveLength, 0)
+				})
+			})
+
+			Convey("And a legacy Zebedee event with migrationLink but editorial type is handled", func() {
+				// Mock response with editorial type
+				zebedeeMock.GetPublishedDataFunc = func(ctx context.Context, uriString string) ([]byte, error) {
+					response := fmt.Sprintf(`{"description": {"cdid": "testCDID","edition": %q,"title": %q,"migrationLink": "/migrated/content"},"type": "bulletin","URI": %q}`, testEdition, testTitle, testZebedeeURI)
+					return []byte(response), nil
+				}
+
+				msg := createMessage(testZebedeeEvent)
+				err := h.Handle(ctx, testWorkerID, msg)
+
+				Convey("Then no error is reported", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("Then a search-data-import event is produced", func() {
+					So(importProducerMock.SendCalls(), ShouldHaveLength, 1)
+					So(importProducerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+				})
+
+				Convey("Then no search-content-deleted event is produced", func() {
+					So(deleteProducerMock.SendCalls(), ShouldHaveLength, 0)
 				})
 			})
 
@@ -147,15 +206,15 @@ func TestHandle(t *testing.T) {
 				})
 
 				Convey("Then the expected search data import event is produced", func() {
-					So(producerMock.SendCalls(), ShouldHaveLength, 1)
-					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
-					So(producerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
+					So(importProducerMock.SendCalls(), ShouldHaveLength, 1)
+					So(importProducerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+					So(importProducerMock.SendCalls()[0].Event, ShouldResemble, expectedDatasetProducedEvent)
 				})
 			})
 		})
 
 		Convey("When only the Zebedee callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, producerMock}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -180,7 +239,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When only the Dataset API callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, producerMock}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -205,7 +264,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When both feature flags are disabled", func() {
-			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, producerMock}
+			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -240,7 +299,7 @@ func TestHandle(t *testing.T) {
 					return nil, errors.New("zebedee error")
 				},
 			}
-			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil, nil}
 
 			Convey("When a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -263,7 +322,7 @@ func TestHandle(t *testing.T) {
 					return dataset.Metadata{}, errors.New("dataset api error")
 				},
 			}
-			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil, nil}
 
 			Convey("When a CMD dataset event is handled", func() {
 				msg := createMessage(testDatasetEvent)
@@ -291,7 +350,7 @@ func TestHandle(t *testing.T) {
 					return dataset.Metadata{}, errors.New("dataset api error")
 				},
 			}
-			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil, nil}
 
 			Convey("When a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -320,7 +379,7 @@ func TestHandle(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get mock cache list: %v", err)
 		}
-		h := &ContentPublished{cfg, *cacheList, nil, nil, nil}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, nil, nil}
 
 		Convey("When an event with an unsupported type is handled", func() {
 			msg := createMessage(testInvalidEvent)
@@ -339,12 +398,17 @@ func TestHandleErrors(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get mock cache list: %v", err)
 		}
-		var producerMock = &kafkatest.IProducerMock{
+		var importProducerMock = &kafkatest.IProducerMock{
 			SendFunc: func(schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, *cacheList, nil, nil, producerMock}
+		var deleteProducerMock = &kafkatest.IProducerMock{
+			SendFunc: func(schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+		}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, importProducerMock, deleteProducerMock}
 
 		Convey("When a malformed event is handled", func() {
 			msg, err := kafkatest.NewMessage([]byte{1, 2, 3}, 0)

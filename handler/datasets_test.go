@@ -84,8 +84,9 @@ func TestHandleDatasetDataTypeErrors(t *testing.T) {
 			},
 		}
 		h := &ContentPublished{
-			DatasetCli: datasetMock,
-			Producer:   producerMock,
+			DatasetCli:     datasetMock,
+			ImportProducer: producerMock,
+			DeleteProducer: producerMock,
 			Cfg: &config.Config{
 				ServiceAuthToken: "testToken",
 			},

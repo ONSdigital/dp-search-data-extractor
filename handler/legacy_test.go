@@ -68,8 +68,9 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 			},
 		}
 		h := &ContentPublished{
-			ZebedeeCli: zebedeeMock,
-			Producer:   producerMock,
+			ZebedeeCli:     zebedeeMock,
+			ImportProducer: producerMock,
+			DeleteProducer: producerMock,
 			Cfg: &config.Config{
 				KeywordsLimit: 10,
 			},
@@ -100,8 +101,9 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 		}
 
 		h := &ContentPublished{
-			ZebedeeCli: zebedeeMock,
-			Producer:   producerMock,
+			ZebedeeCli:     zebedeeMock,
+			ImportProducer: producerMock,
+			DeleteProducer: producerMock,
 			Cfg: &config.Config{
 				KeywordsLimit: 10,
 			},

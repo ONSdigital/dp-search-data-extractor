@@ -17,6 +17,7 @@ type Description struct {
 	Finalised       bool     `json:"finalised,omitempty"`
 	Keywords        []string `json:"keywords,omitempty"`
 	MetaDescription string   `json:"metaDescription"`
+	MigrationLink   string   `json:"migrationLink,omitempty"`
 	ProvisionalDate string   `json:"provisionalDate,omitempty"`
 	CanonicalTopic  string   `json:"canonicalTopic,omitempty"`
 	Published       bool     `json:"published,omitempty"`

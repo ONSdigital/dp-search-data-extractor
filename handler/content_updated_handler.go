@@ -22,11 +22,12 @@ const (
 
 // ContentPublished struct to hold handle for config with zebedee, datasetAPI client and the producer
 type ContentPublished struct {
-	Cfg        *config.Config
-	Cache      cache.List
-	ZebedeeCli clients.ZebedeeClient
-	DatasetCli clients.DatasetClient
-	Producer   kafka.IProducer
+	Cfg            *config.Config
+	Cache          cache.List
+	ZebedeeCli     clients.ZebedeeClient
+	DatasetCli     clients.DatasetClient
+	ImportProducer kafka.IProducer
+	DeleteProducer kafka.IProducer
 }
 
 // Handle takes a single event and triages it according to its data type, which can be 'legacy' (zebedee) or 'datasets'

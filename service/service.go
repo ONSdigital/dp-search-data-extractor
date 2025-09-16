@@ -120,11 +120,12 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 			return fmt.Errorf("failed to create content-published consumer: %w", err)
 		}
 		contentHandler := &handler.ContentPublished{
-			Cfg:        svc.Cfg,
-			ZebedeeCli: svc.ZebedeeCli,
-			DatasetCli: svc.DatasetCli,
-			Producer:   svc.ImportProducer,
-			Cache:      svc.Cache,
+			Cfg:            svc.Cfg,
+			ZebedeeCli:     svc.ZebedeeCli,
+			DatasetCli:     svc.DatasetCli,
+			ImportProducer: svc.ImportProducer,
+			DeleteProducer: svc.DeleteProducer,
+			Cache:          svc.Cache,
 		}
 		if err = svc.ContentPublishedConsumer.RegisterHandler(ctx, contentHandler.Handle); err != nil {
 			return fmt.Errorf("could not register content-published handler: %w", err)
