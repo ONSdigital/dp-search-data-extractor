@@ -9,11 +9,10 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And the following published data for uri "some_uri" is available in zebedee
     """
     {
-      "type": "legacy",
+      "type": "some_type",
       "URI":  "some_uri",
       "description": {
         "title":     "title",
-        "data_type": "legacy",
         "cdid":      "123",
         "datasetId": "456",
         "edition":   "something"
@@ -36,7 +35,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "URI":         "some_uri",
       "Title":       "title",
       "Edition":     "something",
-      "DataType":    "legacy",
+      "DataType":    "some_type",
       "SearchIndex": "ons",
       "CDID":        "123",
       "DatasetID":   "456",
@@ -49,10 +48,9 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And the following published data for uri "some_uri" is available in zebedee
     """
     {
-      "type": "legacy",
+      "type": "some_type",
       "URI":  "some_uri",
       "description": {
-        "data_type": "legacy",
         "cdid":      "123",
         "datasetId": "456",
         "edition":   "something"
@@ -69,16 +67,16 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     Then no search-data-import events are produced
+    Then no search-content-deleted events are produced
 
   Scenario: When migrationLink exists and content type is NOT editorial, send search-content-deleted event
     And the following published data for uri "some_uri" is available in zebedee
     """
     {
-      "type": "legacy",
+      "type": "some_type",
       "URI":  "some_uri",
       "description": {
         "title":          "title",
-        "data_type":      "legacy",
         "cdid":           "123",
         "datasetId":      "456",
         "edition":        "something",
@@ -113,7 +111,6 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "URI":  "some_uri",
       "description": {
         "title":          "title",
-        "data_type":      "legacy",
         "cdid":           "123",
         "datasetId":      "456",
         "edition":        "something",
@@ -151,11 +148,10 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     And the following published data for uri "some_uri" is available in zebedee
     """
     {
-      "type": "legacy",
+      "type": "some_type",
       "URI":  "some_uri",
       "description": {
         "title":          "title",
-        "data_type":      "legacy",
         "cdid":           "123",
         "datasetId":      "456",
         "edition":        "something"
@@ -178,7 +174,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "URI":         "some_uri",
       "Title":       "title",
       "Edition":     "something",
-      "DataType":    "legacy",
+      "DataType":    "some_type",
       "SearchIndex": "ons",
       "CDID":        "123",
       "DatasetID":   "456",
