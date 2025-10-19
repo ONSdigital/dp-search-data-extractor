@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v3"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -64,7 +64,7 @@ func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resou
 	searchDataImport.SearchIndex = OnsSearchIndex
 
 	// Marshall Avro and sending message
-	if err := h.ImportProducer.Send(schema.SearchDataImportEvent, searchDataImport); err != nil {
+	if err := h.ImportProducer.Send(ctx, schema.SearchDataImportEvent, searchDataImport); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}
@@ -77,7 +77,7 @@ func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, res
 	deleteEvent := models.MapResourceToSearchContentDelete(resource)
 	deleteEvent.SearchIndex = OnsSearchIndex
 
-	if err := h.DeleteProducer.Send(schema.SearchContentDeletedEvent, deleteEvent); err != nil {
+	if err := h.DeleteProducer.Send(ctx, schema.SearchContentDeletedEvent, deleteEvent); err != nil {
 		log.Error(ctx, "error while attempting to send SearchContentDeleted event", err)
 		return fmt.Errorf("failed to send search content deleted event: %w", err)
 	}

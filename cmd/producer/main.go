@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v3"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
@@ -48,27 +48,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	// kafka error logging go-routines
-	kafkaProducer.LogErrors(ctx)
+	// Ensure the producer is initialised once
+	if err := kafkaProducer.Initialise(ctx); err != nil {
+		log.Error(ctx, "failed to initialise kafka producer", err)
+		os.Exit(1)
+	}
 
-	time.Sleep(500 * time.Millisecond)
+	fmt.Printf("Producer ready on topic %q\n", cfg.Kafka.ContentUpdatedTopic)
+
+	time.Sleep(300 * time.Millisecond)
 	scanner := bufio.NewScanner(os.Stdin)
+
 	for {
 		e := scanEvent(scanner)
-		log.Info(ctx, "sending content-published event", log.Data{"contentPublishedEvent": e})
-
-		bytes, err := schema.ContentPublishedEvent.Marshal(e)
-		if err != nil {
-			log.Error(ctx, "content-published event error", err)
+		if err := kafkaProducer.Send(ctx, schema.ContentPublishedEvent, e); err != nil {
+			log.Error(ctx, "failed to send avro ContentPublished event", err)
 			os.Exit(1)
 		}
-
-		// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
-		if err := kafkaProducer.Initialise(ctx); err != nil {
-			log.Warn(ctx, "failed to initialise kafka producer")
-			return
-		}
-		kafkaProducer.Channels().Output <- bytes
 	}
 }
 

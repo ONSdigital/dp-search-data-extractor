@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
-	dpkafka "github.com/ONSdigital/dp-kafka/v3"
-	"github.com/ONSdigital/dp-kafka/v3/avro"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	dpkafka "github.com/ONSdigital/dp-kafka/v4"
+	"github.com/ONSdigital/dp-kafka/v4/avro"
+	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
@@ -103,12 +103,12 @@ func TestHandle(t *testing.T) {
 			GetVersionMetadataFunc: getVersionMetadataFunc,
 		}
 		var importProducerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
 		var deleteProducerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
@@ -399,12 +399,12 @@ func TestHandleErrors(t *testing.T) {
 			t.Fatalf("Failed to get mock cache list: %v", err)
 		}
 		var importProducerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
 		var deleteProducerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}

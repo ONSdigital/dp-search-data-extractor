@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ONSdigital/dp-kafka/v3/avro"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	"github.com/ONSdigital/dp-kafka/v4/avro"
+	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
@@ -63,7 +63,7 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 			GetPublishedDataFunc: getPublishDataFunc,
 		}
 		producerMock := &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return errors.New("failed to send kafka message")
 			},
 		}
@@ -95,7 +95,7 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 		}
 
 		producerMock := &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}

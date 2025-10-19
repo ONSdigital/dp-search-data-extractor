@@ -75,7 +75,7 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 			TraceID:      cpEvent.TraceID,
 		}
 
-		if err := h.DeleteProducer.Send(schema.SearchContentDeletedEvent, &deleteEvent); err != nil {
+		if err := h.DeleteProducer.Send(ctx, schema.SearchContentDeletedEvent, &deleteEvent); err != nil {
 			log.Error(ctx, "failed to send search-content-deleted event", err)
 			return fmt.Errorf("failed to send search-content-deleted event: %w", err)
 		}
@@ -92,7 +92,7 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		searchData = tagSearchDataWithURITopics(ctx, searchData, h.Cache.Topic)
 	}
 
-	if err := h.ImportProducer.Send(schema.SearchDataImportEvent, &searchData); err != nil {
+	if err := h.ImportProducer.Send(ctx, schema.SearchDataImportEvent, &searchData); err != nil {
 		log.Error(ctx, "error while attempting to send SearchDataImport event to producer", err)
 		return fmt.Errorf("failed to send search data import event: %w", err)
 	}

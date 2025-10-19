@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"log"
 	"testing"
 
-	kafka "github.com/ONSdigital/dp-kafka/v3"
-	"github.com/ONSdigital/dp-kafka/v3/avro"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
+	"github.com/ONSdigital/dp-kafka/v4/avro"
+	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	. "github.com/smartystreets/goconvey/convey"
@@ -16,7 +17,7 @@ import (
 func TestSearchContentHandler_Handle(t *testing.T) {
 	Convey("Given a SearchContentHandler with a producer and invalid input", t, func() {
 		var producerMock = &kafkatest.IProducerMock{
-			SendFunc: func(schema *avro.Schema, event interface{}) error {
+			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
 		}
@@ -40,7 +41,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 
 		Convey("Given a SearchContentHandler with a working producer", func() {
 			var producerMock = &kafkatest.IProducerMock{
-				SendFunc: func(schema *avro.Schema, event interface{}) error {
+				SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 					return nil
 				},
 			}
@@ -157,7 +158,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 		})
 
 		Convey("When the producer fails to send the event", func() {
-			producerMock.SendFunc = func(schema *avro.Schema, event interface{}) error {
+			producerMock.SendFunc = func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return errors.New("producer error")
 			}
 

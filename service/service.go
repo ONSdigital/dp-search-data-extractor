@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v3"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	cachePrivate "github.com/ONSdigital/dp-search-data-extractor/cache/private"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"

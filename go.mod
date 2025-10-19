@@ -1,15 +1,15 @@
 module github.com/ONSdigital/dp-search-data-extractor
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.269.0
 	github.com/ONSdigital/dp-cache v0.6.0
 	github.com/ONSdigital/dp-component-test v0.26.0
 	github.com/ONSdigital/dp-healthcheck v1.6.4
-	github.com/ONSdigital/dp-kafka/v3 v3.11.0
+	github.com/ONSdigital/dp-kafka/v4 v4.2.0
 	github.com/ONSdigital/dp-net/v3 v3.5.0
-	github.com/ONSdigital/dp-topic-api v1.2.0
+	github.com/ONSdigital/dp-topic-api v1.3.0
 	github.com/ONSdigital/log.go/v2 v2.5.0
 	github.com/cucumber/godog v0.15.1
 	github.com/google/go-cmp v0.7.0
@@ -22,15 +22,14 @@ require (
 
 require (
 	github.com/ONSdigital/dis-redis v0.3.0 // indirect
-	github.com/ONSdigital/dp-authorisation/v2 v2.32.2 // indirect
+	github.com/ONSdigital/dp-authorisation/v2 v2.32.3 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.1 // indirect
-	github.com/ONSdigital/dp-net/v2 v2.22.0 // indirect
-	github.com/ONSdigital/dp-permissions-api v1.1.0 // indirect
+	github.com/ONSdigital/dp-permissions-api v1.6.0 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/alicebob/miniredis/v2 v2.35.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/chromedp/cdproto v0.0.0-20250715215929-4738bcb231c7 // indirect
-	github.com/chromedp/chromedp v0.13.7 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d // indirect
+	github.com/chromedp/chromedp v0.14.2 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
@@ -41,7 +40,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250714165856-be8212f5270d // indirect
+	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
@@ -72,10 +71,10 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
-	github.com/redis/go-redis/v9 v9.11.0 // indirect
+	github.com/redis/go-redis/v9 v9.14.1 // indirect
 	github.com/smarty/assertions v1.16.0 // indirect
-	github.com/spf13/afero v1.14.0 // indirect
-	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/spf13/afero v1.15.0 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
@@ -84,13 +83,14 @@ require (
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.mongodb.org/mongo-driver v1.17.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama v0.43.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
