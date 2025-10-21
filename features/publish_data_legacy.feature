@@ -20,27 +20,27 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
-        "URI":           "some_uri",
-        "DataType":      "legacy",
-        "CollectionID":  "123"
+        "uri":           "some_uri",
+        "data_type":      "legacy",
+        "collection_id":  "123"
     }
     """
     Then this search-data-import event is sent
     """
     {
-      "UID":         "some_uri",
-      "URI":         "some_uri",
-      "Title":       "title",
-      "Edition":     "something",
-      "DataType":    "some_type",
-      "SearchIndex": "ons",
-      "CDID":        "123",
-      "DatasetID":   "456",
-      "Keywords":    [],
-      "Topics":      []
+      "uid":         "some_uri",
+      "uri":         "some_uri",
+      "title":       "title",
+      "edition":     "something",
+      "data_type":    "some_type",
+      "search_index": "ons",
+      "cdid":        "123",
+      "dataset_id":   "456",
+      "keywords":    [],
+      "topics":      []
     }
     """
 
@@ -58,7 +58,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
         "URI":           "some_uri",
@@ -74,7 +74,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
     {
       "type": "some_type",
-      "URI":  "some_uri",
+      "uri":  "some_uri",
       "description": {
         "title":          "title",
         "cdid":           "123",
@@ -85,20 +85,20 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
-        "URI":           "some_uri",
-        "DataType":      "legacy",
-        "CollectionID":  "123"
+        "uri": "some_uri",
+        "data_type": "legacy",
+        "collection_id": "123"
     }
     """
     Then this search-content-deleted event is sent
     """
     {
-      "URI": "some_uri",
-      "CollectionID":  "123",
-      "SearchIndex":  "ons"
+        "uri": "some_uri",
+        "collection_id":  "123",
+        "search_index":  "ons"
     }
     """
     And no search-data-import events are produced
@@ -108,7 +108,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     """
     {
       "type": "bulletin",
-      "URI":  "some_uri",
+      "uri":  "some_uri",
       "description": {
         "title":          "title",
         "cdid":           "123",
@@ -119,27 +119,27 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
-        "URI":           "some_uri",
-        "DataType":      "legacy",
-        "CollectionID":  "123"
+        "uri":           "some_uri",
+        "data_type":      "legacy",
+        "collection_id":  "123"
     }
     """
     Then this search-data-import event is sent
     """
     {
-      "UID":         "some_uri",
-      "URI":         "some_uri",
-      "Title":       "title",
-      "Edition":     "something",
-      "DataType":    "bulletin",
-      "SearchIndex": "ons",
-      "CDID":        "123",
-      "DatasetID":   "456",
-      "Keywords":    [],
-      "Topics":      []
+      "uid":         "some_uri",
+      "uri":         "some_uri",
+      "title":       "title",
+      "edition":     "something",
+      "data_type":    "bulletin",
+      "search_index": "ons",
+      "cdid":        "123",
+      "dataset_id":   "456",
+      "keywords":    [],
+      "topics":      []
     }
     """
     And no search-content-deleted events are produced
@@ -159,27 +159,27 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
-        "URI":           "some_uri",
-        "DataType":      "legacy",
-        "CollectionID":  "123"
+        "uri":           "some_uri",
+        "data_type":      "legacy",
+        "collection_id":  "123"
     }
     """
     Then this search-data-import event is sent
     """
     {
-      "UID":         "some_uri",
-      "URI":         "some_uri",
-      "Title":       "title",
-      "Edition":     "something",
-      "DataType":    "some_type",
-      "SearchIndex": "ons",
-      "CDID":        "123",
-      "DatasetID":   "456",
-      "Keywords":    [],
-      "Topics":      []
+      "uid":         "some_uri",
+      "uri":         "some_uri",
+      "title":       "title",
+      "edition":     "something",
+      "data_type":    "some_type",
+      "search_index": "ons",
+      "cdid":        "123",
+      "dataset_id":   "456",
+      "keywords":    [],
+      "topics":      []
     }
     """
     And no search-content-deleted events are produced

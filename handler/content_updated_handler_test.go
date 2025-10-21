@@ -108,7 +108,7 @@ func TestHandle(t *testing.T) {
 			},
 		}
 		var deleteProducerMock = &kafkatest.IProducerMock{
-			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
+			SendJSONFunc: func(ctx context.Context, event interface{}) error {
 				return nil
 			},
 		}
@@ -130,7 +130,7 @@ func TestHandle(t *testing.T) {
 				})
 
 				Convey("Then no search-content-deleted event is produced", func() {
-					So(deleteProducerMock.SendCalls(), ShouldHaveLength, 0)
+					So(deleteProducerMock.SendJSONCalls(), ShouldHaveLength, 0)
 				})
 
 				Convey("Then the expected search data import event is produced", func() {
@@ -155,10 +155,10 @@ func TestHandle(t *testing.T) {
 				})
 
 				Convey("Then a search-content-deleted event is produced", func() {
-					So(deleteProducerMock.SendCalls(), ShouldHaveLength, 1)
-					So(deleteProducerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchContentDeletedEvent)
-					deleteEvent := deleteProducerMock.SendCalls()[0].Event.(*models.SearchContentDeleted)
-					So(deleteEvent.URI, ShouldEqual, testZebedeeURI)
+					So(deleteProducerMock.SendJSONCalls(), ShouldHaveLength, 1)
+					delEv, ok := deleteProducerMock.SendJSONCalls()[0].Event.(*models.SearchContentDeleted)
+					So(ok, ShouldBeTrue)
+					So(delEv.URI, ShouldEqual, testZebedeeURI)
 				})
 
 				Convey("Then no search-data-import event is produced", func() {
@@ -186,7 +186,7 @@ func TestHandle(t *testing.T) {
 				})
 
 				Convey("Then no search-content-deleted event is produced", func() {
-					So(deleteProducerMock.SendCalls(), ShouldHaveLength, 0)
+					So(deleteProducerMock.SendJSONCalls(), ShouldHaveLength, 0)
 				})
 			})
 
@@ -402,9 +402,15 @@ func TestHandleErrors(t *testing.T) {
 			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
+			SendJSONFunc: func(ctx context.Context, event interface{}) error {
+				return nil
+			},
 		}
 		var deleteProducerMock = &kafkatest.IProducerMock{
 			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+			SendJSONFunc: func(ctx context.Context, event interface{}) error {
 				return nil
 			},
 		}

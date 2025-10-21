@@ -6,7 +6,7 @@ Feature: Search data extractor unhealthy
     And zebedee is healthy
 
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
         "URI": "some_uri",
@@ -23,7 +23,7 @@ Feature: Search data extractor unhealthy
     And zebedee is unhealthy
 
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
         "URI": "some_uri",

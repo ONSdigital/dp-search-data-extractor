@@ -1,13 +1,13 @@
 module github.com/ONSdigital/dp-search-data-extractor
 
-go 1.25
+go 1.24.0
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.269.0
 	github.com/ONSdigital/dp-cache v0.6.0
 	github.com/ONSdigital/dp-component-test v0.26.0
 	github.com/ONSdigital/dp-healthcheck v1.6.4
-	github.com/ONSdigital/dp-kafka/v4 v4.2.0
+	github.com/ONSdigital/dp-kafka/v4 v4.3.0
 	github.com/ONSdigital/dp-net/v3 v3.5.0
 	github.com/ONSdigital/dp-topic-api v1.3.0
 	github.com/ONSdigital/log.go/v2 v2.5.0
@@ -24,7 +24,7 @@ require (
 	github.com/ONSdigital/dis-redis v0.3.0 // indirect
 	github.com/ONSdigital/dp-authorisation/v2 v2.32.3 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.1 // indirect
-	github.com/ONSdigital/dp-permissions-api v1.6.0 // indirect
+	github.com/ONSdigital/dp-permissions-api v1.1.0 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/alicebob/miniredis/v2 v2.35.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -40,7 +40,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250813233538-9b1f9ea2e11b // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect

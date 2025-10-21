@@ -38,8 +38,9 @@ func MapResourceToSearchDataImport(resource SearchContentUpdate) SearchDataImpor
 // MapResourceToSearchContentDelete Performs default mapping of a SearchContentUpdate struct to a SearchContentDeleted struct.
 func MapResourceToSearchContentDelete(resource SearchContentUpdate) SearchContentDeleted {
 	searchContentDeleted := SearchContentDeleted{
-		URI:     resource.URIOld,
-		TraceID: resource.TraceID,
+		URI:          resource.URIOld,
+		CollectionID: resource.CDID,
+		TraceID:      resource.TraceID,
 	}
 	return searchContentDeleted
 }

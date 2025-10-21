@@ -75,7 +75,7 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 			TraceID:      cpEvent.TraceID,
 		}
 
-		if err := h.DeleteProducer.Send(ctx, schema.SearchContentDeletedEvent, &deleteEvent); err != nil {
+		if err := h.DeleteProducer.SendJSON(ctx, &deleteEvent); err != nil {
 			log.Error(ctx, "failed to send search-content-deleted event", err)
 			return fmt.Errorf("failed to send search-content-deleted event: %w", err)
 		}

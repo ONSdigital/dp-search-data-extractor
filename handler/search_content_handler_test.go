@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"testing"
@@ -20,6 +21,9 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return nil
 			},
+			SendJSONFunc: func(ctx context.Context, event interface{}) error {
+				return nil
+			},
 		}
 
 		handler := &SearchContentHandler{
@@ -28,6 +32,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 		}
 
 		Convey("When an event with invalid data is handled", func() {
+			ctx := context.Background()
 			msg, err := kafkatest.NewMessage([]byte("invalid data"), 0)
 			So(err, ShouldBeNil)
 
@@ -40,8 +45,13 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 		})
 
 		Convey("Given a SearchContentHandler with a working producer", func() {
+			ctx := context.Background()
+
 			var producerMock = &kafkatest.IProducerMock{
 				SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
+					return nil
+				},
+				SendJSONFunc: func(ctx context.Context, event interface{}) error {
 					return nil
 				},
 			}
@@ -59,7 +69,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 					TraceID:     "trace1234",
 				}
 
-				msg := createSearchContentMessage(expectedEvent)
+				msg := createJSONMessage(expectedEvent)
 				err := handler.Handle(ctx, 0, msg)
 
 				Convey("Then no error is reported", func() {
@@ -101,7 +111,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 					TraceID: "trace1234",
 				}
 
-				msg := createSearchContentMessage(expectedEvent)
+				msg := createJSONMessage(expectedEvent)
 				err := handler.Handle(ctx, 0, msg)
 
 				Convey("Then no error is reported", func() {
@@ -109,29 +119,29 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 				})
 
 				Convey("And the expected search-data-imported events are sent to the producer", func() {
-					So(producerMock.SendCalls(), ShouldHaveLength, 2) // Expecting two events: one for import and one for delete
+					// 1 Avro send (search-data-import)
+					So(producerMock.SendCalls(), ShouldHaveLength, 1)
 					So(producerMock.SendCalls()[0].Schema, ShouldEqual, schema.SearchDataImportEvent)
+					importEv, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
+					So(ok, ShouldBeTrue)
+					So(importEv.URI, ShouldEqual, expectedEvent.URI)
+					So(importEv.Title, ShouldEqual, expectedEvent.Title)
+					So(importEv.DataType, ShouldEqual, expectedEvent.ContentType)
+					So(importEv.Topics, ShouldResemble, expectedEvent.Topics)
+					So(importEv.DateChanges, ShouldResemble, expectedEvent.DateChanges)
 
-					// Check the first event: search-data-imported
-					sentEvent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
-					So(ok, ShouldBeTrue) // Assert the event is of the correct type
-					So(sentEvent.URI, ShouldEqual, expectedEvent.URI)
-					So(sentEvent.Title, ShouldEqual, expectedEvent.Title)
-					So(sentEvent.DataType, ShouldEqual, expectedEvent.ContentType)
-					So(sentEvent.Topics, ShouldResemble, expectedEvent.Topics)
-					So(sentEvent.DateChanges, ShouldResemble, expectedEvent.DateChanges)
-
-					// Check the second event: search-content-deleted
-					So(producerMock.SendCalls()[1].Schema, ShouldEqual, schema.SearchContentDeletedEvent)
-
-					deleteEvent, ok := producerMock.SendCalls()[1].Event.(models.SearchContentDeleted)
-					So(ok, ShouldBeTrue) // Assert the delete event is of the correct type
-					So(deleteEvent.URI, ShouldEqual, expectedEvent.URIOld)
+					// 1 JSON send (search-content-deleted)
+					So(producerMock.SendJSONCalls(), ShouldHaveLength, 1)
+					delEv, ok := producerMock.SendJSONCalls()[0].Event.(models.SearchContentDeleted)
+					So(ok, ShouldBeTrue)
+					So(delEv.URI, ShouldEqual, expectedEvent.URIOld)
 				})
 			})
 		})
 
 		Convey("When an event with nil slices is handled", func() {
+			ctx := context.Background()
+
 			expectedEvent := &models.SearchContentUpdate{
 				URI:         "/uri/with/nil",
 				Title:       "Nil Slices",
@@ -140,20 +150,22 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 				DateChanges: nil, // Intentionally nil
 			}
 
-			msg := createSearchContentMessage(expectedEvent)
+			msg := createJSONMessage(expectedEvent)
 			err := handler.Handle(ctx, 0, msg)
 
 			Convey("Then no error is reported", func() {
 				So(err, ShouldBeNil)
 			})
 
-			Convey("And the empty slices are properly handled by the producer", func() {
-				sentEvent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
-				So(ok, ShouldBeTrue) // Assert the event is of the correct type
+			Convey("And only the Avro import event is sent (no delete)", func() {
+				So(producerMock.SendCalls(), ShouldHaveLength, 1)     // Avro import
+				So(producerMock.SendJSONCalls(), ShouldHaveLength, 0) // no delete
 
+				sent, ok := producerMock.SendCalls()[0].Event.(models.SearchDataImport)
+				So(ok, ShouldBeTrue)
 				So(err, ShouldBeNil)
-				So(sentEvent.Topics, ShouldResemble, []string{})
-				So(sentEvent.DateChanges, ShouldBeNil) // Remains nil
+				So(sent.Topics, ShouldResemble, []string{})
+				So(sent.DateChanges, ShouldBeNil)
 			})
 		})
 
@@ -165,7 +177,7 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 			expectedEvent := &models.SearchContentUpdate{
 				URI: "/some/uri",
 			}
-			msg := createSearchContentMessage(expectedEvent)
+			msg := createJSONMessage(expectedEvent)
 			err := handler.Handle(ctx, 0, msg)
 
 			Convey("Then the expected error is reported", func() {
@@ -176,12 +188,12 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 	})
 }
 
-func createSearchContentMessage(s interface{}) kafka.Message {
-	e, err := schema.SearchContentUpdateEvent.Marshal(s)
+func createJSONMessage(s interface{}) kafka.Message {
+	b, err := json.Marshal(s)
 	if err != nil {
-		log.Fatalf("Error marshaling SearchContentUpdateEvent: %v", err)
+		log.Fatalf("Error marshaling JSON message: %v", err)
 	}
-	msg, err := kafkatest.NewMessage(e, 0)
+	msg, err := kafkatest.NewMessage(b, 0)
 	if err != nil {
 		log.Fatalf("Error creating Kafka message: %v", err)
 	}

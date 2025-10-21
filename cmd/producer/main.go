@@ -54,8 +54,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Producer ready on topic %q\n", cfg.Kafka.ContentUpdatedTopic)
-
 	time.Sleep(300 * time.Millisecond)
 	scanner := bufio.NewScanner(os.Stdin)
 

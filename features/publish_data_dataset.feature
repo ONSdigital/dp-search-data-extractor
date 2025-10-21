@@ -14,27 +14,27 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
-        "URI":           "/datasets/cphi01/editions/timeseries/versions/version/metadata",
-        "DataType":      "datasets",
-        "CollectionID":  "123"
+        "uri":           "/datasets/cphi01/editions/timeseries/versions/version/metadata",
+        "data_type":      "datasets",
+        "collection_id":  "123"
     }
     """
     Then this search-data-import event is sent
     """
       {
-        "UID":         "cphi01-timeseries",
-        "Edition":     "timeseries",
-        "DataType":    "dataset_landing_page",
-        "SearchIndex": "ons",
-        "DatasetID":   "cphi01",
-        "Keywords":    [ "keyword1", "keyword2" ],
-        "ReleaseDate": "releasedate",
-        "Summary":     "description",
-        "Title":       "title",
-        "Topics":      []
+        "uid":         "cphi01-timeseries",
+        "edition":     "timeseries",
+        "data_type":    "dataset_landing_page",
+        "search_index": "ons",
+        "dataset_id":   "cphi01",
+        "keywords":    [ "keyword1", "keyword2" ],
+        "summary":     "description",
+        "title":       "title",
+        "release_date": "releasedate",
+        "topics":      []
       }
       """
 
@@ -61,35 +61,35 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" event is queued, to be consumed
+    And this "content-updated" avro event is queued, to be consumed
     """
     {
-        "URI":          "/datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata",
-        "DataType":     "datasets",
-        "CollectionID": "123"
+        "uri":          "/datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata",
+        "data_type":     "datasets",
+        "collection_id": "123"
     }
     """
     Then this search-data-import event is sent
       """
       {
-        "UID":         "my-cantabular-dataset-my-edition",
-        "Edition":     "my-edition",
-        "DataType":    "dataset_landing_page",
-        "SearchIndex": "ons",
-        "DatasetID":   "my-cantabular-dataset",
-        "Keywords":    [ "keyword1", "keyword2" ],
-        "ReleaseDate": "releasedate",
-        "Summary":     "description",
-        "Title":       "title",
-        "Topics":      [],
-        "PopulationType": {
-          "Key":    "all-usual-residents-in-households",
-          "AggKey": "all-usual-residents-in-households###All usual residents in households",
-          "Name":   "UR_HH",
-          "Label":  "All usual residents in households"
+        "uid":         "my-cantabular-dataset-my-edition",
+        "edition":     "my-edition",
+        "data_type":    "dataset_landing_page",
+        "search_index": "ons",
+        "dataset_id":   "my-cantabular-dataset",
+        "keywords":    [ "keyword1", "keyword2" ],
+        "release_date": "releasedate",
+        "summary":     "description",
+        "title":       "title",
+        "topics":      [],
+        "population_type": {
+          "key":    "all-usual-residents-in-households",
+          "agg_key": "all-usual-residents-in-households###All usual residents in households",
+          "name":   "UR_HH",
+          "label":  "All usual residents in households"
         },
-        "Dimensions": [
-          { "Key": "label-3", "AggKey": "label-3###label 3", "Name": "dim3.0,dim3.1", "Label": "label 3", "RawLabel": "label 3 (33 categories),label 3 (40 categories)"}
+        "dimensions": [
+          { "key": "label-3", "agg_key": "label-3###label 3", "name": "dim3.0,dim3.1", "label": "label 3", "raw_label": "label 3 (33 categories),label 3 (40 categories)"}
         ]
       }
       """

@@ -66,6 +66,9 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
 				return errors.New("failed to send kafka message")
 			},
+			SendJSONFunc: func(ctx context.Context, event interface{}) error {
+				return errors.New("failed to send kafka message")
+			},
 		}
 		h := &ContentPublished{
 			ZebedeeCli:     zebedeeMock,
@@ -96,6 +99,9 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 
 		producerMock := &kafkatest.IProducerMock{
 			SendFunc: func(ctx context.Context, schema *avro.Schema, event interface{}) error {
+				return nil
+			},
+			SendJSONFunc: func(ctx context.Context, event interface{}) error {
 				return nil
 			},
 		}

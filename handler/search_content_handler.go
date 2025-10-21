@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -25,7 +26,7 @@ type SearchContentHandler struct {
 // Handle processes the search-content-updated event and generates messages.
 func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 	e := &models.SearchContentUpdate{}
-	if err := schema.SearchContentUpdateEvent.Unmarshal(msg.GetData(), e); err != nil {
+	if err := json.Unmarshal(msg.GetData(), e); err != nil {
 		return &Error{
 			err: fmt.Errorf("failed to unmarshal event: %w", err),
 			logData: map[string]interface{}{
@@ -77,7 +78,7 @@ func (h *SearchContentHandler) sendSearchContentDeleted(ctx context.Context, res
 	deleteEvent := models.MapResourceToSearchContentDelete(resource)
 	deleteEvent.SearchIndex = OnsSearchIndex
 
-	if err := h.DeleteProducer.Send(ctx, schema.SearchContentDeletedEvent, deleteEvent); err != nil {
+	if err := h.DeleteProducer.SendJSON(ctx, deleteEvent); err != nil {
 		log.Error(ctx, "error while attempting to send SearchContentDeleted event", err)
 		return fmt.Errorf("failed to send search content deleted event: %w", err)
 	}
