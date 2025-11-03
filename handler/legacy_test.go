@@ -117,48 +117,6 @@ func TestHandleZebedeeTypeErrors(t *testing.T) {
 	})
 }
 
-func TestExtractDatasetURIFromEditionURI(t *testing.T) {
-	t.Parallel()
-
-	Convey("Given a valid edition uri", t, func() {
-		editionURI := "/datasets/uk-economy/2016"
-		expectedURI := "/datasets/uk-economy"
-		Convey("When calling extractDatasetURI function", func() {
-			datasetURI, err := extractDatasetURI(editionURI)
-
-			Convey("Then successfully return a dataset uri and no errors", func() {
-				So(err, ShouldBeNil)
-				So(datasetURI, ShouldEqual, expectedURI)
-			})
-		})
-		Convey("When calling retrieveCorrectURI function", func() {
-			datasetURI, err := retrieveCorrectURI(editionURI)
-
-			Convey("Then successfully return a dataset uri and no errors", func() {
-				So(err, ShouldBeNil)
-				So(datasetURI, ShouldEqual, expectedURI)
-			})
-		})
-	})
-}
-
-func TestRetrieveCorrectURI(t *testing.T) {
-	t.Parallel()
-
-	Convey("Given a valid uri which does not contain \"datasets\"", t, func() {
-		expectedURI := "/bulletins/uk-economy/2016"
-
-		Convey("When calling retrieveCorrectURI function", func() {
-			datasetURI, err := retrieveCorrectURI(expectedURI)
-
-			Convey("Then successfully return the original uri and no errors", func() {
-				So(err, ShouldBeNil)
-				So(datasetURI, ShouldEqual, expectedURI)
-			})
-		})
-	})
-}
-
 func TestTagSearchDataWithURITopics(t *testing.T) {
 	Convey("Given tagSearchDataWithURITopics", t, func() {
 		// Set up mock cache list

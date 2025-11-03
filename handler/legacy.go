@@ -15,11 +15,10 @@ import (
 
 // handleZebedeeType handles a kafka message corresponding to Zebedee event type (legacy)
 func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *models.ContentPublished) error {
-	// obtain correct uri to callback to Zebedee to retrieve content metadata
-	uri, InvalidURIErr := retrieveCorrectURI(cpEvent.URI)
-	if InvalidURIErr != nil {
-		return InvalidURIErr
+	if _, err := url.PathUnescape(cpEvent.URI); err != nil {
+		return fmt.Errorf("parse %q: %w", cpEvent.URI, err)
 	}
+	uri := cpEvent.URI
 
 	failedCriteria := shouldNotBeIndexed(cpEvent)
 	if failedCriteria != "" {
@@ -41,7 +40,7 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	var zebedeeData models.ZebedeeData
 	err = json.Unmarshal(zebedeeContentPublished, &zebedeeData)
 	if err != nil {
-		log.Fatal(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err)
+		log.Error(ctx, "error while attempting to unmarshal zebedee response into zebedeeData", err)
 		return err
 	}
 
@@ -106,7 +105,6 @@ func shouldNotBeIndexed(cpEvent *models.ContentPublished) string {
 	if strings.Contains(cpEvent.URI, "/previous/") {
 		return "Item is a previous version"
 	}
-
 	return ""
 }
 
@@ -155,34 +153,6 @@ func AddTopicWithParents(ctx context.Context, slug, parentSlug string, topicCach
 			return // Stop processing once the correct topic is found and added
 		}
 	}
-}
-
-func retrieveCorrectURI(uri string) (correctURI string, err error) {
-	correctURI = uri
-
-	// Remove edition segment of path from Zebedee dataset uri to
-	// enable retrieval of the dataset resource for edition
-	if strings.Contains(uri, DatasetDataType) {
-		correctURI, err = extractDatasetURI(uri)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return correctURI, nil
-}
-
-func extractDatasetURI(editionURI string) (string, error) {
-	parsedURI, err := url.Parse(editionURI)
-	if err != nil {
-		return "", err
-	}
-
-	slicedURI := strings.Split(parsedURI.Path, "/")
-	slicedURI = slicedURI[:len(slicedURI)-1]
-	datasetURI := strings.Join(slicedURI, "/")
-
-	return datasetURI, nil
 }
 
 func isEditorialSeries(contentType string) bool {
