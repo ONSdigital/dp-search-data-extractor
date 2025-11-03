@@ -5,13 +5,13 @@ go 1.24.0
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.269.0
 	github.com/ONSdigital/dp-cache v0.6.0
-	github.com/ONSdigital/dp-component-test v0.25.0
+	github.com/ONSdigital/dp-component-test v0.26.0
 	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-kafka/v3 v3.11.0
 	github.com/ONSdigital/dp-net/v3 v3.5.0
 	github.com/ONSdigital/dp-topic-api v1.2.0
 	github.com/ONSdigital/log.go/v2 v2.5.0
-	github.com/cucumber/godog v0.15.0
+	github.com/cucumber/godog v0.15.1
 	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/mux v1.8.1
 	github.com/kelseyhightower/envconfig v1.4.0
