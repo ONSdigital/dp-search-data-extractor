@@ -11,8 +11,8 @@ import (
 	"time"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
-	kafka "github.com/ONSdigital/dp-kafka/v4"
-	kafkatest "github.com/ONSdigital/dp-kafka/v4/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
+	kafkatest "github.com/ONSdigital/dp-kafka/v5/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/ONSdigital/log.go/v2/log"
