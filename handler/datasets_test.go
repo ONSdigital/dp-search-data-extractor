@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
-	"github.com/ONSdigital/dp-kafka/v4/avro"
-	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
+	"github.com/ONSdigital/dp-kafka/v5/avro"
+	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"

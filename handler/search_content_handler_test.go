@@ -7,9 +7,9 @@ import (
 	"log"
 	"testing"
 
-	kafka "github.com/ONSdigital/dp-kafka/v4"
-	"github.com/ONSdigital/dp-kafka/v4/avro"
-	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
+	"github.com/ONSdigital/dp-kafka/v5/avro"
+	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	. "github.com/smartystreets/goconvey/convey"

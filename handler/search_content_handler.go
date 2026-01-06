@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v4"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
