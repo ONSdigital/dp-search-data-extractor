@@ -7,20 +7,26 @@ import (
 	"os"
 	"testing"
 
+	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-search-data-extractor/features/steps"
+	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	dplogs "github.com/ONSdigital/log.go/v2/log"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
 
+const kafkaVersion = "3.8.0"
+
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 type ComponentTest struct {
-	t *testing.T
+	Kafka *componenttest.KafkaFeature
 }
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-	component := steps.NewComponent(f.t)
+	kafkaScenario := f.Kafka.NewScenario()
+	component := steps.NewComponent(kafkaScenario)
 
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		if err := component.Reset(); err != nil {
@@ -31,14 +37,30 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		component.Close()
+		kafkaScenario.Close(ctx)
 		return ctx, nil
 	})
 
 	component.RegisterSteps(ctx)
+	kafkaScenario.RegisterSteps(ctx)
 }
 
 func (f *ComponentTest) InitializeTestSuite(_ *godog.TestSuiteContext) {
 	dplogs.Namespace = "dp-search-data-exporter"
+	f.Kafka = componenttest.NewKafkaFeature(&componenttest.KafkaOptions{
+		KafkaVersion: kafkaVersion,
+		Encoders: []componenttest.KafkaEncoderOption{
+			{
+				Topic:    "content-updated",
+				Encoding: "Avro",
+				Encoder:  componenttest.NewAvroEncoder[models.ContentPublished](schema.ContentPublishedEvent),
+			},
+			{
+				Topic:    "search-data-import",
+				Encoding: "Avro",
+				Encoder:  componenttest.NewAvroEncoder[models.SearchDataImport](schema.SearchDataImportEvent)},
+		},
+	})
 }
 
 func TestComponent(t *testing.T) {
@@ -46,12 +68,14 @@ func TestComponent(t *testing.T) {
 		status := 0
 
 		var opts = godog.Options{
-			Output: colors.Colored(os.Stdout),
-			Format: "pretty",
-			Paths:  flag.Args(),
+			Output:   colors.Colored(os.Stdout),
+			Format:   "pretty",
+			Paths:    flag.Args(),
+			Strict:   true,
+			TestingT: t,
 		}
 
-		f := &ComponentTest{t: t}
+		f := &ComponentTest{}
 
 		status = godog.TestSuite{
 			Name:                 "feature_tests",

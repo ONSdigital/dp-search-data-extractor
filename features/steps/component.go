@@ -7,12 +7,9 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"testing"
 	"time"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
-	kafka "github.com/ONSdigital/dp-kafka/v4"
-	kafkatest "github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/service"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -31,23 +28,20 @@ var (
 
 type Component struct {
 	componenttest.ErrorFeature
-	DatasetAPI               *httpfake.HTTPFake  // Dataset API mock at HTTP level
-	Zebedee                  *httpfake.HTTPFake  // Zebedee mock at HTTP level
-	ImportProducer           *kafkatest.Producer // mock for search-data-imported
-	DeleteProducer           *kafkatest.Producer // mock for search-content-deleted
-	ContentPublishedConsumer *kafkatest.Consumer // Mock for service kafka consumer
-	SearchContentConsumer    *kafkatest.Consumer // Mock for service kafka consumer
-	errorChan                chan error
-	svc                      *service.Service
-	cfg                      *config.Config
-	wg                       *sync.WaitGroup
-	signals                  chan os.Signal
-	waitEventTimeout         time.Duration
-	testETag                 string
-	ctx                      context.Context
+	DatasetAPI       *httpfake.HTTPFake // Dataset API mock at HTTP level
+	Zebedee          *httpfake.HTTPFake // Zebedee mock at HTTP level
+	errorChan        chan error
+	svc              *service.Service
+	cfg              *config.Config
+	wg               *sync.WaitGroup
+	signals          chan os.Signal
+	waitEventTimeout time.Duration
+	testETag         string
+	ctx              context.Context
+	kakfkaScenario   *componenttest.KafkaScenario
 }
 
-func NewComponent(_ *testing.T) *Component {
+func NewComponent(kafkaScenario *componenttest.KafkaScenario) *Component {
 	c := &Component{
 		DatasetAPI:       httpfake.New(),
 		Zebedee:          httpfake.New(),
@@ -56,9 +50,8 @@ func NewComponent(_ *testing.T) *Component {
 		wg:               &sync.WaitGroup{},
 		testETag:         "13c7791bafdbaaf5e6660754feb1a58cd6aaa892",
 		ctx:              context.Background(),
+		kakfkaScenario:   kafkaScenario,
 	}
-	service.GetKafkaConsumer = c.GetKafkaConsumer
-	service.GetKafkaProducer = c.GetKafkaProducer
 	return c
 }
 
@@ -80,6 +73,12 @@ func (c *Component) initService(ctx context.Context) error {
 	cfg.ZebedeeURL = c.Zebedee.ResolveURL("")
 	cfg.EnableZebedeeCallbacks = true
 	cfg.EnableSearchContentUpdatedHandler = true
+
+	cfg.Kafka.ContentUpdatedTopic = c.kakfkaScenario.GetMappedTopic("content-updated")
+	cfg.Kafka.SearchContentTopic = c.kakfkaScenario.GetMappedTopic("search-content-updated")
+	cfg.Kafka.SearchDataImportedTopic = c.kakfkaScenario.GetMappedTopic("search-data-import")
+	cfg.Kafka.SearchContentDeletedTopic = c.kakfkaScenario.GetMappedTopic("search-content-deleted")
+	cfg.Kafka.Addr = c.kakfkaScenario.KafkaFeature.GetBrokers(ctx)
 
 	log.Info(ctx, "config used by component tests", log.Data{"cfg": cfg})
 
@@ -143,96 +142,4 @@ func (c *Component) Reset() error {
 	c.Zebedee.Reset()
 
 	return nil
-}
-
-// GetKafkaConsumer creates a new kafkatest consumer based on the topic and stores it in the Component struct.
-// It returns the appropriate mock for the service under test.
-// If there is any error creating the mock, it is returned.
-func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka, topic string) (kafka.IConsumerGroup, error) {
-	var err error
-
-	switch topic {
-	case cfg.ContentUpdatedTopic:
-		// Create a consumer for the "ContentPublished" topic
-		c.ContentPublishedConsumer, err = kafkatest.NewConsumer(
-			ctx,
-			&kafka.ConsumerGroupConfig{
-				BrokerAddrs:       cfg.Addr,
-				Topic:             topic,
-				GroupName:         cfg.ContentUpdatedGroup,
-				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-				KafkaVersion:      &cfg.Version,
-			},
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create ContentPublishedConsumer: %w", err)
-		}
-		return c.ContentPublishedConsumer.Mock, nil
-
-	case cfg.SearchContentTopic:
-		// Create a consumer for the "SearchContent" topic
-		c.SearchContentConsumer, err = kafkatest.NewConsumer(
-			ctx,
-			&kafka.ConsumerGroupConfig{
-				BrokerAddrs:       cfg.Addr,
-				Topic:             topic,
-				GroupName:         cfg.ContentUpdatedGroup,
-				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-				KafkaVersion:      &cfg.Version,
-			},
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create SearchContentConsumer: %w", err)
-		}
-		return c.SearchContentConsumer.Mock, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported topic: %s", topic)
-	}
-}
-
-// GetKafkaProducer creates a new kafkatest producer and stores it to the caller Component struct
-// It returns the mock, so it can be used by the service under test.
-// If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaProducer(_ context.Context, cfg *config.Kafka, topic string) (kafka.IProducer, error) {
-	var err error
-
-	switch topic {
-	case cfg.SearchDataImportedTopic:
-		c.ImportProducer, err = kafkatest.NewProducer(
-			c.ctx,
-			&kafka.ProducerConfig{
-				BrokerAddrs:       cfg.Addr,
-				Topic:             topic,
-				MinBrokersHealthy: &cfg.ProducerMinBrokersHealthy,
-				KafkaVersion:      &cfg.Version,
-			},
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create import kafkatest producer: %w", err)
-		}
-		return c.ImportProducer.Mock, nil
-
-	case cfg.SearchContentDeletedTopic:
-		c.DeleteProducer, err = kafkatest.NewProducer(
-			c.ctx,
-			&kafka.ProducerConfig{
-				BrokerAddrs:       cfg.Addr,
-				Topic:             topic,
-				MinBrokersHealthy: &cfg.ProducerMinBrokersHealthy,
-				KafkaVersion:      &cfg.Version,
-			},
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create delete kafkatest producer: %w", err)
-		}
-		return c.DeleteProducer.Mock, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported topic: %s", topic)
-	}
 }

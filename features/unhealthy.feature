@@ -6,7 +6,7 @@ Feature: Search data extractor unhealthy
     And zebedee is healthy
 
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "URI": "some_uri",
@@ -15,7 +15,7 @@ Feature: Search data extractor unhealthy
     }
     """
 
-    Then no search-data-import events are produced
+    Then no "search-data-import" event is produced within 5 seconds
 
 
   Scenario: Not consuming events, because a zebedee is not healthy
@@ -23,7 +23,7 @@ Feature: Search data extractor unhealthy
     And zebedee is unhealthy
 
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "URI": "some_uri",
@@ -32,4 +32,4 @@ Feature: Search data extractor unhealthy
     }
     """
 
-    Then no search-data-import events are produced
+    Then no "search-data-import" event is produced within 5 seconds

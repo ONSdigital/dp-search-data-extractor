@@ -14,7 +14,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "uri":           "/datasets/cphi01/editions/timeseries/versions/version/metadata",
@@ -22,7 +22,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "collection_id":  "123"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
       {
         "uid":         "cphi01-timeseries",
@@ -61,7 +61,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "uri":          "/datasets/my-cantabular-dataset/editions/my-edition/versions/my-version/metadata",
@@ -69,7 +69,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "collection_id": "123"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
       """
       {
         "uid":         "my-cantabular-dataset-my-edition",

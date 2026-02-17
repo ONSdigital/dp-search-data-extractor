@@ -20,7 +20,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "uri":           "some_uri",
@@ -28,7 +28,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "collection_id":  "123"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
     {
       "uid":         "some_uri",
@@ -58,7 +58,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "URI":           "some_uri",
@@ -66,8 +66,8 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "CollectionID":  "123"
     }
     """
-    Then no search-data-import events are produced
-    Then no search-content-deleted events are produced
+    Then no "search-data-import" event is produced within 5 seconds
+    Then no "search-content-deleted" event is produced within 5 seconds
 
   Scenario: When migrationLink exists and content type is NOT editorial, send search-content-deleted event
     And the following published data for uri "some_uri" is available in zebedee
@@ -85,7 +85,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "uri": "some_uri",
@@ -93,15 +93,16 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "collection_id": "123"
     }
     """
-    Then this search-content-deleted event is sent
+    Then this "search-content-deleted" event is produced:
     """
     {
         "uri": "some_uri",
         "collection_id":  "123",
-        "search_index":  "ons"
+        "search_index":  "ons",
+        "trace_id": ""
     }
     """
-    And no search-data-import events are produced
+    And no "search-data-import" event is produced within 5 seconds
 
   Scenario: When migrationLink exists but content type is editorial, send search-data-import event
     And the following published data for uri "some_uri" is available in zebedee
@@ -119,7 +120,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "uri":           "some_uri",
@@ -127,7 +128,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "collection_id":  "123"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
     {
       "uid":         "some_uri",
@@ -142,7 +143,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "topics":      []
     }
     """
-    And no search-content-deleted events are produced
+    And no "search-content-deleted" event is produced within 5 seconds
 
   Scenario: When migrationLink does not exist, send search-data-import event
     And the following published data for uri "some_uri" is available in zebedee
@@ -159,7 +160,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
     }
     """
     When the service starts
-    And this "content-updated" avro event is queued, to be consumed
+    And this "content-updated" Avro event is queued, to be consumed:
     """
     {
         "uri":           "some_uri",
@@ -167,7 +168,7 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "collection_id":  "123"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
     {
       "uid":         "some_uri",
@@ -182,4 +183,4 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
       "topics":      []
     }
     """
-    And no search-content-deleted events are produced
+    And no "search-content-deleted" event is produced within 5 seconds

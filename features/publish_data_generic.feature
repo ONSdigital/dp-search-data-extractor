@@ -7,7 +7,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
     And the service starts
 
   Scenario: When a valid `search-content-updated` of type release event is consumed, a `search-data-import` event is published
-    Given this "search-content-updated" json event is queued, to be consumed
+    Given this "search-content-updated" event is queued, to be consumed:
     """
     {
       "uri":           "/some/uri",
@@ -19,7 +19,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "dataset_id":     "456"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
     {
       "uid":         "/some/uri",
@@ -37,7 +37,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
 
 
   Scenario: When a valid `search-content-updated` that is not a release event is consumed, a `search-data-import` event is published
-    Given this "search-content-updated" json event is queued, to be consumed
+    Given this "search-content-updated" event is queued, to be consumed:
     """
     {
       "uri":           "/some/uri",
@@ -49,7 +49,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "dataset_id":     "456"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
     {
       "uid":         "/some/uri",
@@ -64,11 +64,11 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "topics":      []
     }
     """
-    Then no search-content-deleted events are produced
+    Then no "search-content-deleted" event is produced within 5 seconds
 
 
   Scenario: When a valid `search-content-updated` with uri_old in event is consumed, a `search-data-import` event is published
-    Given this "search-content-updated" json event is queued, to be consumed
+    Given this "search-content-updated" event is queued, to be consumed:
     """
     {
       "uri":           "/some/uri",
@@ -81,7 +81,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "trace_id":      "trace1234"
     }
     """
-    Then this search-data-import event is sent
+    Then this "search-data-import" Avro event is produced:
     """
     {
       "uid":         "/some/uri",
@@ -97,7 +97,7 @@ Feature:Data extractor should listen to the relevant topic and publish extracted
       "topics":      []
     }
     """
-    And this search-content-deleted event is sent
+    And this "search-content-deleted" event is produced:
     """
     {
       "uri": "/my/old/uri",
