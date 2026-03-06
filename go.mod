@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.269.0
 	github.com/ONSdigital/dp-cache v0.6.0
-	github.com/ONSdigital/dp-component-test v1.2.6-alpha.0.20260302165210-7db64f722293
+	github.com/ONSdigital/dp-component-test v1.3.0-alpha
 	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-kafka/v4 v4.3.0
 	github.com/ONSdigital/dp-net/v3 v3.5.0
