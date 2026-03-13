@@ -7,9 +7,9 @@ import (
 	"log"
 	"testing"
 
-	kafka "github.com/ONSdigital/dp-kafka/v4"
-	"github.com/ONSdigital/dp-kafka/v4/avro"
-	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
+	"github.com/ONSdigital/dp-kafka/v5/avro"
+	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	. "github.com/smartystreets/goconvey/convey"
@@ -33,10 +33,9 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 
 		Convey("When an event with invalid data is handled", func() {
 			ctx := context.Background()
-			msg, err := kafkatest.NewMessage([]byte("invalid data"), 0)
-			So(err, ShouldBeNil)
+			msg := kafkatest.NewMessage([]byte("invalid data"))
 
-			err = handler.Handle(ctx, 0, msg)
+			err := handler.Handle(ctx, 0, msg)
 
 			Convey("Then an unmarshaling error is reported", func() {
 				So(err, ShouldNotBeNil)
@@ -193,9 +192,6 @@ func createJSONMessage(s interface{}) kafka.Message {
 	if err != nil {
 		log.Fatalf("Error marshaling JSON message: %v", err)
 	}
-	msg, err := kafkatest.NewMessage(b, 0)
-	if err != nil {
-		log.Fatalf("Error creating Kafka message: %v", err)
-	}
+	msg := kafkatest.NewMessage(b)
 	return msg
 }

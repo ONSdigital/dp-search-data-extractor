@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v4"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	cachePrivate "github.com/ONSdigital/dp-search-data-extractor/cache/private"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
@@ -215,6 +215,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	timeout := svc.Cfg.GracefulShutdownTimeout
 	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
 	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 	hasShutdownError := false
 
 	go func() {

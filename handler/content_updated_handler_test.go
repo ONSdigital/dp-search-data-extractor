@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
-	dpkafka "github.com/ONSdigital/dp-kafka/v4"
-	"github.com/ONSdigital/dp-kafka/v4/avro"
-	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
+	dpkafka "github.com/ONSdigital/dp-kafka/v5"
+	"github.com/ONSdigital/dp-kafka/v5/avro"
+	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	clientMock "github.com/ONSdigital/dp-search-data-extractor/clients/mock"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
@@ -417,8 +417,7 @@ func TestHandleErrors(t *testing.T) {
 		h := &ContentPublished{cfg, *cacheList, nil, nil, importProducerMock, deleteProducerMock}
 
 		Convey("When a malformed event is handled", func() {
-			msg, err := kafkatest.NewMessage([]byte{1, 2, 3}, 0)
-			So(err, ShouldBeNil)
+			msg := kafkatest.NewMessage([]byte{1, 2, 3})
 			err = h.Handle(ctx, testWorkerID, msg)
 
 			Convey("Then the expected error is reported", func() {
@@ -462,8 +461,7 @@ func TestGetIndexName(t *testing.T) {
 func createMessage(s interface{}) dpkafka.Message {
 	e, err := schema.ContentPublishedEvent.Marshal(s)
 	So(err, ShouldBeNil)
-	msg, err := kafkatest.NewMessage(e, 0)
-	So(err, ShouldBeNil)
+	msg := kafkatest.NewMessage(e)
 	return msg
 }
 
