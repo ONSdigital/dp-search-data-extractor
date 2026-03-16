@@ -16,6 +16,8 @@ github.com/ONSdigital/dp-cache v0.6.0 h1:AcZ7iowt8ZK0ExxTOn8nwUuvhTZOS+aypjFekLi
 github.com/ONSdigital/dp-cache v0.6.0/go.mod h1:GtKW9D6GHIy4aVSk333aYGPPzBik0wbQmKAid2GbKo0=
 github.com/ONSdigital/dp-component-test v1.4.0-alpha h1:vjE1EgpPdOjbP929JPJ274hdn2fVHn+c3BSW0W9eX6k=
 github.com/ONSdigital/dp-component-test v1.4.0-alpha/go.mod h1:r0ePYPyy7xJhN18d0bxKbq84fnR2TDYzB9kAMLJZ43Q=
+github.com/ONSdigital/dp-component-test v1.4.1-alpha h1:nO0p6JPmQLgyJhpC6g+DgMjIAeKDdnM/8udWji62Acs=
+github.com/ONSdigital/dp-component-test v1.4.1-alpha/go.mod h1:r0ePYPyy7xJhN18d0bxKbq84fnR2TDYzB9kAMLJZ43Q=
 github.com/ONSdigital/dp-healthcheck v1.6.4 h1:FhWOuVmob36dYq7AzCdbgyf0Vk58IFitSl8y8pWJ8ck=
 github.com/ONSdigital/dp-healthcheck v1.6.4/go.mod h1:j3UNbGT4ZJg1chrRkPLE6YUVYCg1su3AAQ8frcBrvgc=
 github.com/ONSdigital/dp-kafka/v4 v4.3.0 h1:QGSB3v+ySj1VzuwG1M/BZLoA3dA/nrzYRqbmEKkqrc4=
