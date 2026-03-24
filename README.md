@@ -79,17 +79,17 @@ We use v2 of golangci-lint, which you will [need to install](https://golangci-li
 | HEALTHCHECK_INTERVAL | 30s | Time between self-healthchecks (`time.Duration` format) |
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format) |
 | KAFKA_ADDR | "localhost:9092" | The address of Kafka (accepts list) |
-| KAFKA_OFFSET_OLDEST | true | Start processing Kafka messages in order from the oldest in the queue |
-| KAFKA_VERSION | `1.0.2` | The version of Kafka |
-| KAFKA_NUM_WORKERS | 1 | The maximum number of parallel kafka consumers |
-| KAFKA_SEC_PROTO | _unset_ (only `TLS`) | if set to `TLS`, kafka connections will use TLS |
-| KAFKA_SEC_CLIENT_KEY | _unset_ | PEM [2] for the client key (optional, used for client auth) [[1]](#notes) |
-| KAFKA_SEC_CLIENT_CERT | _unset_ | PEM [2] for the client certificate (optional, used for client auth) [[1]](#notes) |
-| KAFKA_SEC_CA_CERTS | _unset_ | PEM [2] of CA cert chain if using private CA for the server cert [[1]](#notes) |
-| KAFKA_SEC_SKIP_VERIFY | false | ignore server certificate issues if set to `true` [[1]](#notes) |
 | KAFKA_CONTENT_UPDATED_GROUP | dp-search-data-extractor | The consumer group this application to consume content-updated messages |
 | KAFKA_CONTENT_UPDATED_TOPIC | content-updated | The name of the topic to consume messages from |
+| KAFKA_NUM_WORKERS | 1 | The maximum number of parallel kafka consumers |
+| KAFKA_OFFSET_OLDEST | true | Start processing Kafka messages in order from the oldest in the queue |
 | KAFKA_PRODUCER_TOPIC | search-data-import | The name of the topic to produce messages to |
+| KAFKA_SEC_CA_CERTS | _unset_ | PEM [2] of CA cert chain if using private CA for the server cert [[1]](#notes) |
+| KAFKA_SEC_CLIENT_KEY | _unset_ | PEM [2] for the client key (optional, used for client auth) [[1]](#notes) |
+| KAFKA_SEC_CLIENT_CERT | _unset_ | PEM [2] for the client certificate (optional, used for client auth) [[1]](#notes) |
+| KAFKA_SEC_PROTO | _unset_ (only `TLS`) | if set to `TLS`, kafka connections will use TLS |
+| KAFKA_SEC_SKIP_VERIFY | false | ignore server certificate issues if set to `true` [[1]](#notes) |
+| KAFKA_VERSION | `3.8.0` | The version of Kafka |
 | KEYWORDS_LIMITS | -1 | The keywords allowed, default no limit |
 | SERVICE_AUTH_TOKEN | _unset_ | The service auth token for the dp-search-data-extractor |
 | STOP_CONSUMING_ON_UNHEALTHY | true | Application stops consuming kafka messages if application is in unhealthy state |

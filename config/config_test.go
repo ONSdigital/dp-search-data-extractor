@@ -31,7 +31,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.Kafka.SearchDataImportedTopic, ShouldEqual, "search-data-import")
 				So(cfg.Kafka.SearchContentDeletedTopic, ShouldEqual, "search-content-deleted")
 				So(cfg.Kafka.Addr, ShouldResemble, []string{"localhost:9092", "localhost:9093", "localhost:9094"})
-				So(cfg.Kafka.Version, ShouldEqual, "1.0.2")
+				So(cfg.Kafka.Version, ShouldEqual, "3.8.0")
 				So(cfg.Kafka.OffsetOldest, ShouldBeTrue)
 				So(cfg.Kafka.NumWorkers, ShouldEqual, 1)
 				So(cfg.Kafka.SecProtocol, ShouldEqual, "")
