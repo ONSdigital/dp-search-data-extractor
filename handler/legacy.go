@@ -13,6 +13,10 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
+const (
+	uriLabel = "URI"
+)
+
 // handleZebedeeType handles a kafka message corresponding to Zebedee event type (legacy)
 func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *models.ContentPublished) error {
 	if _, err := url.PathUnescape(cpEvent.URI); err != nil {
@@ -25,7 +29,7 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 		log.Info(ctx, "not processing content as does not meet indexing criteria", log.Data{
 			"criteria":  failedCriteria,
 			"data_type": cpEvent.DataType,
-			"URI":       cpEvent.URI,
+			uriLabel:    cpEvent.URI,
 		})
 		return nil
 	}
@@ -53,8 +57,8 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 
 	if zebedeeData.Description.Title == "" {
 		log.Info(ctx, "not processing content as no title present", log.Data{
-			"UID": zebedeeData.UID,
-			"URI": zebedeeData.URI,
+			"UID":    zebedeeData.UID,
+			uriLabel: zebedeeData.URI,
 		})
 		return nil
 	}
@@ -63,7 +67,7 @@ func (h *ContentPublished) handleZebedeeType(ctx context.Context, cpEvent *model
 	if zebedeeData.Description.MigrationLink != "" &&
 		!isEditorialSeries(zebedeeData.DataType) {
 		log.Info(ctx, "migrationLink detected, sending search-content-deleted event", log.Data{
-			"URI":           zebedeeData.URI,
+			uriLabel:        zebedeeData.URI,
 			"DataType":      zebedeeData.DataType,
 			"MigrationLink": zebedeeData.Description.MigrationLink,
 		})

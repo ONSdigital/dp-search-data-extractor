@@ -10,6 +10,11 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
+const (
+	topicIDLabel = "topic_id"
+	depthLabel   = "depth"
+)
+
 // UpdateTopicCache is a function to update the topic cache in publishing (private) mode.
 // This function talks to the dp-topic-api via its private endpoints to retrieve the root topic and its subtopic ids
 // The data returned by the dp-topic-api is of type *models.PrivateSubtopics which is then transformed in this function for the controller
@@ -62,16 +67,16 @@ func UpdateTopicCache(ctx context.Context, serviceAuthToken string, topicClient 
 
 func processTopic(ctx context.Context, serviceAuthToken string, topicClient topicCli.Clienter, topicID string, topicCache *cache.Topic, processedTopics map[string]struct{}, parentTopicID, parentTopicSlug string, depth int) {
 	log.Info(ctx, "Processing topic at depth", log.Data{
-		"topic_id": topicID,
-		"depth":    depth,
+		topicIDLabel: topicID,
+		depthLabel:   depth,
 	})
 
 	// Check if the topic has already been processed
 	if _, exists := processedTopics[topicID]; exists {
 		err := errors.New("topic already processed")
 		log.Error(ctx, "Skipping already processed topic", err, log.Data{
-			"topic_id": topicID,
-			"depth":    depth,
+			topicIDLabel: topicID,
+			depthLabel:   depth,
 		})
 		return
 	}
@@ -80,8 +85,8 @@ func processTopic(ctx context.Context, serviceAuthToken string, topicClient topi
 	topic, err := topicClient.GetTopicPrivate(ctx, topicCli.Headers{ServiceAuthToken: "Bearer " + serviceAuthToken}, topicID)
 	if err != nil {
 		log.Error(ctx, "failed to get topic details from topic-api", err, log.Data{
-			"topic_id": topicID,
-			"depth":    depth,
+			topicIDLabel: topicID,
+			depthLabel:   depth,
 		})
 		return
 	}

@@ -21,26 +21,28 @@ var CantabularTypes = map[string]struct{}{
 	"cantabular_multivariate_table": {},
 }
 
+const allUsualRes = "All usual residents"
+
 // PopulationTypes is a mapping between dataset is_based_ok @ID values and population type labels
 // Note: this can be also obtained by calling population-api: GET /population-types
 var PopulationTypes = map[string]string{
 	"atc-ts-demmig-hh-ct-oa":     "All households",
 	"atc-ts-demmig-str-ct-oa":    "All non-UK born short-term residents",
-	"atc-ts-demmig-ur-ct-oa":     "All usual residents",
-	"atc-ts-demmig-ur-pd-oa":     "All usual residents",
+	"atc-ts-demmig-ur-ct-oa":     allUsualRes,
+	"atc-ts-demmig-ur-pd-oa":     allUsualRes,
 	"atc-ts-ed-ftetta-ct-oa":     "All schoolchildren and full-time students aged 5 years and over at their term-time address",
 	"atc-ts-eilr-ur-ct-ltla":     "All usual residents aged 3 years and over",
-	"atc-ts-eilr-ur-ct-msoa":     "All usual residents",
-	"atc-ts-hduc-ur-asp-ltla":    "All usual residents",
-	"atc-ts-hous-ur-ct-oa":       "All usual residents",
+	"atc-ts-eilr-ur-ct-msoa":     allUsualRes,
+	"atc-ts-hduc-ur-asp-ltla":    allUsualRes,
+	"atc-ts-hous-ur-ct-oa":       allUsualRes,
 	"atc-ts-hous-urce-ct-msoa":   "All usual residents in communal establishments",
-	"atc-ts-lmttw-ur-ct-oa":      "All usual residents",
+	"atc-ts-lmttw-ur-ct-oa":      allUsualRes,
 	"atc-ts-sogi-ur16o-ct-ltla":  "All usual residents aged 16 years and over",
 	"atc-ts-sogi-ur16o-ct-msoa":  "All usual residents aged 16 years and over",
 	"atc-ts-vets-vetsur-ct-msoa": "All usual residents who have previously served in the UK armed forces",
 	"HH":                         "All Households",
 	"UR_HH":                      "All usual residents in households",
-	"UR":                         "All usual residents",
+	"UR":                         allUsualRes,
 }
 
 func (s *SearchDataImport) MapDatasetMetadataValues(ctx context.Context, metadata *dataset.Metadata) error {

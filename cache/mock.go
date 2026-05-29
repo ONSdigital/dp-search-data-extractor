@@ -40,9 +40,10 @@ func GetMockRootTopic(rootTopicID string) *Topic {
 	}
 
 	mockRootTopic.List = NewSubTopicsMap()
-	mockRootTopic.List.AppendSubtopicID("economy", Subtopic{ID: "6734", Slug: "economy", LocaliseKeyName: "Economy", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: ""})
-	mockRootTopic.List.AppendSubtopicID("environmentalaccounts", Subtopic{ID: "1834", Slug: "environmentalaccounts", LocaliseKeyName: "Environmental Accounts", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "6734", ParentSlug: "economy"})
-	mockRootTopic.List.AppendSubtopicID("governmentpublicsectorandtaxes", Subtopic{ID: "8268", Slug: "governmentpublicsectorandtaxes", LocaliseKeyName: "Government Public Sector and Taxes", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "6734", ParentSlug: "economy"})
+	const economyID = "economy"
+	mockRootTopic.List.AppendSubtopicID(economyID, Subtopic{ID: "6734", Slug: economyID, LocaliseKeyName: "Economy", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: ""})
+	mockRootTopic.List.AppendSubtopicID("environmentalaccounts", Subtopic{ID: "1834", Slug: "environmentalaccounts", LocaliseKeyName: "Environmental Accounts", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "6734", ParentSlug: economyID})
+	mockRootTopic.List.AppendSubtopicID("governmentpublicsectorandtaxes", Subtopic{ID: "8268", Slug: "governmentpublicsectorandtaxes", LocaliseKeyName: "Government Public Sector and Taxes", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "6734", ParentSlug: economyID})
 	mockRootTopic.List.AppendSubtopicID("publicsectorfinance", Subtopic{ID: "3687", Slug: "publicsectorfinance", LocaliseKeyName: "Public Sector Finance", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: "8268", ParentSlug: "governmentpublicsectorandtaxes"})
 	mockRootTopic.List.AppendSubtopicID("internationalmigration", Subtopic{ID: "1234", Slug: "internationalmigration", LocaliseKeyName: "International Migration", ReleaseDate: timeHelper("2022-10-10T08:30:00Z"), ParentID: ""})
 

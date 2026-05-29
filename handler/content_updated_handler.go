@@ -18,6 +18,9 @@ const (
 	OnsSearchIndex  = "ons"
 	ZebedeeDataType = "legacy"
 	DatasetDataType = "datasets"
+
+	eventLabel    = "event"
+	dataTypeLabel = "data_type"
 )
 
 // ContentPublished struct to hold handle for config with zebedee, datasetAPI client and the producer
@@ -48,7 +51,7 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 	unixTimeStamp := time.Now().UnixNano()
 
 	logData := log.Data{
-		"event":     e,
+		eventLabel:  e,
 		"timeStamp": unixTimeStamp,
 		"topic":     "content-updated",
 	}
@@ -58,7 +61,7 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 	case ZebedeeDataType:
 		if !h.Cfg.EnableZebedeeCallbacks {
 			err := fmt.Errorf("event cannot be processed as zebedee callbacks are disabled")
-			log.Error(ctx, "failed event handling as zebedee callbacks are disabled.", err, log.Data{"data_type": e.DataType})
+			log.Error(ctx, "failed event handling as zebedee callbacks are disabled.", err, log.Data{dataTypeLabel: e.DataType})
 			return err
 		}
 		if err := h.handleZebedeeType(ctx, e); err != nil {
@@ -67,7 +70,7 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 	case DatasetDataType:
 		if !h.Cfg.EnableDatasetAPICallbacks {
 			err := fmt.Errorf("event cannot be processed as dataset API callbacks are disabled")
-			log.Error(ctx, "failed event handling as dataset API callbacks are disabled.", err, log.Data{"data_type": e.DataType})
+			log.Error(ctx, "failed event handling as dataset API callbacks are disabled.", err, log.Data{dataTypeLabel: e.DataType})
 			return err
 		}
 		if err := h.handleDatasetDataType(ctx, e); err != nil {
@@ -77,7 +80,7 @@ func (h *ContentPublished) Handle(ctx context.Context, _ int, msg kafka.Message)
 		log.Warn(ctx,
 			"data type not handled by data extractor",
 			log.FormatErrors([]error{fmt.Errorf("unrecognised data type received")}),
-			log.Data{"data_type": e.DataType},
+			log.Data{dataTypeLabel: e.DataType},
 		)
 		return nil
 	}

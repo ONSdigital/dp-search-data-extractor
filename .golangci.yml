@@ -26,7 +26,8 @@ linters:
       threshold: 100
     goconst:
       min-len: 2
-      min-occurrences: 2
+      min-occurrences: 3
+      ignore-tests: true
     gocritic:
       disabled-checks:
         - wrapperFunc

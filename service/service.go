@@ -18,6 +18,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	consumerLabel = "Consumer"
+)
+
 // Service contains all the configs, server and clients to run the event handler service
 type Service struct {
 	Cfg                      *config.Config
@@ -282,20 +286,20 @@ func (svc *Service) shutdownConsumers(ctx context.Context) error {
 			return
 		}
 
-		log.Info(ctx, "stopping kafka consumer listener...", log.Data{"Consumer": name})
+		log.Info(ctx, "stopping kafka consumer listener...", log.Data{consumerLabel: name})
 		if err := consumer.StopAndWait(); err != nil {
-			log.Error(ctx, "error stopping kafka consumer listener", err, log.Data{"Consumer": name})
+			log.Error(ctx, "error stopping kafka consumer listener", err, log.Data{consumerLabel: name})
 			errMessages = append(errMessages, fmt.Sprintf("%s consumer stop error: %v", name, err))
 		} else {
-			log.Info(ctx, "stopped kafka consumer listener", log.Data{"Consumer": name})
+			log.Info(ctx, "stopped kafka consumer listener", log.Data{consumerLabel: name})
 		}
 
-		log.Info(ctx, "closing kafka consumer...", log.Data{"Consumer": name})
+		log.Info(ctx, "closing kafka consumer...", log.Data{consumerLabel: name})
 		if err := consumer.Close(ctx); err != nil {
-			log.Error(ctx, "error closing kafka consumer", err, log.Data{"Consumer": name})
+			log.Error(ctx, "error closing kafka consumer", err, log.Data{consumerLabel: name})
 			errMessages = append(errMessages, fmt.Sprintf("%s consumer close error: %v", name, err))
 		} else {
-			log.Info(ctx, "closed kafka consumer", log.Data{"Consumer": name})
+			log.Info(ctx, "closed kafka consumer", log.Data{consumerLabel: name})
 		}
 	}
 
