@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	. "github.com/smartystreets/goconvey/convey"
@@ -306,6 +307,58 @@ func TestValidate_WithEmptytopicsSize0(t *testing.T) {
 			actual := models.ValidateTopics([]string{})
 			Convey("Then topics should be populated with an string array of size 0", func() {
 				So(actual, ShouldResemble, []string{})
+			})
+		})
+	})
+}
+
+func TestMapZebedeeDataToSearchDataImport_TaxonomyLandingPage(t *testing.T) {
+	Convey("Given some valid zebedee data with taxonomy_landing_page data type", t, func() {
+		zebedeeData := models.ZebedeeData{
+			UID:      someTitle,
+			URI:      someURI,
+			DataType: models.TaxonomyLandingPageDataType,
+			Description: models.Description{
+				CDID:            someCDID,
+				DatasetID:       someDatasetID,
+				Keywords:        []string{somekeyword0, somekeyword1},
+				MetaDescription: someMetaDescription,
+				ReleaseDate:     someReleaseDate,
+				Summary:         someSummary,
+				Title:           someTitle,
+				Topics:          []string{sometopic0, sometopic1},
+			},
+		}
+		Convey("And mapped with a default keywords limit", func() {
+			result := models.MapZebedeeDataToSearchDataImport(zebedeeData, -1)
+			Convey("Then the release date should be set to today's date regardless of the description release date", func() {
+				So(result.ReleaseDate, ShouldEqual, time.Now().Format(models.DateFormat))
+			})
+		})
+	})
+}
+
+func TestMapZebedeeDataToSearchDataImport_NonTaxonomyLandingPage_UsesDescriptionReleaseDate(t *testing.T) {
+	Convey("Given some valid zebedee data with a non-taxonomy_landing_page data type", t, func() {
+		zebedeeData := models.ZebedeeData{
+			UID:      someTitle,
+			URI:      someURI,
+			DataType: "article",
+			Description: models.Description{
+				CDID:            someCDID,
+				DatasetID:       someDatasetID,
+				Keywords:        []string{somekeyword0},
+				MetaDescription: someMetaDescription,
+				ReleaseDate:     someReleaseDate,
+				Summary:         someSummary,
+				Title:           someTitle,
+				Topics:          []string{sometopic0},
+			},
+		}
+		Convey("And mapped with a default keywords limit", func() {
+			result := models.MapZebedeeDataToSearchDataImport(zebedeeData, -1)
+			Convey("Then the release date should come from the zebedee description", func() {
+				So(result.ReleaseDate, ShouldEqual, someReleaseDate)
 			})
 		})
 	})

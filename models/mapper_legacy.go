@@ -3,12 +3,15 @@ package models
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const (
-	ReleaseDataType = "release"
+	ReleaseDataType             = "release"
+	TaxonomyLandingPageDataType = "taxonomy_landing_page"
+	DateFormat                  = "2006-01-02"
 )
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
@@ -46,6 +49,11 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		searchData.Survey = zebedeeData.Description.Survey
 		searchData.Language = zebedeeData.Description.Language
 		searchData.CanonicalTopic = zebedeeData.Description.CanonicalTopic
+	}
+	if zebedeeData.DataType == TaxonomyLandingPageDataType {
+		searchData.ReleaseDate = time.Now().Format(DateFormat)
+	} else {
+		searchData.ReleaseDate = zebedeeData.Description.ReleaseDate
 	}
 
 	return searchData
