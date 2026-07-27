@@ -23,6 +23,7 @@ type Description struct {
 	Published       bool     `json:"published,omitempty"`
 	ReleaseDate     string   `json:"releaseDate"`
 	Summary         string   `json:"summary"`
+	Abstract        string   `json:"_abstract"`
 	Title           string   `json:"title"`
 	Topics          []string `json:"secondaryTopics,omitempty"`
 	Language        string   `json:"language,omitempty"`

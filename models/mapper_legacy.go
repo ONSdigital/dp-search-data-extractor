@@ -9,6 +9,7 @@ import (
 
 const (
 	ReleaseDataType = "release"
+	ArticleDataType = "article"
 )
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
@@ -46,6 +47,11 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		searchData.Survey = zebedeeData.Description.Survey
 		searchData.Language = zebedeeData.Description.Language
 		searchData.CanonicalTopic = zebedeeData.Description.CanonicalTopic
+	}
+	if zebedeeData.DataType == ArticleDataType {
+		if searchData.Summary == "" {
+			searchData.Summary = zebedeeData.Description.Abstract
+		}
 	}
 
 	return searchData
