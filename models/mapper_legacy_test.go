@@ -9,6 +9,7 @@ import (
 
 const (
 	someRelease          = "release"
+	someArticle          = "article"
 	someCDID             = "CDID"
 	someChangeNotice     = "Delay on publication"
 	someChangeNoticeDate = "2021-12-14"
@@ -24,6 +25,8 @@ const (
 	someProvisionalDate = "2021-12-12"
 	someReleaseDate     = "2021-12-13"
 	someSummary         = "Some Amazing Summary"
+	emptySummary        = ""
+	someAbstract        = "Some Interesting Abstract"
 	someTitle           = "Some Incredible Title"
 	someSurvey          = "Some survey"
 	someLanguage        = "some language"
@@ -57,6 +60,7 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				Published:       true,
 				ReleaseDate:     someReleaseDate,
 				Summary:         someSummary,
+				Abstract:        someAbstract,
 				Title:           someTitle,
 				Topics:          []string{sometopic0, sometopic1},
 				Survey:          someSurvey,
@@ -86,11 +90,21 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				Published:       true,
 				ReleaseDate:     someReleaseDate,
 				Summary:         someSummary,
+				Abstract:        someAbstract,
 				Title:           someTitle,
 				Topics:          []string{sometopic0, sometopic1},
 				Survey:          someSurvey,
 				Language:        someLanguage,
 				CanonicalTopic:  canonicalTopic,
+			},
+		}
+		zebedeeDataWithEmptySummary := models.ZebedeeData{
+			UID:      someTitle,
+			URI:      someURI,
+			DataType: someArticle,
+			Description: models.Description{
+				Summary:  emptySummary,
+				Abstract: someAbstract,
 			},
 		}
 		Convey("And mapped with a default keywords limit when edition is present", func() {
@@ -183,6 +197,12 @@ func TestMapZebedeeDataToSearchDataImport(t *testing.T) {
 				So(result.Keywords, ShouldHaveLength, 2)
 				So(result.Keywords[0], ShouldResemble, somekeyword0)
 				So(result.Keywords[1], ShouldResemble, somekeyword1)
+			})
+		})
+		Convey("And mapped with zebedee returning an article with an empty summary field", func() {
+			result := models.MapZebedeeDataToSearchDataImport(zebedeeDataWithEmptySummary, -1)
+			Convey("Then the abstract field value should be mapped to the summary instead", func() {
+				So(result.Summary, ShouldResemble, someAbstract)
 			})
 		})
 	})
