@@ -3,13 +3,10 @@ package models
 import (
 	"context"
 	"strings"
+	"time"
 
+	zebedeeclient "github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/log.go/v2/log"
-)
-
-const (
-	ReleaseDataType = "release"
-	ArticleDataType = "article"
 )
 
 // MapZebedeeDataToSearchDataImport Performs default mapping of zebedee data to a SearchDataImport struct.
@@ -32,7 +29,7 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 	if zebedeeData.Description.Edition != "" {
 		searchData.Edition = zebedeeData.Description.Edition
 	}
-	if zebedeeData.DataType == ReleaseDataType {
+	if zebedeeData.DataType == zebedeeclient.PageTypeRelease {
 		logData := log.Data{
 			"zebedeeRCData": zebedeeData,
 		}
@@ -48,12 +45,16 @@ func MapZebedeeDataToSearchDataImport(zebedeeData ZebedeeData, keywordsLimit int
 		searchData.Language = zebedeeData.Description.Language
 		searchData.CanonicalTopic = zebedeeData.Description.CanonicalTopic
 	}
-	if zebedeeData.DataType == ArticleDataType {
+	if zebedeeData.DataType == zebedeeclient.PageTypeArticle {
 		if searchData.Summary == "" {
 			searchData.Summary = zebedeeData.Description.Abstract
 		}
 	}
-
+	// If the data type is a product page (topic page), then we set release date to "now" so it surfaces in search
+	// results. "Now" is used so if/when product pages are edited, they will have accurate release dates.
+	if zebedeeData.DataType == zebedeeclient.PageTypeProductPage {
+		searchData.ReleaseDate = time.Now().UTC().Format(time.RFC3339)
+	}
 	return searchData
 }
 

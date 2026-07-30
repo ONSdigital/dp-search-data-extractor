@@ -1,5 +1,7 @@
 package models
 
+import zebedeeclient "github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
+
 // MapResourceToSearchDataImport Performs default mapping of a SearchContentUpdate struct to a SearchDataImport struct.
 func MapResourceToSearchDataImport(resource SearchContentUpdate) SearchDataImport {
 	searchDataImport := SearchDataImport{
@@ -25,7 +27,7 @@ func MapResourceToSearchDataImport(resource SearchContentUpdate) SearchDataImpor
 		searchDataImport.Topics = resource.Topics
 	}
 
-	if resource.ContentType == ReleaseDataType {
+	if resource.ContentType == zebedeeclient.PageTypeRelease {
 		searchDataImport.Cancelled = resource.Cancelled
 		searchDataImport.Finalised = resource.Finalised
 		searchDataImport.Published = resource.Published
