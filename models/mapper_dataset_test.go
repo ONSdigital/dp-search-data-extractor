@@ -165,39 +165,6 @@ func TestPopulateCantabularFields(t *testing.T) {
 			})
 		})
 	})
-
-	Convey("Given a dataset metadata with is_based_on field with a cantabular type and a valid population type", t, func() {
-		metadata := &dataset.Metadata{
-			DatasetDetails: dataset.DatasetDetails{
-				IsBasedOn: &dataset.IsBasedOn{
-					ID:   "UR_HH",
-					Type: "cantabular_flexible_table",
-				},
-			},
-		}
-
-		Convey("When PopulateCantabularFields is called on a valid search data import struct", func() {
-			s := &models.SearchDataImport{
-				Summary:  testSummary,
-				DataType: "dataset_landing_page",
-			}
-			s.PopulateCantabularFields(ctx, metadata)
-
-			Convey("Then the expected population type fields are populated", func() {
-				So(*s, ShouldResemble, models.SearchDataImport{
-					Summary:    testSummary,
-					DataType:   "dataset_landing_page",
-					Dimensions: []models.Dimension{},
-					PopulationType: models.PopulationType{
-						Key:    "all-usual-residents-in-households",
-						AggKey: "all-usual-residents-in-households###All usual residents in households",
-						Name:   "UR_HH",
-						Label:  "All usual residents in households",
-					},
-				})
-			})
-		})
-	})
 }
 
 func TestMapDimensions(t *testing.T) {

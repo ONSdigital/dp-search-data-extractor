@@ -35,7 +35,6 @@ type SearchDataImport struct {
 	Published       bool                 `avro:"published" json:"published"`
 	Language        string               `avro:"language" json:"language"`
 	Survey          string               `avro:"survey" json:"survey"`
-	PopulationType  PopulationType       `avro:"population_type" json:"population_type"`
 	Dimensions      []Dimension          `avro:"dimensions" json:"dimensions"`
 }
 
@@ -53,15 +52,6 @@ type Dimension struct {
 	Name     string `avro:"name" json:"name"`
 	Label    string `avro:"label" json:"label"`
 	RawLabel string `avro:"raw_label" json:"raw_label"`
-}
-
-// PopulationType represents the population type name (unique ID) and label
-// and an aggregation key which combines name and label
-type PopulationType struct {
-	Key    string `avro:"key" json:"key"`
-	AggKey string `avro:"agg_key" json:"agg_key"`
-	Name   string `avro:"name" json:"name"`
-	Label  string `avro:"label" json:"label"`
 }
 
 // SearchContentUpdate - this represents a standard resource metadata model and json representation for API

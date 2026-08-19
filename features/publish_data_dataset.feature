@@ -82,12 +82,6 @@ Feature: Data extractor should listen to the relevant topic and publish extracte
         "summary":     "description",
         "title":       "title",
         "topics":      [],
-        "population_type": {
-          "key":    "all-usual-residents-in-households",
-          "agg_key": "all-usual-residents-in-households###All usual residents in households",
-          "name":   "UR_HH",
-          "label":  "All usual residents in households"
-        },
         "dimensions": [
           { "key": "label-3", "agg_key": "label-3###label 3", "name": "dim3.0,dim3.1", "label": "label 3", "raw_label": "label 3 (33 categories),label 3 (40 categories)"}
         ]

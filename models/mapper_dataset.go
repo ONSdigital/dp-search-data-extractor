@@ -21,30 +21,6 @@ var CantabularTypes = map[string]struct{}{
 	"cantabular_multivariate_table": {},
 }
 
-const allUsualRes = "All usual residents"
-
-// PopulationTypes is a mapping between dataset is_based_ok @ID values and population type labels
-// Note: this can be also obtained by calling population-api: GET /population-types
-var PopulationTypes = map[string]string{
-	"atc-ts-demmig-hh-ct-oa":     "All households",
-	"atc-ts-demmig-str-ct-oa":    "All non-UK born short-term residents",
-	"atc-ts-demmig-ur-ct-oa":     allUsualRes,
-	"atc-ts-demmig-ur-pd-oa":     allUsualRes,
-	"atc-ts-ed-ftetta-ct-oa":     "All schoolchildren and full-time students aged 5 years and over at their term-time address",
-	"atc-ts-eilr-ur-ct-ltla":     "All usual residents aged 3 years and over",
-	"atc-ts-eilr-ur-ct-msoa":     allUsualRes,
-	"atc-ts-hduc-ur-asp-ltla":    allUsualRes,
-	"atc-ts-hous-ur-ct-oa":       allUsualRes,
-	"atc-ts-hous-urce-ct-msoa":   "All usual residents in communal establishments",
-	"atc-ts-lmttw-ur-ct-oa":      allUsualRes,
-	"atc-ts-sogi-ur16o-ct-ltla":  "All usual residents aged 16 years and over",
-	"atc-ts-sogi-ur16o-ct-msoa":  "All usual residents aged 16 years and over",
-	"atc-ts-vets-vetsur-ct-msoa": "All usual residents who have previously served in the UK armed forces",
-	"HH":                         "All Households",
-	"UR_HH":                      "All usual residents in households",
-	"UR":                         allUsualRes,
-}
-
 func (s *SearchDataImport) MapDatasetMetadataValues(ctx context.Context, metadata *dataset.Metadata) error {
 	if metadata == nil {
 		return fmt.Errorf("nil metadata cannot be mapped")
@@ -73,8 +49,7 @@ func (s *SearchDataImport) MapDatasetMetadataValues(ctx context.Context, metadat
 }
 
 // PopulateCantabularFields checks if the provided dataset metadata corresponds to a Cantabular Data type,
-// if it does, it populates the dimensions array of SearchDataImport with the dimension names, labels and processed labels,
-// and assigns the population type corresponding to the 'IsBasedOn' id value.
+// if it does, it populates the dimensions array of SearchDataImport with the dimension names, labels and processed labels.
 func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadata *dataset.Metadata) {
 	if metadata.DatasetDetails.IsBasedOn == nil {
 		return // is_based_on not present in Dataset
@@ -91,7 +66,6 @@ func (s *SearchDataImport) PopulateCantabularFields(ctx context.Context, metadat
 	)
 
 	s.Dimensions = MapDimensions(ctx, metadata.Dimensions)
-	s.PopulationType = MapPopulationType(ctx, metadata.DatasetDetails.IsBasedOn.ID)
 }
 
 // MapDimensions returns a slice of dimensions corresponding to the provided slice of dataset versionDimensions.
@@ -139,28 +113,6 @@ func MapDimensions(ctx context.Context, dimensions []dataset.VersionDimension) [
 		i++
 	}
 	return dims
-}
-
-// MapPopulationType a PopulationType that contains a
-// The new dimensions are keyed by human friendly label. If multiple dimensions have the same key, they will be collapsed into 1 single dimension.
-// Collapsed dimensions keep all the original names and labels as csv values, as this information is very valuable to know what was combined, if necessary.
-func MapPopulationType(ctx context.Context, basedOnID string) PopulationType {
-	lbl, ok := PopulationTypes[basedOnID]
-	if !ok {
-		log.Warn(ctx, "population type not identified",
-			log.Data{
-				"pop_type":    basedOnID,
-				"valid_types": PopulationTypes,
-			},
-		)
-	}
-	k := key(lbl)
-	return PopulationType{
-		Key:    k,
-		AggKey: aggregationKey(ctx, k, lbl),
-		Name:   basedOnID,
-		Label:  lbl,
-	}
 }
 
 // cleanDimensionLabel is a helper function that parses dimension labels from cantabular into display text

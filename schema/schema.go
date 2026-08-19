@@ -66,15 +66,7 @@ var searchDataImport = `{
         { "name": "label", "type": "string", "default": "" },
         { "name": "raw_label", "type": "string", "default": "" }
       ]
-    }}},
-    {"name": "population_type", "type": {
-      "name": "PopulationType", "type": "record", "fields": [
-        { "name": "key", "type": "string", "default": "" },
-        { "name": "agg_key", "type": "string", "default": "" },
-        { "name": "name", "type": "string", "default": ""},
-        { "name": "label", "type": "string", "default": ""}
-      ]
-    }}
+    }}}
   ]
 }`
 

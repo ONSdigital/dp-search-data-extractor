@@ -237,20 +237,6 @@ components:
                   type: string
                 raw_label:
                   type: string
-          population_type:
-            type: array
-            description: Array of population types, not currently used.
-            items:
-              type: object
-              properties:
-                key:
-                  type: string
-                agg_key:
-                  type: string
-                name:
-                  type: string
-                label:
-                  type: string
     search-content-deleted:
       name: search-content-deleted
       title: A content item has been deleted and should be removed from the search index
