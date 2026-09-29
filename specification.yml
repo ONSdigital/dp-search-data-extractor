@@ -173,6 +173,11 @@ components:
               type: string
           meta_description:
             type: string
+          previous_uris:
+            type: array
+            description: Array of previous URIs for the content item
+            items:
+              type: string
           release_date:
             type: string
             format: date-time
