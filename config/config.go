@@ -19,11 +19,13 @@ type Config struct {
 	HealthCheckInterval               time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout        time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	EnableZebedeeCallbacks            bool          `envconfig:"ENABLE_ZEBEDEE_CALLBACKS"`
+	EnableDatasetRedirects            bool          `envconfig:"ENABLE_DATASET_REDIRECTS"`
 	EnableDatasetAPICallbacks         bool          `envconfig:"ENABLE_DATASET_API_CALLBACKS"`
 	EnableSearchContentUpdatedHandler bool          `envconfig:"ENABLE_SEARCH_CONTENT_UPDATED_HANDLER"`
 	ZebedeeURL                        string        `envconfig:"ZEBEDEE_URL"`
 	KeywordsLimit                     int           `envconfig:"KEYWORDS_LIMITS"`
 	DatasetAPIURL                     string        `envconfig:"DATASET_API_URL"`
+	RedirectAPIURL                    string        `envconfig:"REDIRECT_API_URL"`
 	ServiceAuthToken                  string        `envconfig:"SERVICE_AUTH_TOKEN"            json:"-"`
 	StopConsumingOnUnhealthy          bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
 	Kafka                             *Kafka
@@ -73,6 +75,8 @@ func Get() (*Config, error) {
 		EnableDatasetAPICallbacks:         false,
 		DatasetAPIURL:                     "http://localhost:22000",
 		EnableSearchContentUpdatedHandler: false,
+		EnableDatasetRedirects:            false,
+		RedirectAPIURL:                    "http://localhost:29900",
 		ServiceAuthToken:                  "",
 		StopConsumingOnUnhealthy:          true,
 		Kafka: &Kafka{

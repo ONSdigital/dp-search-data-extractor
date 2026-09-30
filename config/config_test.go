@@ -49,6 +49,8 @@ func TestConfig(t *testing.T) {
 				So(cfg.EnableZebedeeCallbacks, ShouldBeFalse)
 				So(cfg.EnableDatasetAPICallbacks, ShouldBeFalse)
 				So(cfg.EnableSearchContentUpdatedHandler, ShouldBeFalse)
+				So(cfg.EnableDatasetRedirects, ShouldBeFalse)
+				So(cfg.RedirectAPIURL, ShouldEqual, "http://localhost:29900")
 			})
 			Convey("Then a second call to config should return the same config", func() {
 				newCfg, newErr := Get()

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -45,6 +46,14 @@ var GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
 		return nil
 	}
 	return zebedee.New(cfg.ZebedeeURL)
+}
+
+var GetRedirectClient = func(cfg *config.Config) redirectAPI.Clienter {
+	if !cfg.EnableDatasetRedirects {
+		log.Info(context.Background(), "returning nil Redirect client as Dataset redirects are disabled")
+		return nil
+	}
+	return redirectAPI.NewClient(cfg.RedirectAPIURL)
 }
 
 // GetDatasetClient gets the Dataset API client

@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
+	redirectAPIMock "github.com/ONSdigital/dis-redirect-api/sdk/go/mocks"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
@@ -55,6 +57,7 @@ func TestInit(t *testing.T) {
 		cfg.EnableZebedeeCallbacks = true
 		cfg.EnableDatasetAPICallbacks = true
 		cfg.EnableSearchContentUpdatedHandler = true
+		cfg.EnableDatasetRedirects = true
 
 		// Mocking the Kafka consumers
 		consumerMock1 := &kafkatest.IConsumerGroupMock{
@@ -115,6 +118,13 @@ func TestInit(t *testing.T) {
 		}
 		service.GetZebedee = func(cfg *config.Config) clients.ZebedeeClient {
 			return zebedeeMock
+		}
+
+		redirectClientMock := &redirectAPIMock.ClienterMock{
+			CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
+		}
+		service.GetRedirectClient = func(cfg *config.Config) redirectAPI.Clienter {
+			return redirectClientMock
 		}
 
 		svc := &service.Service{}
@@ -310,6 +320,7 @@ func TestInit(t *testing.T) {
 				So(svc.DeleteProducer, ShouldResemble, producerMock)
 				So(svc.ZebedeeCli, ShouldResemble, zebedeeMock)
 				So(svc.DatasetCli, ShouldResemble, datasetAPIMock)
+				So(svc.RedirectClient, ShouldResemble, redirectClientMock)
 
 				Convey("Then only necessary checks are registered based on feature flags", func() {
 					registeredChecks := make(map[string]bool)

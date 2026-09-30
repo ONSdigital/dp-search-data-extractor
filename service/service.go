@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
@@ -35,6 +36,7 @@ type Service struct {
 	ZebedeeCli               clients.ZebedeeClient
 	DatasetCli               clients.DatasetClient
 	TopicCli                 topicCli.Clienter
+	RedirectClient           redirectAPI.Clienter
 }
 
 func New() *Service {
@@ -113,6 +115,12 @@ func (svc *Service) initClients(ctx context.Context) {
 		svc.TopicCli = GetTopicClient(svc.Cfg)
 	} else {
 		log.Info(ctx, "Topic client not initialised as tagging disabled")
+	}
+
+	if svc.Cfg != nil && svc.Cfg.EnableDatasetRedirects {
+		svc.RedirectClient = GetRedirectClient(svc.Cfg)
+	} else {
+		log.Info(ctx, "Redirect client not initialised as Dataset redirects are disabled")
 	}
 }
 
