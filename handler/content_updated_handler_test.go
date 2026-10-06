@@ -114,7 +114,7 @@ func TestHandle(t *testing.T) {
 		}
 
 		Convey("When both feature flags are enabled", func() {
-			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -214,7 +214,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When only the Zebedee callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -239,7 +239,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When only the Dataset API callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -264,7 +264,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When both feature flags are disabled", func() {
-			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
+			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -299,7 +299,7 @@ func TestHandle(t *testing.T) {
 					return nil, errors.New("zebedee error")
 				},
 			}
-			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil, nil}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil, nil, nil}
 
 			Convey("When a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -322,7 +322,7 @@ func TestHandle(t *testing.T) {
 					return dataset.Metadata{}, errors.New("dataset api error")
 				},
 			}
-			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil, nil}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil, nil, nil}
 
 			Convey("When a CMD dataset event is handled", func() {
 				msg := createMessage(testDatasetEvent)
@@ -350,7 +350,7 @@ func TestHandle(t *testing.T) {
 					return dataset.Metadata{}, errors.New("dataset api error")
 				},
 			}
-			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil, nil}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil, nil, nil}
 
 			Convey("When a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -379,7 +379,7 @@ func TestHandle(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get mock cache list: %v", err)
 		}
-		h := &ContentPublished{cfg, *cacheList, nil, nil, nil, nil}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, nil, nil, nil}
 
 		Convey("When an event with an unsupported type is handled", func() {
 			msg := createMessage(testInvalidEvent)
@@ -414,7 +414,7 @@ func TestHandleErrors(t *testing.T) {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, *cacheList, nil, nil, importProducerMock, deleteProducerMock}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, importProducerMock, deleteProducerMock, nil}
 
 		Convey("When a malformed event is handled", func() {
 			msg := kafkatest.NewMessage([]byte{1, 2, 3})
@@ -463,6 +463,37 @@ func createMessage(s interface{}) dpkafka.Message {
 	So(err, ShouldBeNil)
 	msg := kafkatest.NewMessage(e)
 	return msg
+}
+
+func TestSearchDataImportPreviousURIs(t *testing.T) {
+	Convey("Given the search data import event schema", t, func() {
+		Convey("When an event has no previous URIs", func() {
+			event := &models.SearchDataImport{PreviousURIs: []string{}}
+			encoded, err := schema.SearchDataImportEvent.Marshal(event)
+			So(err, ShouldBeNil)
+			decoded := &models.SearchDataImport{}
+			err = schema.SearchDataImportEvent.Unmarshal(encoded, decoded)
+
+			Convey("Then previous URIs remain empty", func() {
+				So(err, ShouldBeNil)
+				So(decoded.PreviousURIs, ShouldResemble, []string{})
+			})
+		})
+
+		Convey("When an event has previous URIs", func() {
+			previousURIs := []string{"/economy/environmentalaccounts/datasets/teststaticdataset", "/economy/nationalaccounts/datasets/teststaticdataset"}
+			event := &models.SearchDataImport{PreviousURIs: previousURIs}
+			encoded, err := schema.SearchDataImportEvent.Marshal(event)
+			So(err, ShouldBeNil)
+			decoded := &models.SearchDataImport{}
+			err = schema.SearchDataImportEvent.Unmarshal(encoded, decoded)
+
+			Convey("Then previous URIs retain their values and order", func() {
+				So(err, ShouldBeNil)
+				So(decoded.PreviousURIs, ShouldResemble, previousURIs)
+			})
+		})
+	})
 }
 
 func setupMetadata() dataset.Metadata {

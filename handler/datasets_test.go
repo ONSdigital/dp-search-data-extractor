@@ -5,6 +5,10 @@ import (
 	"errors"
 	"testing"
 
+	redirectModels "github.com/ONSdigital/dis-redirect-api/models"
+	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
+	apiError "github.com/ONSdigital/dis-redirect-api/sdk/go/errors"
+	redirectClientMock "github.com/ONSdigital/dis-redirect-api/sdk/go/mocks"
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-kafka/v5/avro"
 	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
@@ -96,6 +100,70 @@ func TestHandleDatasetDataTypeErrors(t *testing.T) {
 			err := h.handleDatasetDataType(ctx, &testDatasetEvent)
 			So(err, ShouldNotBeNil)
 			So(err.Error(), ShouldEqual, "failed to send search data import event: failed to send kafka message")
+		})
+	})
+}
+
+func TestHandleStaticDatasetRedirects(t *testing.T) {
+	Convey("Given a dataset handler with a redirect client and import producer", t, func() {
+		metadata := setupMetadata()
+		metadata.Type = "static"
+		datasetClient := &clientMock.DatasetClientMock{
+			GetVersionMetadataFunc: func(context.Context, string, string, string, string, string, string) (dataset.Metadata, error) {
+				return metadata, nil
+			},
+		}
+		redirectClient := &redirectClientMock.ClienterMock{
+			GetRedirectsFunc: func(_ context.Context, _ redirectAPI.Options) (*redirectModels.Redirects, apiError.Error) {
+				return &redirectModels.Redirects{RedirectList: []redirectModels.Redirect{{From: "/economy/environmentalaccounts/datasets/cphi01"}}, NextCursor: "0"}, nil
+			},
+		}
+		producer := &kafkatest.IProducerMock{
+			SendFunc: func(_ context.Context, _ *avro.Schema, _ interface{}) error { return nil },
+		}
+		h := &ContentPublished{
+			Cfg:            &config.Config{ServiceAuthToken: "testToken", EnableDatasetRedirects: true},
+			DatasetCli:     datasetClient,
+			RedirectClient: redirectClient,
+			ImportProducer: producer,
+		}
+
+		Convey("When a static dataset is handled with redirects enabled", func() {
+			err := h.handleDatasetDataType(ctx, &testDatasetEvent)
+
+			Convey("Then the redirect source is included in the import event", func() {
+				So(err, ShouldBeNil)
+				So(redirectClient.GetRedirectsCalls(), ShouldHaveLength, 1)
+				calls := producer.SendCalls()
+				So(calls, ShouldHaveLength, 1)
+				event, ok := calls[0].Event.(*models.SearchDataImport)
+				So(ok, ShouldBeTrue)
+				So(event.URI, ShouldEqual, "/datasets/cphi01")
+				So(event.PreviousURIs, ShouldResemble, []string{"/economy/environmentalaccounts/datasets/cphi01"})
+			})
+		})
+
+		Convey("When the redirect lookup fails", func() {
+			redirectClient.GetRedirectsFunc = func(_ context.Context, _ redirectAPI.Options) (*redirectModels.Redirects, apiError.Error) {
+				return nil, apiError.StatusError{Err: errors.New("redirect API unavailable")}
+			}
+			err := h.handleDatasetDataType(ctx, &testDatasetEvent)
+
+			Convey("Then the error is returned without publishing an import event", func() {
+				So(err, ShouldNotBeNil)
+				So(redirectClient.GetRedirectsCalls(), ShouldHaveLength, 1)
+				So(producer.SendCalls(), ShouldHaveLength, 0)
+			})
+		})
+
+		Convey("When redirects are disabled for a static dataset", func() {
+			h.Cfg.EnableDatasetRedirects = false
+			err := h.handleDatasetDataType(ctx, &testDatasetEvent)
+
+			Convey("Then the import event is sent without a redirect lookup", func() {
+				So(err, ShouldBeNil)
+				So(redirectClient.GetRedirectsCalls(), ShouldHaveLength, 0)
+			})
 		})
 	})
 }

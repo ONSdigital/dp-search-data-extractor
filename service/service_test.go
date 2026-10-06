@@ -18,7 +18,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	service "github.com/ONSdigital/dp-search-data-extractor/service"
 	serviceMock "github.com/ONSdigital/dp-search-data-extractor/service/mock"
-
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )

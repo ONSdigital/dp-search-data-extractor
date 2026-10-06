@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/redirects"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -52,6 +53,16 @@ func (h *ContentPublished) handleDatasetDataType(ctx context.Context, cpEvent *m
 	// Map data returned by Dataset to the kafka Event structure, including Cantabular fields
 	if err := searchDataImport.MapDatasetMetadataValues(ctx, &datasetMetadataPublished); err != nil {
 		return fmt.Errorf("failed to map dataset metadata values :%w", err)
+	}
+	if datasetMetadataPublished.Type == "static" {
+		searchDataImport.URI = fmt.Sprintf("/datasets/%s", datasetID)
+		if h.Cfg.EnableDatasetRedirects {
+			previousURIs, err := redirects.GetPreviousURIs(ctx, h.RedirectClient, searchDataImport.URI, h.Cfg.ServiceAuthToken)
+			if err != nil {
+				return fmt.Errorf("failed to get dataset redirects: %w", err)
+			}
+			searchDataImport.PreviousURIs = previousURIs
+		}
 	}
 
 	// Marshall Avro and sending message
