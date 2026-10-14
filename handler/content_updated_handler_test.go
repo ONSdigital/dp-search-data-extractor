@@ -114,7 +114,7 @@ func TestHandle(t *testing.T) {
 		}
 
 		Convey("When both feature flags are enabled", func() {
-			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -214,7 +214,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When only the Zebedee callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -239,7 +239,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When only the Dataset API callback feature flag is enabled", func() {
-			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -264,7 +264,7 @@ func TestHandle(t *testing.T) {
 		})
 
 		Convey("When both feature flags are disabled", func() {
-			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock, nil}
+			h := &ContentPublished{cfgWithBothDisabled, *cacheList, zebedeeMock, datasetMock, importProducerMock, deleteProducerMock}
 
 			Convey("And a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -299,7 +299,7 @@ func TestHandle(t *testing.T) {
 					return nil, errors.New("zebedee error")
 				},
 			}
-			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil, nil, nil}
+			h := &ContentPublished{cfgWithZebedeeOnly, *cacheList, zebedeeMock, nil, nil, nil}
 
 			Convey("When a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -322,7 +322,7 @@ func TestHandle(t *testing.T) {
 					return dataset.Metadata{}, errors.New("dataset api error")
 				},
 			}
-			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil, nil, nil}
+			h := &ContentPublished{cfgWithDatasetOnly, *cacheList, nil, datasetMock, nil, nil}
 
 			Convey("When a CMD dataset event is handled", func() {
 				msg := createMessage(testDatasetEvent)
@@ -350,7 +350,7 @@ func TestHandle(t *testing.T) {
 					return dataset.Metadata{}, errors.New("dataset api error")
 				},
 			}
-			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil, nil, nil}
+			h := &ContentPublished{cfgWithBothEnabled, *cacheList, zebedeeMock, datasetMock, nil, nil}
 
 			Convey("When a legacy Zebedee event is handled", func() {
 				msg := createMessage(testZebedeeEvent)
@@ -379,7 +379,7 @@ func TestHandle(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get mock cache list: %v", err)
 		}
-		h := &ContentPublished{cfg, *cacheList, nil, nil, nil, nil, nil}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, nil, nil}
 
 		Convey("When an event with an unsupported type is handled", func() {
 			msg := createMessage(testInvalidEvent)
@@ -414,7 +414,7 @@ func TestHandleErrors(t *testing.T) {
 				return nil
 			},
 		}
-		h := &ContentPublished{cfg, *cacheList, nil, nil, importProducerMock, deleteProducerMock, nil}
+		h := &ContentPublished{cfg, *cacheList, nil, nil, importProducerMock, deleteProducerMock}
 
 		Convey("When a malformed event is handled", func() {
 			msg := kafkatest.NewMessage([]byte{1, 2, 3})

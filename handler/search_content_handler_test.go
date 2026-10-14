@@ -7,9 +7,14 @@ import (
 	"log"
 	"testing"
 
+	redirectModels "github.com/ONSdigital/dis-redirect-api/models"
+	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
+	apiError "github.com/ONSdigital/dis-redirect-api/sdk/go/errors"
+	redirectClientMock "github.com/ONSdigital/dis-redirect-api/sdk/go/mocks"
 	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-kafka/v5/avro"
 	"github.com/ONSdigital/dp-kafka/v5/kafkatest"
+	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	. "github.com/smartystreets/goconvey/convey"
@@ -183,6 +188,73 @@ func TestSearchContentHandler_Handle(t *testing.T) {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldContainSubstring, "failed to send search data import event")
 			})
+		})
+	})
+}
+
+func TestSearchContentHandler_DatasetRedirects(t *testing.T) {
+	Convey("Given a dataset landing page with a topic-prefixed URI", t, func() {
+		resource := &models.SearchContentUpdate{
+			URI:         "/retailindustry/datasets/testDataset",
+			URIOld:      "/retailindustry/datasets/oldTestDataset",
+			ContentType: DefaultType,
+			DatasetID:   "testDataset",
+			Topics:      []string{"retailindustry"},
+		}
+		redirectClient := &redirectClientMock.ClienterMock{
+			GetRedirectsFunc: func(_ context.Context, _ redirectAPI.Options) (*redirectModels.Redirects, apiError.Error) {
+				return &redirectModels.Redirects{RedirectList: []redirectModels.Redirect{{From: "/businessindustryandtrade/retailindustry/datasets/oldTestDataset"}}, NextCursor: "0"}, nil
+			},
+		}
+		producer := &kafkatest.IProducerMock{
+			SendFunc:     func(_ context.Context, _ *avro.Schema, _ interface{}) error { return nil },
+			SendJSONFunc: func(_ context.Context, _ interface{}) error { return nil },
+		}
+		handler := &SearchContentHandler{
+			Cfg:            &config.Config{EnableDatasetRedirects: true, ServiceAuthToken: "testToken"},
+			ImportProducer: producer,
+			DeleteProducer: producer,
+			RedirectClient: redirectClient,
+		}
+
+		Convey("When the dataset is imported, previous URIs are fetched for its event URI", func() {
+			err := handler.Handle(context.Background(), 0, createJSONMessage(resource))
+			So(err, ShouldBeNil)
+			So(redirectClient.GetRedirectsCalls(), ShouldHaveLength, 1)
+			So(redirectClient.GetRedirectsCalls()[0].Options.Query.Get("to"), ShouldEqual, resource.URI)
+			So(redirectClient.GetRedirectsCalls()[0].Options.Headers.Get(redirectAPI.Authorization), ShouldEqual, "testToken")
+			So(producer.SendCalls(), ShouldHaveLength, 1)
+			So(producer.SendJSONCalls(), ShouldHaveLength, 1)
+			importEvent := producer.SendCalls()[0].Event.(models.SearchDataImport)
+			So(importEvent.URI, ShouldEqual, resource.URI)
+			So(importEvent.PreviousURIs, ShouldResemble, []string{"/businessindustryandtrade/retailindustry/datasets/oldTestDataset"})
+		})
+
+		Convey("When redirects are disabled, the dataset is imported without a lookup", func() {
+			handler.Cfg.EnableDatasetRedirects = false
+			err := handler.Handle(context.Background(), 0, createJSONMessage(resource))
+			So(err, ShouldBeNil)
+			So(redirectClient.GetRedirectsCalls(), ShouldHaveLength, 0)
+			So(producer.SendCalls(), ShouldHaveLength, 1)
+		})
+
+		Convey("When unrelated content is imported, redirects are not queried", func() {
+			resource.ContentType = "article"
+			err := handler.Handle(context.Background(), 0, createJSONMessage(resource))
+			So(err, ShouldBeNil)
+			So(redirectClient.GetRedirectsCalls(), ShouldHaveLength, 0)
+			So(producer.SendCalls(), ShouldHaveLength, 1)
+		})
+
+		Convey("When the redirect lookup fails, nothing is imported", func() {
+			redirectClient.GetRedirectsFunc = func(_ context.Context, _ redirectAPI.Options) (*redirectModels.Redirects, apiError.Error) {
+				return nil, apiError.StatusError{Err: errors.New("redirect API unavailable")}
+			}
+			err := handler.Handle(context.Background(), 0, createJSONMessage(resource))
+			So(err, ShouldNotBeNil)
+			So(err.Error(), ShouldContainSubstring, "failed to get dataset redirects")
+			So(producer.SendCalls(), ShouldHaveLength, 0)
+			So(producer.SendJSONCalls(), ShouldHaveLength, 0)
 		})
 	})
 }

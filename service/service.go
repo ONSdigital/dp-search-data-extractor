@@ -138,7 +138,6 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 			ImportProducer: svc.ImportProducer,
 			DeleteProducer: svc.DeleteProducer,
 			Cache:          svc.Cache,
-			RedirectClient: svc.RedirectClient,
 		}
 		if err = svc.ContentPublishedConsumer.RegisterHandler(ctx, contentHandler.Handle); err != nil {
 			return fmt.Errorf("could not register content-published handler: %w", err)
@@ -154,6 +153,7 @@ func (svc *Service) initConsumers(ctx context.Context) error {
 			Cfg:            svc.Cfg,
 			ImportProducer: svc.ImportProducer,
 			DeleteProducer: svc.DeleteProducer,
+			RedirectClient: svc.RedirectClient,
 		}
 		if err = svc.SearchContentConsumer.RegisterHandler(ctx, searchContentHandler.Handle); err != nil {
 			return fmt.Errorf("could not register search-content-updated handler: %w", err)

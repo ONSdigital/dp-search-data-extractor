@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	redirectClient "github.com/ONSdigital/dis-redirect-api/sdk/go"
 	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-search-data-extractor/cache"
 	"github.com/ONSdigital/dp-search-data-extractor/clients"
@@ -32,7 +31,6 @@ type ContentPublished struct {
 	DatasetCli     clients.DatasetClient
 	ImportProducer kafka.IProducer
 	DeleteProducer kafka.IProducer
-	RedirectClient redirectClient.Clienter
 }
 
 // Handle takes a single event and triages it according to its data type, which can be 'legacy' (zebedee) or 'datasets'

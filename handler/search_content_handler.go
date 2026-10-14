@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
 	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-search-data-extractor/config"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
+	"github.com/ONSdigital/dp-search-data-extractor/redirects"
 	"github.com/ONSdigital/dp-search-data-extractor/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -21,6 +23,7 @@ type SearchContentHandler struct {
 	Cfg            *config.Config
 	ImportProducer kafka.IProducer
 	DeleteProducer kafka.IProducer
+	RedirectClient redirectAPI.Clienter
 }
 
 // Handle processes the search-content-updated event and generates messages.
@@ -63,6 +66,13 @@ func (h *SearchContentHandler) Handle(ctx context.Context, _ int, msg kafka.Mess
 func (h *SearchContentHandler) sendSearchDataImported(ctx context.Context, resource models.SearchContentUpdate) error {
 	searchDataImport := models.MapResourceToSearchDataImport(resource)
 	searchDataImport.SearchIndex = OnsSearchIndex
+	if resource.ContentType == DefaultType && h.Cfg != nil && h.Cfg.EnableDatasetRedirects {
+		previousURIs, err := redirects.GetPreviousURIs(ctx, h.RedirectClient, resource.URI, h.Cfg.ServiceAuthToken)
+		if err != nil {
+			return fmt.Errorf("failed to get dataset redirects: %w", err)
+		}
+		searchDataImport.PreviousURIs = previousURIs
+	}
 
 	// Marshall Avro and sending message
 	if err := h.ImportProducer.Send(ctx, schema.SearchDataImportEvent, searchDataImport); err != nil {
