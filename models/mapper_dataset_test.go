@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	//nolint:staticcheck // work ongoing to replace dataset with a new implementation
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-search-data-extractor/models"
 	. "github.com/smartystreets/goconvey/convey"
@@ -30,11 +31,13 @@ func TestMapDatasetMetadataValues(t *testing.T) {
 				ReleaseDate: testReleaseDate,
 			},
 			DatasetDetails: dataset.DatasetDetails{
-				Title:          testTitle,
-				Description:    testSummary,
+				Title:       testTitle,
+				Description: testSummary,
+				//nolint:staticcheck // work ongoing to replace canonical topic usage with new implementation
 				CanonicalTopic: testCanonicalTopic,
-				Subtopics:      testTopics,
-				Keywords:       &testKeywords,
+				//nolint:staticcheck // work ongoing to replace subtopics usage with new implementation
+				Subtopics: testTopics,
+				Keywords:  &testKeywords,
 			},
 			DatasetLinks: dataset.Links{
 				LatestVersion: dataset.Link{

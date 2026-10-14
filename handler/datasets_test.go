@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	//nolint:staticcheck // work ongoing to replace dataset with a new implementation
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-kafka/v5/avro"
 	"github.com/ONSdigital/dp-kafka/v5/kafkatest"

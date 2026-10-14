@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	redirectAPI "github.com/ONSdigital/dis-redirect-api/sdk/go"
+	//nolint:staticcheck // work ongoing to replace dataset with a new implementation
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"

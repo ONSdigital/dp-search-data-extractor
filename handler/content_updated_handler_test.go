@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	//nolint:staticcheck // work ongoing to replace dataset with a new implementation
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	dpkafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/ONSdigital/dp-kafka/v5/avro"
@@ -502,11 +503,13 @@ func setupMetadata() dataset.Metadata {
 			ReleaseDate: "release date",
 		},
 		DatasetDetails: dataset.DatasetDetails{
-			Title:          "title",
-			Description:    "description",
-			Keywords:       &[]string{"keyword_1", "keyword_2"},
+			Title:       "title",
+			Description: "description",
+			Keywords:    &[]string{"keyword_1", "keyword_2"},
+			//nolint:staticcheck // work ongoing to replace canonical topic usage with new implementation
 			CanonicalTopic: "testTopic",
-			Subtopics:      []string{"subTopic1"},
+			//nolint:staticcheck // work ongoing to replace subtopics usage with new implementation
+			Subtopics: []string{"subTopic1"},
 		},
 	}
 	return m

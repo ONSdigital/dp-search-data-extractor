@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	//nolint:staticcheck // work ongoing to replace dataset with a new implementation
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -36,7 +37,9 @@ func (s *SearchDataImport) MapDatasetMetadataValues(ctx context.Context, metadat
 	s.ReleaseDate = metadata.ReleaseDate
 	s.Title = metadata.Title
 	s.Summary = metadata.Description
+	//nolint:staticcheck // work ongoing to replace canonical topic usage with new implementation
 	s.CanonicalTopic = metadata.CanonicalTopic
+	//nolint:staticcheck // work ongoing to replace subtopics usage with new implementation
 	s.Topics = metadata.Subtopics
 
 	if metadata.Keywords != nil {
