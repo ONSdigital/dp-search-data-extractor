@@ -26,7 +26,7 @@ An example event can be created using the helper script, `make produce`.
 
 ## Dependencies
 
-* golang 1.26.x
+* Go (see `go.mod` for the required version)
 * Running instance of zebedee
 * Requires running…
       * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
